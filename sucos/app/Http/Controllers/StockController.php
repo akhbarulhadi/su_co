@@ -34,12 +34,4 @@ class StockController extends Controller
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
-    public function search(Request $request)
-    {
-        $keyword = $request->input('nama_produk');
-
-        $results = Stock::where('nama_produk', 'like', "%$keyword%")->get();
-
-        return response()->json(['stock' => $results]);
-    }
 }

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:intl/intl.dart';
 
 class HistoryOrder extends StatefulWidget {
   const HistoryOrder({Key? key}) : super(key: key);
@@ -19,6 +20,7 @@ class HistoryOrderState extends State<HistoryOrder> {
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
   bool _isloading = true;
+  List _filteredData = [];
 
   @override
   void initState() {
@@ -27,8 +29,9 @@ class HistoryOrderState extends State<HistoryOrder> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
+    _listdata = [];
+    _filteredData = [];
     _getdata();
-    //print(_listdata);
     super.initState();
   }
 
@@ -55,15 +58,13 @@ class HistoryOrderState extends State<HistoryOrder> {
 
   Future _getdata() async {
     try {
-      final response = await http.get(
-          Uri.parse('http://192.168.28.100:8000/api/pesanan/show-history'));
-      print(response.body); // Cetak respons ke konsol
+      final response = await http.get(Uri.parse('http://192.168.28.100:8000/api/pesanan/show-history'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data); // Cetak data ke konsol
         setState(() {
           _listdata = data['pesanan'];
+          _filteredData = _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
@@ -265,6 +266,19 @@ class HistoryOrderState extends State<HistoryOrder> {
                                 padding: EdgeInsets.only(left: 12),
                                 child: TextFormField(
                                   controller: _textController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = _listdata.where((item) {
+                                        // Customize this condition based on your search criteria
+                                        return item['nama_perusahaan']
+                                            .toLowerCase()
+                                            .contains(query.toLowerCase()) ||
+                                            item['updated_at']
+                                                .toLowerCase()
+                                                .contains(query.toLowerCase());
+                                      }).toList();
+                                    });
+                                  },
                                   obscureText: false,
                                   decoration: InputDecoration(
                                     hintText: getTranslatedText('Search...'),
@@ -317,12 +331,12 @@ class HistoryOrderState extends State<HistoryOrder> {
                     ? Center(
                         child: CircularProgressIndicator(),
                       )
-                    : _listdata.isEmpty
+                    : _filteredData.isEmpty
                         ? Center(
-                            child: Text(getTranslatedText('No history yet')),
+                            child: Text(getTranslatedText('No history')),
                           )
                         : ListView.builder(
-                            itemCount: _listdata.length,
+                            itemCount: _filteredData.length,
                             itemBuilder: ((context, index) {
                               return GestureDetector(
                                 onTap: () {
@@ -332,23 +346,23 @@ class HistoryOrderState extends State<HistoryOrder> {
                                     builder: (context) {
                                       TextEditingController statusController =
                                           TextEditingController(
-                                              text: _listdata[index]
+                                              text: _filteredData[index]
                                                       ['status_pesanan']
                                                   .toString());
                                       TextEditingController
                                           namaklienController =
                                           TextEditingController(
-                                              text: _listdata[index]
+                                              text: _filteredData[index]
                                                       ['nama_klien']
                                                   .toString());
                                       TextEditingController alamatController =
                                           TextEditingController(
-                                              text: _listdata[index]['alamat']
+                                              text: _filteredData[index]['alamat']
                                                   .toString());
                                       TextEditingController
                                           namaprodukController =
                                           TextEditingController(
-                                              text: _listdata[index]
+                                              text: _filteredData[index]
                                                       ['nama_produk']
                                                   .toString());
                                       return AlertDialog(
@@ -452,15 +466,13 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                   padding: EdgeInsetsDirectional
                                                       .fromSTEB(0, 4, 0, 0),
                                                   child: Text(
-                                                    _listdata[index]
-                                                        ['updated_at'],
+                                                    DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(
+                                                        _filteredData[index]['updated_at'])),
                                                     style: TextStyle(
                                                       fontFamily: 'Inter',
                                                       color: Color(0xFFFFFFFE),
-                                                      fontSize: screenWidth *
-                                                          0.03, // Ukuran teks pada tombol
-                                                      fontWeight:
-                                                          FontWeight.w300,
+                                                      fontSize: screenWidth * 0.03,
+                                                      fontWeight: FontWeight.w300,
                                                     ),
                                                   ),
                                                 ),
@@ -497,7 +509,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                 alignment: AlignmentDirectional(
                                                     0.00, 0.00),
                                                 child: Text(
-                                                  _listdata[index]['id_klien']
+                                                  _filteredData[index]['id_klien']
                                                       .toString(),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
@@ -526,7 +538,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                                 .spaceBetween,
                                                         children: [
                                                           Text(
-                                                            _listdata[index][
+                                                            _filteredData[index][
                                                                 'nama_perusahaan'],
                                                             style: TextStyle(
                                                               fontFamily:
@@ -549,7 +561,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                                 .fromSTEB(
                                                                     0, 4, 0, 0),
                                                         child: Text(
-                                                          _listdata[index]
+                                                          _filteredData[index]
                                                               ['alamat'],
                                                           style: TextStyle(
                                                             fontFamily: 'Inter',

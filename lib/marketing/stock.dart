@@ -17,10 +17,10 @@ class StockState extends State<Stock> {
   late FocusNode _unfocusNode;
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
+  TextEditingController _searchController = TextEditingController();
   List _listdata = [];
   bool _isloading = true;
-  TextEditingController _searchController = TextEditingController();
-  List _stockData = [];
+  List _filteredData = [];
 
   @override
   void initState() {
@@ -29,8 +29,9 @@ class StockState extends State<Stock> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
+    _listdata = [];
+    _filteredData = [];
     _getdata();
-    //print(_listdata);
     super.initState();
   }
 
@@ -80,32 +81,15 @@ class StockState extends State<Stock> {
     }
   }
 
-  Future<void> searchProduct(String productName) async {
-    final response = await http.get(
-      Uri.parse('http://192.168.28.100:8000/api/stock/search?nama_produk=$productName'),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _stockData = jsonDecode(response.body)['stock'];
-      });
-    } else {
-      // Gagal mengambil data
-      print('Failed to fetch data');
-    }
-  }
-
   Future _getdata() async {
     try {
-      final response =
-      await http.get(Uri.parse('http://192.168.28.100:8000/api/stock'));
-      print(response.body); // Cetak respons ke konsol
+      final response = await http.get(Uri.parse('http://192.168.28.100:8000/api/stock'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data); // Cetak data ke konsol
         setState(() {
           _listdata = data['stock'];
+          _filteredData = _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
@@ -223,53 +207,7 @@ class StockState extends State<Stock> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
-                      decoration: BoxDecoration(
-                        color: isDarkTheme ? Colors.white24 : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.transparent, // Warna garis tepi
-                          width: 0.5, // Lebar garis tepi
-                        ),
-                      ),
-                      child: DropdownSearch<String>(
-                        popupProps: PopupProps.menu(
-                          fit: FlexFit.loose,
-                          menuProps: MenuProps(
-                            backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
-                            elevation: 0,
-                          ),
-                          showSelectedItems: true,
-                        ),
-                        items: [
-                          getTranslatedText('All'),
-                          getTranslatedText('Daily'),
-                          getTranslatedText('Weekly'),
-                          getTranslatedText('Monthly'),
-                          getTranslatedText('Yearly'),
-                        ],
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            labelText: getTranslatedText("Time Period"),
-                            // hintText: "waktu in menu mode",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.transparent),
-                            ),
-                          ),
-                        ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText("All"),
-                      ),
-                    ),
-                    Container(
-                      width: mediaQueryWidth * 0.6,
+                      width: mediaQueryWidth * 0.9,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
@@ -284,11 +222,34 @@ class StockState extends State<Stock> {
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
+                            Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.search_rounded,
+                                color: isDarkTheme
+                                    ? Colors.white
+                                    : Color(0xFF8B9BA8),
+                                size: 15,
+                              ),
+                            ),
                             Expanded(
                               child: Padding(
                                 padding: EdgeInsets.only(left: 12),
                                 child: TextFormField(
                                   controller: _searchController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = _listdata.where((item) {
+                                        // Customize this condition based on your search criteria
+                                        return item['nama_produk']
+                                            .toLowerCase()
+                                            .contains(query.toLowerCase()) ||
+                                            item['harga_produk']
+                                                .toLowerCase()
+                                                .contains(query.toLowerCase());
+                                      }).toList();
+                                    });
+                                  },
                                   obscureText: false,
                                   decoration: InputDecoration(
                                     hintText: getTranslatedText('Search...'),
@@ -312,12 +273,7 @@ class StockState extends State<Stock> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
-                                    suffixIcon: IconButton(
-                                      onPressed: () {
-                                        searchProduct(_searchController.text);
-                                      },
-                                      icon: Icon(Icons.search),
-                                    ),
+                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
@@ -347,8 +303,12 @@ class StockState extends State<Stock> {
                     ? Center(
                         child: CircularProgressIndicator(),
                       )
+                    : _filteredData.isEmpty
+                    ? Center(
+                  child: Text(getTranslatedText('No Stock')),
+                )
                     : ListView.builder(
-                        itemCount: _stockData.length,
+                        itemCount: _filteredData.length,
                         itemBuilder: (context, index) {
                           return GestureDetector(
                             onTap: () {
@@ -358,7 +318,7 @@ class StockState extends State<Stock> {
                                 builder: (context) {
                                   TextEditingController priceController =
                                       TextEditingController(
-                                          text: _stockData[index]['harga_produk']);
+                                          text: _filteredData[index]['harga_produk']);
 
                                   return AlertDialog(
                                     shape: RoundedRectangleBorder(
@@ -449,7 +409,7 @@ class StockState extends State<Stock> {
                                               padding: EdgeInsetsDirectional
                                                   .fromSTEB(0, 4, 0, 0),
                                               child: Text(
-                                                  _stockData[index]['nama_produk'],
+                                                _filteredData[index]['nama_produk'],
                                                 style: TextStyle(
                                                   fontFamily: 'Inter',
                                                   color: Color(0xFFFFFFFE),
@@ -484,7 +444,7 @@ class StockState extends State<Stock> {
                                               padding: EdgeInsetsDirectional
                                                   .fromSTEB(0, 4, 0, 0),
                                               child: Text(
-                                                  _stockData[index]['jumlah_produk'].toString(),
+                                                _filteredData[index]['jumlah_produk'].toString(),
                                                 style: TextStyle(
                                                   fontFamily: 'Inter',
                                                   color: Color(0xFFFFFFFE),
@@ -519,7 +479,7 @@ class StockState extends State<Stock> {
                                               padding: EdgeInsetsDirectional
                                                   .fromSTEB(0, 4, 0, 0),
                                               child: Text(
-                                                  _stockData[index]['harga_produk'],
+                                                _filteredData[index]['harga_produk'],
                                                 style: TextStyle(
                                                   fontFamily: 'Inter',
                                                   color: Color(0xFFFFFFFE),
