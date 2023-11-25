@@ -17,7 +17,6 @@ class StockState extends State<Stock> {
   late FocusNode _unfocusNode;
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
-  TextEditingController _searchController = TextEditingController();
   List _listdata = [];
   bool _isloading = true;
   List _filteredData = [];
@@ -236,7 +235,7 @@ class StockState extends State<Stock> {
                               child: Padding(
                                 padding: EdgeInsets.only(left: 12),
                                 child: TextFormField(
-                                  controller: _searchController,
+                                  controller: _textController,
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
