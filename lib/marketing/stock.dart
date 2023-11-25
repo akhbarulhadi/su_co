@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 
 class Stock extends StatefulWidget {
   const Stock({Key? key}) : super(key: key);
@@ -57,7 +56,7 @@ class StockState extends State<Stock> {
 
   Future<void> _updatePrice(BuildContext context, int index, String newStatus) async {
     final response = await http.post(
-      Uri.parse('http://192.168.28.100:8000/api/pesanan/update-harga'), // Ganti dengan URL endpoint Anda
+      Uri.parse('http://192.168.28.100:8000/api/pesanan/update-harga'),
       body: {'id_produk': _listdata[index]['id_produk'].toString(), 'harga_produk': newStatus},
     );
 
@@ -69,6 +68,13 @@ class StockState extends State<Stock> {
           duration: Duration(seconds: 2),
         ),
       );
+
+      // Perbarui harga langsung dalam _filteredData
+      setState(() {
+        _filteredData[index]['harga_produk'] = newStatus;
+      });
+      Navigator.pop(context);
+
     } else {
       // Gagal memperbarui status
       ScaffoldMessenger.of(context).showSnackBar(
@@ -351,8 +357,6 @@ class StockState extends State<Stock> {
                                           ),
                                           onPressed: () async {
                                             await _updatePrice(context, index, priceController.text);
-                                            Navigator.push(
-                                                context, MaterialPageRoute(builder: (context) => Stock()));
                                           },
                                           child: Text(
                                             getTranslatedText('Save'),
