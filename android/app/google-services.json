@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "698173629901",
+    "project_id": "suco-a2d79",
+    "storage_bucket": "suco-a2d79.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698173629901:android:f84809babdfaa070881084",
+        "android_client_info": {
+          "package_name": "com.example.suco"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSk7e0oVbMfjXZOqh1TDpfmDPaZLNoQaA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
