@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:intl/intl.dart';
 
 class HistoryOrder extends StatefulWidget {
   const HistoryOrder({Key? key}) : super(key: key);
@@ -19,25 +20,7 @@ class HistoryOrderState extends State<HistoryOrder> {
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
   bool _isloading = true;
-
-  Future<void> editProductPrice(int id, double status) async {
-    final String url =
-        'http://10.132.221.215//crudflutter/update_laporan.php'; // Ganti dengan URL backend PHP Anda.
-
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'id': id, 'status': status}),
-    );
-
-    if (response.statusCode == 200) {
-      print("Harga berhasil diubah.");
-      // Tampilkan pesan sukses atau tindakan lainnya.
-    } else {
-      print("Gagal mengubah harga.");
-      // Tampilkan pesan kesalahan atau tindakan lainnya.
-    }
-  }
+  List _filteredData = [];
 
   @override
   void initState() {
@@ -46,8 +29,9 @@ class HistoryOrderState extends State<HistoryOrder> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
+    _listdata = [];
+    _filteredData = [];
     _getdata();
-    //print(_listdata);
     super.initState();
   }
 
@@ -74,13 +58,13 @@ class HistoryOrderState extends State<HistoryOrder> {
 
   Future _getdata() async {
     try {
-      final respone = await http
-          .get(Uri.parse('http://10.132.221.215//crudflutter/read.php'));
-      if (respone.statusCode == 200) {
-        //print(respone.body);
-        final data = jsonDecode(respone.body);
+      final response = await http.get(Uri.parse('http://10.132.237.193:8000/api/pesanan/show-history'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
-          _listdata = data;
+          _listdata = data['pesanan'];
+          _filteredData = _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
@@ -120,6 +104,12 @@ class HistoryOrderState extends State<HistoryOrder> {
           return 'Alamat';
         case 'Product Name':
           return 'Nama Produk';
+        case 'No history yet':
+          return 'Belum ada riwayat';
+        case '':
+          return '';
+        case '':
+          return '';
         case '':
           return '';
         case '':
@@ -169,7 +159,9 @@ class HistoryOrderState extends State<HistoryOrder> {
         ),
       ),
       actions: <Widget>[
-        SizedBox(width: 45.0,),
+        SizedBox(
+          width: 45.0,
+        ),
       ],
     );
     final bodyHeight = mediaQueryHeight -
@@ -212,7 +204,8 @@ class HistoryOrderState extends State<HistoryOrder> {
                         popupProps: PopupProps.menu(
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
-                            backgroundColor: isDarkTheme ? Colors.black : Colors.white,
+                            backgroundColor:
+                            isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -264,8 +257,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                                 Icons.search_rounded,
                                 color: isDarkTheme
                                     ? Colors.white
-                                    : Color(
-                                    0xFF8B9BA8),
+                                    : Color(0xFF8B9BA8),
                                 size: 15,
                               ),
                             ),
@@ -274,6 +266,19 @@ class HistoryOrderState extends State<HistoryOrder> {
                                 padding: EdgeInsets.only(left: 12),
                                 child: TextFormField(
                                   controller: _textController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = _listdata.where((item) {
+                                        // Customize this condition based on your search criteria
+                                        return item['nama_perusahaan']
+                                            .toLowerCase()
+                                            .contains(query.toLowerCase()) ||
+                                            item['updated_at']
+                                                .toLowerCase()
+                                                .contains(query.toLowerCase());
+                                      }).toList();
+                                    });
+                                  },
                                   obscureText: false,
                                   decoration: InputDecoration(
                                     hintText: getTranslatedText('Search...'),
@@ -326,8 +331,12 @@ class HistoryOrderState extends State<HistoryOrder> {
                     ? Center(
                   child: CircularProgressIndicator(),
                 )
+                    : _filteredData.isEmpty
+                    ? Center(
+                  child: Text(getTranslatedText('No history')),
+                )
                     : ListView.builder(
-                  itemCount: _listdata.length,
+                  itemCount: _filteredData.length,
                   itemBuilder: ((context, index) {
                     return GestureDetector(
                       onTap: () {
@@ -337,46 +346,69 @@ class HistoryOrderState extends State<HistoryOrder> {
                           builder: (context) {
                             TextEditingController statusController =
                             TextEditingController(
-                                text: _listdata[index]['status']
+                                text: _filteredData[index]
+                                ['status_pesanan']
                                     .toString());
-                            TextEditingController namaController =
+                            TextEditingController
+                            namaklienController =
                             TextEditingController(
-                                text: _listdata[index]['nama']
+                                text: _filteredData[index]
+                                ['nama_klien']
                                     .toString());
                             TextEditingController alamatController =
                             TextEditingController(
-                                text: _listdata[index]['alamat']
+                                text: _filteredData[index]['alamat']
+                                    .toString());
+                            TextEditingController
+                            namaprodukController =
+                            TextEditingController(
+                                text: _filteredData[index]
+                                ['nama_produk']
                                     .toString());
                             return AlertDialog(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8), // Ganti nilai sesuai keinginan Anda
+                                borderRadius: BorderRadius.circular(
+                                    8), // Ganti nilai sesuai keinginan Anda
                               ),
-                              title: Center(child: Text(getTranslatedText('Order Detail'))),
+                              title: Center(
+                                  child: Text(getTranslatedText(
+                                      'Order Detail'))),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   TextField(
-                                    controller: namaController,
+                                    controller: namaklienController,
                                     keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(labelText: getTranslatedText('Client Name')),
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Client Name')),
                                     enabled: false,
                                   ),
                                   TextField(
                                     controller: alamatController,
                                     keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(labelText: getTranslatedText('Address')),
-                                    enabled: false, // Mengatur TextField menjadi disable
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Address')),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
                                   ),
                                   TextField(
+                                    controller: namaprodukController,
                                     keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(labelText: getTranslatedText('Product Name')),
-                                    enabled: false, // Mengatur TextField menjadi disable
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Product Name')),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
                                   ),
                                   TextField(
                                     controller: statusController,
                                     keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(labelText: 'Status'),
-                                    enabled: false, // Mengatur TextField menjadi disable
+                                    decoration: InputDecoration(
+                                        labelText: 'Status'),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
                                   ),
                                 ],
                               ),
@@ -404,13 +436,15 @@ class HistoryOrderState extends State<HistoryOrder> {
                                 children: [
                                   Row(
                                     mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                    MainAxisAlignment
+                                        .spaceBetween,
                                     children: [
                                       Padding(
                                         padding: EdgeInsetsDirectional
                                             .fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          getTranslatedText('Completed on'),
+                                          getTranslatedText(
+                                              'Completed on'),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
@@ -425,26 +459,28 @@ class HistoryOrderState extends State<HistoryOrder> {
                                   ),
                                   Row(
                                     mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                    MainAxisAlignment
+                                        .spaceBetween,
                                     children: [
                                       Padding(
                                         padding: EdgeInsetsDirectional
                                             .fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          '13 Oktober 2023',
+                                          DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(
+                                              _filteredData[index]['updated_at'])),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth *
-                                                0.03, // Ukuran teks pada tombol
-                                            fontWeight:
-                                            FontWeight.w300,
+                                            fontSize: screenWidth * 0.03,
+                                            fontWeight: FontWeight.w300,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                 SizedBox( height: bodyHeight * 0.01,)
+                                  SizedBox(
+                                    height: bodyHeight * 0.01,
+                                  ),
                                 ],
                               ),
                             ),
@@ -452,11 +488,13 @@ class HistoryOrderState extends State<HistoryOrder> {
                               decoration: BoxDecoration(
                                 color: Color(0xFF094067),
                                 border: Border.all(
-                                  color: Colors.black.withOpacity(0.20000000298023224),
+                                  color: Colors.black.withOpacity(
+                                      0.20000000298023224),
                                 ),
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding:
+                                EdgeInsetsDirectional.fromSTEB(
                                     16, 12, 16, 16),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -468,28 +506,31 @@ class HistoryOrderState extends State<HistoryOrder> {
                                         color: Color(0xFF06D5CD),
                                         shape: BoxShape.circle,
                                       ),
-                                      alignment:
-                                      AlignmentDirectional(0.00, 0.00),
+                                      alignment: AlignmentDirectional(
+                                          0.00, 0.00),
                                       child: Text(
-                                        _listdata[index]['id'],
+                                        _filteredData[index]['id_klien']
+                                            .toString(),
                                         style: TextStyle(
                                           fontFamily: 'Inter',
                                           color: Colors.white,
                                           fontSize: screenWidth *
                                               0.04, // Ukuran teks pada tombol
-                                          fontWeight: FontWeight.normal,
+                                          fontWeight:
+                                          FontWeight.normal,
                                         ),
                                       ),
                                     ),
                                     Expanded(
                                       child: Padding(
-                                        padding:
-                                        EdgeInsetsDirectional.fromSTEB(
-                                            12, 0, 0, 0),
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(12, 0, 0, 0),
                                         child: Column(
-                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisSize:
+                                          MainAxisSize.max,
                                           crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment
+                                              .start,
                                           children: [
                                             Row(
                                               mainAxisAlignment:
@@ -497,31 +538,40 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                   .spaceBetween,
                                               children: [
                                                 Text(
-                                                  _listdata[index]['nama'],
+                                                  _filteredData[index][
+                                                  'nama_perusahaan'],
                                                   style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color:
-                                                    Color(0xFFFFFFFE),
-                                                    fontSize: screenWidth *
+                                                    fontFamily:
+                                                    'Inter',
+                                                    color: Color(
+                                                        0xFFFFFFFE),
+                                                    fontSize:
+                                                    screenWidth *
                                                         0.04, // Ukuran teks pada tombol
                                                     fontWeight:
-                                                    FontWeight.bold,
+                                                    FontWeight
+                                                        .bold,
                                                   ),
                                                 ),
                                               ],
                                             ),
                                             Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 4, 0, 0),
+                                              padding:
+                                              EdgeInsetsDirectional
+                                                  .fromSTEB(
+                                                  0, 4, 0, 0),
                                               child: Text(
-                                                _listdata[index]['alamat'],
+                                                _filteredData[index]
+                                                ['alamat'],
                                                 style: TextStyle(
                                                   fontFamily: 'Inter',
-                                                  color: Color(0xFFFFFFFE),
+                                                  color: Color(
+                                                      0xFFFFFFFE),
                                                   fontSize: screenWidth *
                                                       0.028, // Ukuran teks pada tombol
                                                   fontWeight:
-                                                  FontWeight.normal,
+                                                  FontWeight
+                                                      .normal,
                                                 ),
                                               ),
                                             ),

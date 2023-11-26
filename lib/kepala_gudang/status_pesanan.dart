@@ -4,40 +4,24 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'dart:math';
 
 class StatusPesanan extends StatefulWidget {
   const StatusPesanan({Key? key}) : super(key: key);
 
   @override
-  StatusPesananState createState() => StatusPesananState();
+  _LaporanWidgetState createState() => _LaporanWidgetState();
 }
 
-class StatusPesananState extends State<StatusPesanan> {
+class _LaporanWidgetState extends State<StatusPesanan> {
   late TextEditingController _textController;
   late FocusNode _unfocusNode;
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
   bool _isloading = true;
-
-  Future<void> editProductPrice(int id, double status) async {
-    final String url =
-        'http://10.132.221.215//crudflutter/update_laporan.php'; // Ganti dengan URL backend PHP Anda.
-
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'id': id, 'status': status}),
-    );
-
-    if (response.statusCode == 200) {
-      print("Harga berhasil diubah.");
-      // Tampilkan pesan sukses atau tindakan lainnya.
-    } else {
-      print("Gagal mengubah harga.");
-      // Tampilkan pesan kesalahan atau tindakan lainnya.
-    }
-  }
+  List _filteredData = [];
+  Map<int, Color> colorMap = {}; // Menyimpan warna berdasarkan id_klien
 
   @override
   void initState() {
@@ -46,8 +30,9 @@ class StatusPesananState extends State<StatusPesanan> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
+    _listdata = [];
+    _filteredData = [];
     _getdata();
-    //print(_listdata);
     super.initState();
   }
 
@@ -72,15 +57,78 @@ class StatusPesananState extends State<StatusPesanan> {
     super.dispose();
   }
 
+  Future<void> _updateStatus(BuildContext context, int index, String newStatus) async {
+    final response = await http.post(
+      Uri.parse('http://10.132.237.193:8000/api/pesanan/update-status-siapdiantar'),
+      body: {
+        'id_pemesanan': _listdata[index]['id_pemesanan'].toString(),
+        'status_pesanan': newStatus,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Status berhasil diperbarui
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Status berhasil diperbarui'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Perbarui status langsung dalam _filteredData
+      setState(() {
+        _filteredData[index]['status_pesanan'] = newStatus;
+      });
+
+      // Panggil fungsi untuk mengurangkan jumlah_produk di tabel ketersediaan
+      await _updateProductAvailability(
+          _listdata[index]['id_produk'] as int,
+          _listdata[index]['jumlah_pesanan'] as int, // Ubah ke string jika diperlukan
+      );
+
+      Navigator.pop(context);
+    } else {
+      // Gagal memperbarui status
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memperbarui status'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateProductAvailability(int productId, int jumlahPesanan) async {
+    final response = await http.post(
+      Uri.parse('http://10.132.237.193:8000/api/ketersediaan/update-availability'),
+      body: {
+        'product_id': productId.toString(),
+        'jumlah_pesanan': jumlahPesanan.toString(),
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Berhasil mengurangkan jumlah_pesanan
+      print('Jumlah pesanan berhasil diperbarui');
+    } else {
+      // Gagal mengurangkan jumlah_pesanan
+      print('Gagal mengurangkan jumlah_pesanan');
+    }
+  }
+
+
+
   Future _getdata() async {
     try {
-      final respone = await http
-          .get(Uri.parse('http://10.132.221.215//crudflutter/read.php'));
-      if (respone.statusCode == 200) {
-        //print(respone.body);
-        final data = jsonDecode(respone.body);
+      final response =
+          await http.get(Uri.parse('http://10.132.237.193:8000/api/pesanan'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
-          _listdata = data;
+          _listdata = data['pesanan'];
+          _filteredData =
+              _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
@@ -89,13 +137,43 @@ class StatusPesananState extends State<StatusPesanan> {
     }
   }
 
+  Color getColorForId(int id) {
+    if (!colorMap.containsKey(id)) {
+      // Jika id belum ada dalam map, tambahkan warna baru
+      colorMap[id] = generateRandomColor();
+    }
+
+    return colorMap[id]!;
+  }
+
+  Color generateRandomColor() {
+    Random random = Random();
+    return Color.fromARGB(
+      255,
+      random.nextInt(256),
+      random.nextInt(256),
+      random.nextInt(256),
+    );
+  }
+
+  Color getColorForStatus(String status) {
+    switch (status) {
+      case 'Menunggu':
+        return Color(0xFFFBE28F);
+      case 'Siap Diantar':
+        return Color(0xFF00FF00);
+      default:
+        return Colors.grey; // Warna default jika diluar case nya
+    }
+  }
+
 // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
       // Teks dalam bahasa Indonesia
       switch (text) {
-        case 'Report':
-          return 'Laporan';
+        case 'Order Status':
+          return 'Status Pemesanan';
         case 'Time Period':
           return 'Jangka Waktu';
         case 'Search...':
@@ -112,10 +190,8 @@ class StatusPesananState extends State<StatusPesanan> {
           return 'Tahunan';
         case 'Select Status':
           return 'Pilih Status';
-        case 'Cancelled':
-          return 'Batal';
-        case 'Finished':
-          return 'Selesai';
+        case 'Ready To Deliver':
+          return 'Siap Diantar';
         case 'Waiting':
           return 'Menunggu';
         case 'Change Status':
@@ -128,19 +204,18 @@ class StatusPesananState extends State<StatusPesanan> {
           return 'Kode Produk :';
         case 'Product Name :':
           return 'Nama Produk :';
-        case 'Total Product :':
-          return 'Jumlah Produk:';
+        case 'Order Quantity :':
+          return 'Jumlah Pesanan:';
         case 'Type Of Payment :':
           return 'Jenis Pembayaran :';
         case 'Price :':
           return 'Harga :';
+        case 'Deadline :':
+          return 'Batas Tanggal :';
         case '':
           return '';
         case '':
           return '';
-        case '':
-          return '';
-
 
         default:
           return text;
@@ -176,7 +251,7 @@ class StatusPesananState extends State<StatusPesanan> {
       title: Align(
         alignment: Alignment.center,
         child: Text(
-          getTranslatedText("Report"),
+          getTranslatedText("Order Status"),
           style: TextStyle(
             fontSize: screenWidth * 0.05, // Ukuran teks pada tombol
             color: isDarkTheme ? Colors.white : Colors.black,
@@ -184,7 +259,9 @@ class StatusPesananState extends State<StatusPesanan> {
         ),
       ),
       actions: <Widget>[
-        SizedBox(width: 45.0,),
+        SizedBox(
+          width: 45.0,
+        ),
       ],
     );
     final bodyHeight = mediaQueryHeight -
@@ -227,7 +304,8 @@ class StatusPesananState extends State<StatusPesanan> {
                         popupProps: PopupProps.menu(
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
-                            backgroundColor: isDarkTheme ? Colors.black : Colors.white,
+                            backgroundColor:
+                                isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -255,7 +333,6 @@ class StatusPesananState extends State<StatusPesanan> {
                         ),
                         onChanged: print,
                         selectedItem: getTranslatedText("All"),
-
                       ),
                     ),
                     Container(
@@ -290,6 +367,20 @@ class StatusPesananState extends State<StatusPesanan> {
                                 padding: EdgeInsets.only(left: 12),
                                 child: TextFormField(
                                   controller: _textController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = _listdata.where((item) {
+                                        // Customize this condition based on your search criteria
+                                        return item['nama_perusahaan']
+                                                .toLowerCase()
+                                                .contains(
+                                                    query.toLowerCase()) ||
+                                            item['status_pesanan']
+                                                .toLowerCase()
+                                                .contains(query.toLowerCase());
+                                      }).toList();
+                                    });
+                                  },
                                   obscureText: false,
                                   decoration: InputDecoration(
                                     hintText: getTranslatedText('Search...'),
@@ -313,6 +404,7 @@ class StatusPesananState extends State<StatusPesanan> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
+                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
@@ -349,17 +441,16 @@ class StatusPesananState extends State<StatusPesanan> {
                         popupProps: PopupProps.menu(
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
-                            backgroundColor: isDarkTheme ? Colors.black : Colors.white,
+                            backgroundColor:
+                                isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
-                          disabledItemFn: (String s) => s.startsWith(getTranslatedText('Finished')),
                         ),
                         items: [
                           getTranslatedText("All"),
-                          getTranslatedText("Cancelled"),
-                          getTranslatedText("Finished"),
-                          getTranslatedText('Waiting'),
+                          getTranslatedText("Waiting"),
+                          getTranslatedText('Ready To Deliver'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -387,479 +478,580 @@ class StatusPesananState extends State<StatusPesanan> {
                     ? Center(
                         child: CircularProgressIndicator(),
                       )
-                    : ListView.builder(
-                        itemCount: _listdata.length,
-                        itemBuilder: ((context, index) {
-                          return GestureDetector(
-                            onTap: () {
-                              // Menampilkan form edit harga saat Card ditekan
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  TextEditingController priceController =
-                                      TextEditingController(
-                                          text: _listdata[index]['status']
-                                              .toString());
-                                  return AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          8), // Ganti nilai sesuai keinginan Anda
-                                    ),
-                                    title: Center(child: Text(getTranslatedText('Change Status'))),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          child: DropdownSearch<String>(
-                                            popupProps: PopupProps.menu(
-                                              fit: FlexFit.loose,
-                                              menuProps: MenuProps(
-                                                backgroundColor: isDarkTheme ? Colors.black : Colors.white,
-                                                elevation: 0,
-                                              ),
-                                              showSelectedItems: true,
-                                              disabledItemFn: (String s) =>
-                                                  s.startsWith(getTranslatedText('Waiting')),
-                                            ),
-                                            items: [
-                                              getTranslatedText("Cancelled"),
-                                              getTranslatedText("Finished"),
-                                              getTranslatedText('Waiting'),
+                    : _filteredData.isEmpty
+                        ? Center(
+                            child: Text(getTranslatedText('No Order')),
+                          )
+                        : ListView.builder(
+                            itemCount: _filteredData.length,
+                            itemBuilder: ((context, index) {
+                              int idKlien = _filteredData[index]['id_klien'];
+                              String statusPesanan =
+                              _filteredData[index]['status_pesanan'];
+                              return GestureDetector(
+                                onTap: () {
+                                  if (_filteredData[index]['status_pesanan'] ==
+                                      'Menunggu') {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          title: Center(
+                                              child: Text(
+                                                  'Pesanan sudah selesai diproses')),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text('Siap Diantar ?'),
                                             ],
-                                            dropdownDecoratorProps:
-                                                DropDownDecoratorProps(
-                                              dropdownSearchDecoration:
-                                                  InputDecoration(
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                  horizontal: 7,
-                                                  vertical: 3,
-                                                ),
-                                                labelText: "Status",
-                                                // hintText: "Ubah Status",
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  borderSide: BorderSide(
-                                                      color:
-                                                          Colors.transparent),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () async {
+                                                // Mengubah status pesanan menjadi 'Selesai'
+                                                await _updateStatus(context,
+                                                    index, 'Siap Diantar');
+                                              },
+                                              child: Text(
+                                                'Ya',
+                                                style: TextStyle(
+                                                    color: Colors.green),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                // Menutup dialog tanpa melakukan perubahan
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text(
+                                                'Tidak',
+                                                style: TextStyle(
+                                                    color: Colors.red),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                                child: Card(
+                                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                                  color: Color(0xFF094067), // warna latar Card
+                                  elevation: 4,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            16, 5, 16, 5),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            Container(
+                                              width: mediaQueryWidth * 0.09,
+                                              height: bodyHeight * 0.09,
+                                              decoration: BoxDecoration(
+                                                color: getColorForId(idKlien),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              alignment: AlignmentDirectional(
+                                                  0.00, 0.00),
+                                              child: Text(
+                                                _filteredData[index]['id_klien']
+                                                    .toString(),
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  color: Colors.white,
+                                                  fontSize: screenWidth *
+                                                      0.04, // Ukuran teks pada tombol
+                                                  fontWeight: FontWeight.normal,
                                                 ),
                                               ),
                                             ),
-                                            onChanged: print,
-                                            selectedItem: "",
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    actions: [
-                                      Center(
-                                        child: TextButton(
-                                          style: TextButton.styleFrom(
-                                            backgroundColor: Color(
-                                                0xFF3DA9FC), // Ganti warna sesuai keinginan Anda
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                  8), // Ganti nilai sesuai keinginan Anda
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            // Mengambil harga baru dari controller
-                                            double newPrice = double.parse(
-                                                priceController.text);
-
-                                            // Kirim permintaan edit harga ke server
-                                            editProductPrice(
-                                                _listdata[index]['id'],
-                                                newPrice);
-
-                                            // Perbarui harga di dalam _listdata
-                                            setState(() {
-                                              _listdata[index]['status'] =
-                                                  newPrice;
-                                            });
-
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text(
-                                            getTranslatedText('Save'),
-                                            style: TextStyle(
-                                                color: Colors
-                                                    .white), // Warna teks tombol
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            child: Card(
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              color: Color(0xFF094067), // warna latar Card
-                              elevation: 4,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        16, 5, 16, 5),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      children: [
-                                        Container(
-                                          width: mediaQueryWidth * 0.09,
-                                          height: bodyHeight * 0.09,
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFF06D5CD),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          alignment:
-                                              AlignmentDirectional(0.00, 0.00),
-                                          child: Text(
-                                            _listdata[index]['id'],
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
-                                              color: Colors.white,
-                                              fontSize: screenWidth *
-                                                  0.04, // Ukuran teks pada tombol
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    12, 0, 0, 0),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.max,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(12, 0, 0, 0),
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(
-                                                      _listdata[index]['nama'],
-                                                      style: TextStyle(
-                                                        fontFamily: 'Inter',
-                                                        color:
-                                                            Color(0xFFFFFFFE),
-                                                        fontSize: screenWidth *
-                                                            0.04, // Ukuran teks pada tombol
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      width: mediaQueryWidth *
-                                                          0.20,
-                                                      height: bodyHeight * 0.03,
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            Color(0xFFFBE28F),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                      ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          _listdata[index]
-                                                              ['status'],
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          _filteredData[index][
+                                                              'nama_perusahaan'],
                                                           style: TextStyle(
                                                             fontFamily: 'Inter',
                                                             color: Color(
-                                                                0xFF101518),
+                                                                0xFFFFFFFE),
                                                             fontSize: screenWidth *
-                                                                0.030, // Ukuran teks pada tombol
+                                                                0.04, // Ukuran teks pada tombol
                                                             fontWeight:
-                                                                FontWeight
-                                                                    .normal,
+                                                                FontWeight.bold,
                                                           ),
+                                                        ),
+                                                        Container(
+                                                          width:
+                                                              mediaQueryWidth *
+                                                                  0.20,
+                                                          height:
+                                                              bodyHeight * 0.03,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: getColorForStatus(
+                                                                statusPesanan),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8),
+                                                          ),
+                                                          child: Center(
+                                                            child: Text(
+                                                              _filteredData[index][
+                                                                  'status_pesanan'],
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    'Inter',
+                                                                color: Color(
+                                                                    0xFF101518),
+                                                                fontSize:
+                                                                    screenWidth *
+                                                                        0.030, // Ukuran teks pada tombol
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .normal,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 4, 0, 0),
+                                                      child: Text(
+                                                        _filteredData[index]
+                                                            ['alamat'],
+                                                        style: TextStyle(
+                                                          fontFamily: 'Inter',
+                                                          color:
+                                                              Color(0xFFFFFFFE),
+                                                          fontSize: screenWidth *
+                                                              0.028, // Ukuran teks pada tombol
+                                                          fontWeight:
+                                                              FontWeight.normal,
                                                         ),
                                                       ),
                                                     ),
                                                   ],
                                                 ),
-                                                Padding(
-                                                  padding: EdgeInsetsDirectional
-                                                      .fromSTEB(0, 4, 0, 0),
-                                                  child: Text(
-                                                    _listdata[index]['alamat'],
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      color: Color(0xFFFFFFFE),
-                                                      fontSize: screenWidth *
-                                                          0.028, // Ukuran teks pada tombol
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
+                                              ),
                                             ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFFC3DCED),
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(
+                                                20.0), // Atur radius sudut kiri atas
+                                            topRight: Radius.circular(
+                                                20.0), // Atur radius sudut kanan atas
+                                            bottomLeft: Radius.circular(8),
+                                            bottomRight: Radius.circular(8),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFC3DCED),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(
-                                            20.0), // Atur radius sudut kiri atas
-                                        topRight: Radius.circular(
-                                            20.0), // Atur radius sudut kanan atas
-                                        bottomLeft: Radius.circular(8),
-                                        bottomRight: Radius.circular(8),
+                                        child: Padding(
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  16, 12, 16, 16),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.max,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      getTranslatedText(
+                                                          'Client Name :'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF57636C),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      _filteredData[index]
+                                                          ['nama_klien'],
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF101518),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      getTranslatedText(
+                                                          'Product Code :'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF57636C),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      _filteredData[index]
+                                                              ['kode_produk']
+                                                          .toString(),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF101518),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      getTranslatedText(
+                                                          'Product Name :'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF57636C),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      _filteredData[index]
+                                                          ['nama_produk'],
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF101518),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      getTranslatedText(
+                                                          'Order Quantity :'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF57636C),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Row(
+                                                      children: [
+                                                        Text(
+                                                          _filteredData[index][
+                                                              'jumlah_pesanan'],
+                                                          style: TextStyle(
+                                                            fontFamily: 'Inter',
+                                                            color: Color(
+                                                                0xFF101518),
+                                                            fontSize: screenWidth *
+                                                                0.03, // Ukuran teks pada tombol
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .normal,
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          '/',
+                                                          style: TextStyle(
+                                                            fontFamily: 'Inter',
+                                                            color: Color(
+                                                                0xFF101518),
+                                                            fontSize: screenWidth *
+                                                                0.03, // Ukuran teks pada tombol
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .normal,
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          _filteredData[index][
+                                                                  'jumlah_produk']
+                                                              .toString(),
+                                                          style: TextStyle(
+                                                            fontFamily: 'Inter',
+                                                            color: Color(
+                                                                0xFF101518),
+                                                            fontSize: screenWidth *
+                                                                0.03, // Ukuran teks pada tombol
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .normal,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      getTranslatedText(
+                                                          'Deadline :'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF57636C),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      _filteredData[index]
+                                                          ['batas_tanggal'],
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF101518),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      getTranslatedText(
+                                                          'Type Of Payment :'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF57636C),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      _filteredData[index]
+                                                          ['jenis_pembayaran'],
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF101518),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      getTranslatedText(
+                                                          'Price :'),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF57636C),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                                0, 4, 0, 0),
+                                                    child: Text(
+                                                      _filteredData[index]
+                                                          ['harga_total'],
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            Color(0xFF101518),
+                                                        fontSize: screenWidth *
+                                                            0.03, // Ukuran teks pada tombol
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          16, 12, 16, 16),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  getTranslatedText('Client Name :'),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF57636C),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  _listdata[index]['nama'],
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF101518),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.0),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  getTranslatedText('Product Code :'),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF57636C),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  _listdata[index]['nisn'],
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF101518),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.0),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  getTranslatedText('Product Name :'),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF57636C),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  '',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF101518),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.0),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  getTranslatedText('Total Product :'),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF57636C),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  '',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF101518),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.0),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  getTranslatedText('Type Of Payment :'),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF57636C),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  '',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF101518),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.0),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  getTranslatedText('Price :'),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF57636C),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  '',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFF101518),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
+                                ),
+                              );
+                            }),
+                          ),
               ),
             ],
           ),

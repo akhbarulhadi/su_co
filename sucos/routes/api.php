@@ -30,6 +30,7 @@ Route::get('/users', [AuthController::class, 'index']);
 Route::get('/pesanan', [PesananController::class, 'showPesanan']);
 Route::get('/pesanan/show-history', [PesananController::class, 'showHistory']);
 Route::post('pesanan/update-status', [PesananController::class, 'updateStatus']);
+Route::post('pesanan/update-status-siapdiantar', [PesananController::class, 'updateStatusSiapDiantar']);
 Route::post('pesanan/tambah-pesanan', [PesananController::class, 'store']);
 
 // untuk halaman stock

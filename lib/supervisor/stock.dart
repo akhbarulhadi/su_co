@@ -19,6 +19,7 @@ class StockState extends State<Stock> {
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
   bool _isloading = true;
+  List _filteredData = [];
 
   @override
   void initState() {
@@ -27,10 +28,12 @@ class StockState extends State<Stock> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
+    _listdata = [];
+    _filteredData = [];
     _getdata();
-    //print(_listdata);
     super.initState();
   }
+
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -55,14 +58,14 @@ class StockState extends State<Stock> {
   Future _getdata() async {
     try {
       final response =
-      await http.get(Uri.parse('http://192.168.28.100:8000/api/stock'));
-      print(response.body); // Cetak respons ke konsol
+      await http.get(Uri.parse('http://10.132.237.193:8000/api/stock'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data); // Cetak data ke konsol
         setState(() {
           _listdata = data['stock'];
+          _filteredData =
+              _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
@@ -70,7 +73,6 @@ class StockState extends State<Stock> {
       print(e);
     }
   }
-
 
 // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
@@ -121,7 +123,8 @@ class StockState extends State<Stock> {
   Widget build(BuildContext context) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
-    final ThemeData themeData = isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    final ThemeData themeData =
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final screenWidth = MediaQuery.of(context).size.width;
     final myAppBar = AppBar(
       leading: IconButton(
@@ -133,7 +136,11 @@ class StockState extends State<Stock> {
       ),
       backgroundColor: Colors.transparent, // Mengubah warna AppBar
       elevation: 0, // Menghilangkan efek bayangan di bawah AppBar
-      iconTheme: IconThemeData(color: isDarkTheme ? Colors.white : Colors.black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+      iconTheme: IconThemeData(
+          color: isDarkTheme
+              ? Colors.white
+              : Colors
+              .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
@@ -145,10 +152,14 @@ class StockState extends State<Stock> {
         ),
       ),
       actions: <Widget>[
-        SizedBox(width: 45.0,),
+        SizedBox(
+          width: 45.0,
+        ),
       ],
     );
-    final bodyHeight = mediaQueryHeight - myAppBar.preferredSize.height - MediaQuery.of(context).padding.top;
+    final bodyHeight = mediaQueryHeight -
+        myAppBar.preferredSize.height -
+        MediaQuery.of(context).padding.top;
     return GestureDetector(
       onTap: () {
         if (_unfocusNode.canRequestFocus) {
@@ -172,59 +183,14 @@ class StockState extends State<Stock> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
-                      decoration: BoxDecoration(
-                        color: isDarkTheme ? Colors.white24 : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.transparent, // Warna garis tepi
-                          width: 0.5, // Lebar garis tepi
-                        ),
-                      ),
-                      child: DropdownSearch<String>(
-                        popupProps: PopupProps.menu(
-                          fit: FlexFit.loose,
-                          menuProps: MenuProps(
-                            backgroundColor: isDarkTheme ? Colors.black : Colors.white,
-                            elevation: 0,
-                          ),
-                          showSelectedItems: true,
-                        ),
-                        items: [
-                          getTranslatedText('All'),
-                          getTranslatedText('Daily'),
-                          getTranslatedText('Weekly'),
-                          getTranslatedText('Monthly'),
-                          getTranslatedText('Yearly'),
-                        ],
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            labelText: getTranslatedText("Time Period"),
-                            // hintText: "waktu in menu mode",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.transparent),
-                            ),
-                          ),
-                        ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText("All"),
-                      ),
-                    ),
-                    Container(
-                      width: mediaQueryWidth * 0.6,
+                      width: mediaQueryWidth * 0.9,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isDarkTheme ? Colors.white38 : Colors.black38,
-                          width: 1,          // Lebar garis tepi
+                          width: 1, // Lebar garis tepi
                         ),
                       ),
                       child: Padding(
@@ -238,8 +204,7 @@ class StockState extends State<Stock> {
                                 Icons.search_rounded,
                                 color: isDarkTheme
                                     ? Colors.white
-                                    : Color(
-                                    0xFF8B9BA8),
+                                    : Color(0xFF8B9BA8),
                                 size: 15,
                               ),
                             ),
@@ -248,6 +213,20 @@ class StockState extends State<Stock> {
                                 padding: EdgeInsets.only(left: 12),
                                 child: TextFormField(
                                   controller: _textController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = _listdata.where((item) {
+                                        // Customize this condition based on your search criteria
+                                        return item['nama_produk']
+                                            .toLowerCase()
+                                            .contains(
+                                            query.toLowerCase()) ||
+                                            item['harga_produk']
+                                                .toLowerCase()
+                                                .contains(query.toLowerCase());
+                                      }).toList();
+                                    });
+                                  },
                                   obscureText: false,
                                   decoration: InputDecoration(
                                     hintText: getTranslatedText('Search...'),
@@ -271,11 +250,15 @@ class StockState extends State<Stock> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
+                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
-                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                    fontSize: screenWidth * 0.035, // Ukuran teks pada tombol
+                                    color: isDarkTheme
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: screenWidth *
+                                        0.035, // Ukuran teks pada tombol
                                     fontWeight: FontWeight.normal,
                                   ),
                                   validator: (value) {
@@ -297,8 +280,12 @@ class StockState extends State<Stock> {
                     ? Center(
                   child: CircularProgressIndicator(),
                 )
+                    : _filteredData.isEmpty
+                    ? Center(
+                  child: Text(getTranslatedText('No Stock')),
+                )
                     : ListView.builder(
-                    itemCount: _listdata.length,
+                    itemCount: _filteredData.length,
                     itemBuilder: (context, index) {
                       return Card(
                         clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -311,36 +298,46 @@ class StockState extends State<Stock> {
                           mainAxisSize: MainAxisSize.max,
                           children: [
                             Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(16, 12, 16, 16),
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  16, 12, 16, 16),
                               child: Column(
                                 mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                     children: [
                                       Padding(
-                                        padding:
-                                        EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          getTranslatedText('Product Name'),
+                                          getTranslatedText(
+                                              'Product Name'),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
-                                            fontWeight: FontWeight.normal,
+                                            fontSize: screenWidth *
+                                                0.04, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.normal,
                                           ),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          _listdata[index]['nama_produk'],
+                                          _filteredData[index]
+                                          ['nama_produk'],
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
-                                            fontWeight: FontWeight.normal,
+                                            fontSize: screenWidth *
+                                                0.04, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.normal,
                                           ),
                                         ),
                                       ),
@@ -348,30 +345,38 @@ class StockState extends State<Stock> {
                                   ),
                                   SizedBox(height: bodyHeight * 0.02),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                     children: [
                                       Padding(
-                                        padding:
-                                        EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
                                         child: Text(
                                           getTranslatedText('Stock'),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
-                                            fontWeight: FontWeight.normal,
+                                            fontSize: screenWidth *
+                                                0.04, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.normal,
                                           ),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          _listdata[index]['jumlah_produk'].toString(),
+                                          _filteredData[index]
+                                          ['jumlah_produk']
+                                              .toString(),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
-                                            fontWeight: FontWeight.normal,
+                                            fontSize: screenWidth *
+                                                0.04, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.normal,
                                           ),
                                         ),
                                       ),
@@ -379,30 +384,37 @@ class StockState extends State<Stock> {
                                   ),
                                   SizedBox(height: bodyHeight * 0.02),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                     children: [
                                       Padding(
-                                        padding:
-                                        EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
                                         child: Text(
                                           getTranslatedText('Price'),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
-                                            fontWeight: FontWeight.normal,
+                                            fontSize: screenWidth *
+                                                0.04, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.normal,
                                           ),
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          _listdata[index]['harga_produk'],
+                                          _filteredData[index]
+                                          ['harga_produk'],
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
-                                            fontWeight: FontWeight.normal,
+                                            fontSize: screenWidth *
+                                                0.04, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.normal,
                                           ),
                                         ),
                                       ),
@@ -414,9 +426,8 @@ class StockState extends State<Stock> {
                           ],
                         ),
                       );
-                  }),
-                ),
-
+                    }),
+              ),
             ],
           ),
         ),
@@ -424,60 +435,3 @@ class StockState extends State<Stock> {
     );
   }
 }
-
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    // Tambahkan aksi yang ingin ditampilkan pada tampilan pencarian
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-  @override
-  Widget buildLeading(BuildContext context) {
-    // Ikon yang ditampilkan di sebelah kiri pada AppBar
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-  @override
-  Widget buildResults(BuildContext context) {
-    // Tampilkan hasil pencarian di sini (jika ada)
-    return Center(
-      child: Text('Hasil pencarian untuk: $query'),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // Tampilkan saran pencarian saat pengguna mengetik
-    return ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text('Saran 1'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 1');
-          },
-        ),
-        ListTile(
-          title: Text('Saran 2'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 2');
-          },
-        ),
-      ],
-    );
-  }
-}
-

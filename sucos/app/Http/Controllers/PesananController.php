@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class PesananController extends Controller
@@ -63,5 +64,42 @@ class PesananController extends Controller
         $pesanan = Pesanan::create($data);
 
         return response()->json(['message' => 'Data Pesanan berhasil dibuat', 'data' => $pesanan], 201);
+    }
+
+    public function updateStatusSiapDiantar(Request $request)
+    {
+        // Validasi request sesuai kebutuhan Anda
+        $request->validate([
+            'id_pemesanan' => 'required|integer',
+            'status_pesanan' => 'required|string',
+        ]);
+
+        // Perbarui status pesanan di database
+        $pesanan = Pesanan::find($request->id_pemesanan);
+
+        if (!$pesanan) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+        }
+
+        $pesanan->status_pesanan = $request->status_pesanan;
+        $pesanan->save();
+
+        // Kurangi jumlah_produk di tabel ketersediaan barang
+        $this->updateProductAvailability($pesanan->id_produk, $pesanan->jumlah_pesanan);
+
+        return response()->json(['message' => 'Status berhasil diperbarui']);
+    }
+
+    protected function updateProductAvailability($id_produk, $jumlah_pesanan)
+    {
+        $product = Stock::find($id_produk);
+
+        if (!$product) {
+            return response()->json(['message' => 'Produk tidak ditemukan'], 404);
+        }
+
+        // Kurangi jumlah_produk berdasarkan jumlah_pesanan
+        $product->jumlah_produk -= $jumlah_pesanan;
+        $product->save();
     }
 }
