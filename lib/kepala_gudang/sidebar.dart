@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/kepala_gudang/history_order.dart';
 import 'package:suco/kepala_gudang/status_pesanan.dart';
 import 'package:suco/login.dart';
 import 'package:suco/kepala_gudang/jadwal.dart';
@@ -67,6 +68,8 @@ class SidebarDrawerState extends State<SidebarDrawer> {
           return 'STATUS PEMESANAN';
         case 'Head Of Warehouse':
           return 'Kepala Gudang';
+        case 'ORDER HISTORY':
+          return 'RIWAYAT PESANAN';
 
         default:
           return text;
@@ -133,6 +136,16 @@ class SidebarDrawerState extends State<SidebarDrawer> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => StatusPesanan()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.history),
+            title: Text(getTranslatedText('ORDER HISTORY')),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HistoryOrder()),
               );
             },
           ),

@@ -99,7 +99,14 @@ class PesananController extends Controller
         }
 
         // Kurangi jumlah_produk berdasarkan jumlah_pesanan
-        $product->jumlah_produk -= $jumlah_pesanan;
-        $product->save();
+        if ($product->jumlah_produk >= $jumlah_pesanan) {
+            // Kurangi jumlah_produk
+            $product->jumlah_produk -= $jumlah_pesanan;
+            $product->save();
+
+            return response()->json(['message' => 'Jumlah produk berhasil diperbarui']);
+        } else {
+            return response()->json(['message' => 'Gagal mengurangkan jumlah_produk, stok tidak mencukupi'], 400);
+        }
     }
 }

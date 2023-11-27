@@ -83,8 +83,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
 
       // Panggil fungsi untuk mengurangkan jumlah_produk di tabel ketersediaan
       await _updateProductAvailability(
-          _listdata[index]['id_produk'] as int,
-          _listdata[index]['jumlah_pesanan'] as int, // Ubah ke string jika diperlukan
+          _listdata[index]['id_produk'],
+          _listdata[index]['jumlah_pesanan'], // Ubah ke string jika diperlukan
       );
 
       Navigator.pop(context);
@@ -101,9 +101,9 @@ class _LaporanWidgetState extends State<StatusPesanan> {
 
   Future<void> _updateProductAvailability(int productId, int jumlahPesanan) async {
     final response = await http.post(
-      Uri.parse('http://10.132.237.193:8000/api/ketersediaan/update-availability'),
+      Uri.parse(ApiConfig.kurangi_stok),
       body: {
-        'product_id': productId.toString(),
+        'id_produk': productId.toString(),
         'jumlah_pesanan': jumlahPesanan.toString(),
       },
     );
@@ -122,7 +122,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
   Future _getdata() async {
     try {
       final response =
-          await http.get(Uri.parse('http://10.132.237.193:8000/api/pesanan'));
+          await http.get(Uri.parse(ApiConfig.pesanan));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
