@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -59,7 +60,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
 
   Future<void> _updateStatus(BuildContext context, int index, String newStatus) async {
     final response = await http.post(
-      Uri.parse('http://10.132.237.193:8000/api/pesanan/update-status-siapdiantar'),
+         Uri.parse(ApiConfig.status_pesanan),
       body: {
         'id_pemesanan': _listdata[index]['id_pemesanan'].toString(),
         'status_pesanan': newStatus,

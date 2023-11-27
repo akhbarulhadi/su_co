@@ -96,6 +96,89 @@ class AuthController extends Controller
         }
     }
 
+    public function getProfile(Request $request)
+    {
+        try {
+            $user = auth()->user(); // Pastikan pengguna sudah diautentikasi
+            if (!$user) {
+                return response()->json(['error' => 'User not authenticated'], 401);
+            }
+    
+            // Sesuaikan dengan struktur data profil Anda
+            $profileData = [
+                'email' => $user->email,
+                'alamat' => $user->alamat,
+                'no_tlp' => $user->no_tlp,
+                // Tambahkan properti lain sesuai kebutuhan
+            ];
+    
+            return response()->json($profileData, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+    
+    public function editProfile(Request $request)
+{
+    try {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $request->validate([
+            'email' => 'required|string',
+            'alamat' => 'required|string',
+            'no_tlp' => 'required|string',
+            
+        ]);
+
+        $user->update([
+            'email' => $request->email,
+            'alamat' => $request->alamat,
+            'no_tlp' => $request->no_tlp,
+       
+        ]);
+
+        $user->save();
+
+        return response()->json(['message' => 'Profil berhasil diperbarui', 'user' => $user], 200);
+    } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
+    }
+}
+
+
+    public function changePassword(Request $request)
+{
+    try {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8',
+        ]);
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Invalid current password'], 422);
+        }
+
+        // Menggunakan fungsi mutator untuk mengenkripsi password baru
+        $user->password = bcrypt($request->new_password);
+        $user->save();
+
+        return response()->json(['message' => 'Password berhasil diperbarui'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
+    }
+}
+
+
     public function user(Request $request)
     {
         return $request->user();

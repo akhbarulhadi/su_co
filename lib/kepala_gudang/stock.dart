@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -58,7 +59,7 @@ class StockState extends State<Stock> {
   Future _getdata() async {
     try {
       final response =
-          await http.get(Uri.parse('http://10.132.237.193:8000/api/stock'));
+          await http.get(Uri.parse(ApiConfig.stock),);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

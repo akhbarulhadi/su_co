@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -58,7 +59,7 @@ class HistoryOrderState extends State<HistoryOrder> {
 
   Future _getdata() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.28.100:8000/api/pesanan/show-history'));
+      final response = await http.get(Uri.parse(ApiConfig.show_history),);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/marketing/data_pesanan.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -16,6 +19,9 @@ class EditProfilePage extends State<EditProfile> {
   File? _imageFile;
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _alamatController = TextEditingController();
+  TextEditingController _noTlpController = TextEditingController();
 
   Future<void> _getImageFromGallery() async {
     final picker = ImagePicker();
@@ -23,7 +29,6 @@ class EditProfilePage extends State<EditProfile> {
 
     if (pickedFile != null) {
       final image = File(pickedFile.path);
-      // Simpan gambar ke direktori perangkat
       final savedImage = await saveImageToDeviceDirectory(image);
       setState(() {
         _imageFile = savedImage;
@@ -31,24 +36,19 @@ class EditProfilePage extends State<EditProfile> {
     }
   }
 
-  // Fungsi untuk menyimpan gambar ke direktori perangkat
   Future<File> saveImageToDeviceDirectory(File image) async {
-    // Tentukan direktori penyimpanan (contoh: direktori gambar)
     final directory = await getApplicationDocumentsDirectory();
     final imagePath = directory.path + '/image.png';
 
-    // Salin gambar ke direktori
     await image.copy(imagePath);
 
     return File(imagePath);
   }
 
   Future<void> openCamera() async {
-    //fuction openCamera();
     final pickedImage =
-    await ImagePicker().getImage(source: ImageSource.camera);
+        await ImagePicker().getImage(source: ImageSource.camera);
     setState(() {
-      // tempat untuk set state image
       _imageFile = File(pickedImage!.path);
     });
   }
@@ -56,8 +56,39 @@ class EditProfilePage extends State<EditProfile> {
   @override
   void initState() {
     super.initState();
-    loadThemePreference(); // Muat preferensi tema gelap saat halaman dimulai
-    loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
+    loadDataProfile();
+    loadThemePreference();
+    loadSelectedLanguage();
+  }
+
+  void loadDataProfile() async {
+    try {
+      var token = 'access_token';
+
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      var response = await http.get(
+        Uri.parse(ApiConfig.getProfile),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+
+        setState(() {
+          _emailController.text = data['email'];
+          _alamatController.text = data['alamat'];
+          _noTlpController.text = data['no_tlp'];
+        });
+      } else {
+        print('Failed to load profile data: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
   }
 
   void loadSelectedLanguage() async {
@@ -74,10 +105,8 @@ class EditProfilePage extends State<EditProfile> {
     });
   }
 
-  // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
-      // Teks dalam bahasa Indonesia
       switch (text) {
         case 'Edit Profile':
           return 'Ubah Profil';
@@ -102,39 +131,66 @@ class EditProfilePage extends State<EditProfile> {
           return text;
       }
     } else {
-      // Teks dalam bahasa Inggris (default)
       return text;
+    }
+  }
+
+  Future<void> saveProfileChanges() async {
+    try {
+      var token = 'access_token';
+
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      var body = {
+        'email': _emailController.text,
+        'alamat': _alamatController.text,
+        'no_tlp': _noTlpController.text,
+      };
+
+      var response = await http.post(
+        Uri.parse(ApiConfig.editProfile),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        // Berhasil menyimpan perubahan, tambahkan logika atau pindah ke halaman lain jika perlu
+      } else {
+        // Gagal menyimpan perubahan, tampilkan pesan kesalahan atau lakukan sesuatu yang sesuai
+      }
+    } catch (e) {
+      print("Error: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData =
-    isDarkTheme ? ThemeData.dark() : ThemeData.light();
+        isDarkTheme ? ThemeData.dark() : ThemeData.light();
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
-      theme: themeData, // Terapkan tema sesuai dengan preferensi tema gelap
+      theme: themeData,
       home: Scaffold(
         backgroundColor: isDarkTheme ? Colors.black : Colors.white,
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              Navigator.pop(context); // Kembali ke halaman sebelumnya
+              Navigator.pop(context);
             },
           ),
-          backgroundColor: Colors.transparent, // Mengubah warna AppBar
-          elevation: 0, // Menghilangkan efek bayangan di bawah AppBar
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           iconTheme: IconThemeData(
-              color: isDarkTheme
-                  ? Colors.white
-                  : Colors
-                  .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+            color: isDarkTheme ? Colors.white : Colors.black,
+          ),
           title: Align(
             alignment: Alignment.center,
             child: Text(
-              getTranslatedText(
-                  'Edit Profile'),
+              getTranslatedText('Edit Profile'),
               style: TextStyle(
                 fontSize: 20.0,
                 color: isDarkTheme ? Colors.white : Colors.black,
@@ -159,15 +215,10 @@ class EditProfilePage extends State<EditProfile> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: isDarkTheme
-                          ? Colors.white10
-                          : Colors
-                          .white, // Ganti dengan warna latar belakang yang sesuai
+                      color: isDarkTheme ? Colors.white10 : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isDarkTheme
-                            ? Colors.white70
-                            : Colors.black, // Ganti dengan warna yang sesuai
+                        color: isDarkTheme ? Colors.white70 : Colors.black,
                         width: 0.3,
                       ),
                     ),
@@ -180,17 +231,18 @@ class EditProfilePage extends State<EditProfile> {
                             child: Container(
                               width: 90,
                               height: 90,
-                              child: Image(
-                                image: AssetImage('lib/assets/user.png'),
-                              ),
+                              child: _imageFile == null
+                                  ? Image(
+                                      image: AssetImage('lib/assets/user.png'))
+                                  : Image.file(_imageFile!),
                             ),
                           ),
                           Center(
                             child: MaterialButton(
-                              textColor: isDarkTheme
-                                  ? Colors.white
-                                  : Colors.black, // Warna teks
-                              child: Text(getTranslatedText('Edit Profile Photo'),),
+                              textColor:
+                                  isDarkTheme ? Colors.white : Colors.black,
+                              child:
+                                  Text(getTranslatedText('Edit Profile Photo')),
                               onPressed: () {
                                 showModalBottomSheet(
                                   context: context,
@@ -215,7 +267,8 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text(getTranslatedText('Select Photo'),),
+                                                Text(getTranslatedText(
+                                                    'Select Photo')),
                                               ],
                                             ),
                                           ),
@@ -232,7 +285,8 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text(getTranslatedText('Take a Photo'),),
+                                                Text(getTranslatedText(
+                                                    'Take a Photo')),
                                               ],
                                             ),
                                           ),
@@ -246,67 +300,49 @@ class EditProfilePage extends State<EditProfile> {
                           ),
                           Center(
                             child: _imageFile == null
-                                ? Text(getTranslatedText(''),)
+                                ? Text(getTranslatedText('No Image'))
                                 : Text(
-                                "Suco_Photo: ${_imageFile!.path.split('/').last}"),
+                                    "Suco_Photo: ${_imageFile!.path.split('/').last}"),
                           ),
                           TextFormField(
+                            controller: _emailController,
                             obscureText: false,
                             decoration: InputDecoration(
-                              labelText: getTranslatedText('Name'),
+                              labelText: getTranslatedText('Email'),
                               contentPadding: EdgeInsets.all(13),
                             ),
                             style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
                           ),
                           TextFormField(
+                            controller: _alamatController,
                             obscureText: false,
                             decoration: InputDecoration(
-                              labelText: 'Id Staff',
+                              labelText: getTranslatedText('Alamat'),
                               contentPadding: EdgeInsets.all(13),
                             ),
                             style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
                           ),
                           TextFormField(
-                            obscureText: false,
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              contentPadding: EdgeInsets.all(13),
-                            ),
-                            style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
-                          ),
-                          TextFormField(
-                            obscureText: false,
-                            decoration: InputDecoration(
-                              labelText: getTranslatedText('Address'),
-                              contentPadding: EdgeInsets.all(13),
-                            ),
-                            style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
-                          ),
-                          TextFormField(
+                            controller: _noTlpController,
                             obscureText: false,
                             decoration: InputDecoration(
                               labelText: 'Telp',
                               contentPadding: EdgeInsets.all(13),
                             ),
                             style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
                           ),
                           Padding(
                             padding: EdgeInsets.fromLTRB(50, 50, 50, 10),
                             child: ElevatedButton(
-                              onPressed: () {
-                                //Navigator.push(
-                                    //context, MaterialPageRoute(builder: (context) => DataPesanan()));
-                                },
+                              onPressed: () async {
+                                await saveProfileChanges();
+                              },
                               child: Text(
                                 getTranslatedText('Save'),
                                 style: TextStyle(
                                   fontSize: 16,
-                                ),),
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 minimumSize: Size(370, 44),
                                 padding: EdgeInsets.all(0),

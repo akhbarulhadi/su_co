@@ -1,28 +1,32 @@
+import 'dart:convert';
+import 'package:suco/api_config.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChangePassWidget extends StatefulWidget {
-  const ChangePassWidget({super.key});
+  const ChangePassWidget({Key? key}) : super(key: key);
 
   @override
   State<ChangePassWidget> createState() => ChangePassState();
 }
 
 class ChangePassState extends State<ChangePassWidget> {
-  bool isDarkTheme = false; // Variabel untuk tema gelap
-  String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
-  bool _obscureText1 = true; // Untuk menentukan apakah teks tersembunyi
-  bool _obscureText2 = true; // Untuk menentukan apakah teks tersembunyi
-  bool _obscureText3 = true; // Untuk menentukan apakah teks tersembunyi
-
-
+  bool isDarkTheme = false;
+  String selectedLanguage = 'IDN';
+  bool _obscureText1 = true;
+  bool _obscureText2 = true;
+  bool _obscureText3 = true;
+  TextEditingController currentPasswordController = TextEditingController();
+  TextEditingController newPasswordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    loadThemePreference(); // Muat preferensi tema gelap saat halaman dimulai
-    loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
+    loadThemePreference();
+    loadSelectedLanguage();
   }
+
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -37,10 +41,8 @@ class ChangePassState extends State<ChangePassWidget> {
     });
   }
 
-  // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
-      // Teks dalam bahasa Indonesia
       switch (text) {
         case 'Change Password':
           return 'Ganti Kata Sandi';
@@ -59,17 +61,43 @@ class ChangePassState extends State<ChangePassWidget> {
           return text;
       }
     } else {
-      // Teks dalam bahasa Inggris (default)
       return text;
+    }
+  }
+
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+     String storedToken = prefs.getString('access_token') ?? '';
+
+    final response = await http.post(
+     Uri.parse(ApiConfig.changePassword),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $storedToken',
+      },
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Password berhasil diperbarui');
+      // Tambahkan logika atau navigasi sesuai kebutuhan setelah berhasil mengganti password
+    } else {
+      print('Gagal mengganti password: ${response.body}');
+      // Tambahkan logika atau tampilan pesan kesalahan sesuai kebutuhan
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData themeData = isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    final ThemeData themeData =
+        isDarkTheme ? ThemeData.dark() : ThemeData.light();
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
-      theme: themeData, // Terapkan tema sesuai dengan preferensi tema gelap
+      theme: themeData,
       home: Scaffold(
         backgroundColor: isDarkTheme ? Colors.black : Colors.white,
         appBar: AppBar(
@@ -77,13 +105,14 @@ class ChangePassState extends State<ChangePassWidget> {
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               FocusScope.of(context).unfocus();
-              Navigator.pop(context); // Kembali ke halaman sebelumnya
+              Navigator.pop(context);
             },
           ),
-          backgroundColor: Colors.transparent, // Mengubah warna AppBar
-          elevation: 0, // Menghilangkan efek bayangan di bawah AppBar
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           iconTheme: IconThemeData(
-              color: isDarkTheme ? Colors.white : Colors.black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+            color: isDarkTheme ? Colors.white : Colors.black,
+          ),
           title: Align(
             alignment: Alignment.center,
             child: Text(
@@ -112,15 +141,10 @@ class ChangePassState extends State<ChangePassWidget> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: isDarkTheme
-                          ? Colors.white10
-                          : Colors
-                          .white, // Ganti dengan warna latar belakang yang sesuai
+                      color: isDarkTheme ? Colors.white10 : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isDarkTheme
-                            ? Colors.white70
-                            : Colors.black, // Ganti dengan warna yang sesuai
+                        color: isDarkTheme ? Colors.white70 : Colors.black,
                         width: 0.3,
                       ),
                     ),
@@ -137,12 +161,14 @@ class ChangePassState extends State<ChangePassWidget> {
                           Padding(
                             padding: EdgeInsets.only(top: 12, bottom: 24),
                             child: Text(
-                              getTranslatedText('Please enter your current password and new password below.'),
+                              getTranslatedText(
+                                  'Please enter your current password and new password below.'),
                               textAlign: TextAlign.start,
                               style: TextStyle(fontSize: 14),
                             ),
                           ),
                           TextFormField(
+                            controller: currentPasswordController,
                             obscureText: _obscureText1,
                             decoration: InputDecoration(
                               labelText: getTranslatedText('Current Password'),
@@ -160,12 +186,11 @@ class ChangePassState extends State<ChangePassWidget> {
                                   });
                                 },
                               ),
-
                             ),
                             style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
                           ),
                           TextFormField(
+                            controller: newPasswordController,
                             obscureText: _obscureText2,
                             decoration: InputDecoration(
                               labelText: getTranslatedText('New Password'),
@@ -185,12 +210,12 @@ class ChangePassState extends State<ChangePassWidget> {
                               ),
                             ),
                             style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
                           ),
                           TextFormField(
                             obscureText: _obscureText3,
                             decoration: InputDecoration(
-                              labelText: getTranslatedText('Confirm New Password'),
+                              labelText:
+                                  getTranslatedText('Confirm New Password'),
                               contentPadding: EdgeInsets.all(24),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -207,20 +232,25 @@ class ChangePassState extends State<ChangePassWidget> {
                               ),
                             ),
                             style: TextStyle(fontSize: 16),
-// Tambahkan validator sesuai kebutuhan
                           ),
                           Padding(
                             padding: EdgeInsets.fromLTRB(50, 50, 50, 10),
                             child: ElevatedButton(
                               onPressed: () {
-                                //Navigator.push(
-                                //context, MaterialPageRoute(builder: (context) => DataPesanan()));
+                                if (currentPasswordController.text.isNotEmpty &&
+                                    newPasswordController.text.isNotEmpty) {
+                                  changePassword(currentPasswordController.text,
+                                      newPasswordController.text);
+                                } else {
+                                  // Tampilkan pesan kesalahan atau lakukan sesuatu sesuai kebutuhan
+                                }
                               },
                               child: Text(
                                 getTranslatedText('Save Changes'),
                                 style: TextStyle(
                                   fontSize: 16,
-                                ),),
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 minimumSize: Size(370, 44),
                                 padding: EdgeInsets.all(0),
@@ -232,7 +262,6 @@ class ChangePassState extends State<ChangePassWidget> {
                               ),
                             ),
                           ),
-
                         ],
                       ),
                     ),

@@ -25,6 +25,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/user', [AuthController::class, 'user']);
 Route::get('/users', [AuthController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/change-password', [AuthController::class, 'changePassword']);
+Route::middleware('auth:sanctum')->get('/get-profile', [AuthController::class, 'getProfile']);
+Route::middleware('auth:sanctum')->post('/edit-profile', [AuthController::class, 'editProfile']);
 
 // untuk halaman pesanan
 Route::get('/pesanan', [PesananController::class, 'showPesanan']);

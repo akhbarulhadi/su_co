@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/marketing/dashboard.dart';
 import 'package:suco/supervisor/dashboard.dart';
 import 'package:suco/kepala_produksi/dashboard.dart';
 import 'package:suco/staff_gudang/dashboard.dart';
+import 'package:suco/kepala_gudang/dashboard.dart';
 import 'package:suco/admin/man_user.dart';
 import 'package:suco/role_middleware.dart';
 import 'package:http/http.dart' as http;
@@ -42,7 +45,7 @@ class _LoginState extends State<Login> {
       if (email.isNotEmpty && password.isNotEmpty) {
         // API call for login using email
         final response = await http.post(
-          Uri.parse('http://192.168.28.100:8000/api/login'),
+          Uri.parse(ApiConfig.login),
           body: {
             'email': email,
             'password': password,
@@ -50,10 +53,61 @@ class _LoginState extends State<Login> {
         );
 
         if (response.statusCode == 200) {
-          final Map<String, dynamic> data = json.decode(response.body);
-          final String roles = data['roles'];
+          final Map<String, dynamic>? data = json.decode(response.body);
 
-          RoleMiddleware roleMiddleware = RoleMiddleware(allowedRoles: [
+          if (data != null) {
+            final String roles = data['roles'] ?? '';
+            final String token = data['access_token'] ?? '';
+            final String name = data['user']?['nama'] ?? '';
+
+            // Simpan informasi login ke shared_preferences
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            prefs.setString('access_token', token);
+            prefs.setString('nama', name);
+            prefs.setString('roles', roles);
+
+            // Pengecekan apakah token dan informasi lainnya telah berhasil disimpan
+            String storedToken = prefs.getString('access_token') ?? '';
+            String storedName = prefs.getString('nama') ?? '';
+            String storedRoles = prefs.getString('roles') ?? '';
+
+            print('Token: $storedToken');
+            print('Nama: $storedName');
+            print('Roles: $storedRoles');
+
+            // Handle navigasi sesuai dengan roles
+            navigateBasedOnRoles(roles);
+          } else {
+            // Handle kasus ketika data null
+            print('Error: Response data is null');
+          }
+        } else {
+          // Handle kasus status code selain 200
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login failed. Check your email and password.'),
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Email and password must be filled.'),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Login error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login failed. Check your email and password.'),
+        ),
+      );
+    }
+  }
+
+    void navigateBasedOnRoles(String roles) {
+        RoleMiddleware roleMiddleware = RoleMiddleware(allowedRoles: [
             'admin',
             'marketing',
             'supervisor',
@@ -97,30 +151,15 @@ class _LoginState extends State<Login> {
                 MaterialPageRoute(builder: (context) => DashboardPageStaff()),
               );
               break;
+            case 'kepala_gudang':
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DashboardPageLeaderWarehouse()),
+              );
+              break;
           }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Login failed. Check your email and password.'),
-            ),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Email and password must be filled.'),
-          ),
-        );
-      }
-    } catch (e) {
-      print("Login error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Login failed. Check your email and password.'),
-        ),
-      );
     }
-  }
+
 
   @override
   Widget build(BuildContext context) {

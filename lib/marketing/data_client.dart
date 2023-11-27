@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/marketing/data_pesanan.dart';
 import 'package:http/http.dart' as http;
@@ -47,7 +48,7 @@ class KlientPage extends State<DataClient> {
 
   Future<void> createKlien() async {
     final response = await http.post(
-      Uri.parse("http://192.168.28.100:8000/api/add/data-klien"),
+           Uri.parse(ApiConfig.add_data_client),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "nama_perusahaan": namaPerusahaanController.text,

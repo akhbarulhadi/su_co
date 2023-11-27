@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -7,7 +8,6 @@ import 'package:suco/admin/add_user.dart';
 import 'package:suco/admin/sidebar.dart';
 import 'package:suco/admin/setting.dart';
 import 'package:dropdown_search/dropdown_search.dart';
-import 'package:suco/admin/sidebar.dart';
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({Key? key}) : super(key: key);
@@ -60,7 +60,7 @@ class UserManagementPageState extends State<UserManagementPage> {
   Future _getdata() async {
     try {
       final response =
-          await http.get(Uri.parse('http://192.168.28.100:8000/api/users'));
+          await http.get( Uri.parse(ApiConfig.users),);
       print(response.body); // Cetak respons ke konsol
 
       if (response.statusCode == 200) {
@@ -177,8 +177,8 @@ class UserManagementPageState extends State<UserManagementPage> {
         theme: themeData, // Terapkan tema sesuai dengan preferensi tema gelap
         home: Scaffold(
           backgroundColor: isDarkTheme ? Colors.black : Colors.white,
-          drawer: SidebarDrawer(),
           appBar: myAppBar,
+          drawer: SidebarDrawer(),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -188,78 +188,95 @@ class UserManagementPageState extends State<UserManagementPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      width: mediaQueryWidth * 0.5,
+                      width: mediaQueryWidth * 0.25,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isDarkTheme ? Colors.white38 : Colors.black38,
-                          width: 1, // Lebar garis tepi
+                          color: Colors.transparent, // Warna garis tepi
+                          width: 0.5, // Lebar garis tepi
                         ),
                       ),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.all(4),
-                              child: Icon(
-                                Icons.search_rounded,
-                                color: isDarkTheme
-                                    ? Colors.white
-                                    : Color(0xFF8B9BA8),
-                                size: 15,
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 12),
-                                child: TextFormField(
-                                  controller: _textController,
-                                  obscureText: false,
-                                  decoration: InputDecoration(
-                                    hintText: getTranslatedText('Search...'),
-                                    enabledBorder: UnderlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.transparent,
-                                        width: 1,
-                                      ),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(4.0),
-                                        topRight: Radius.circular(4.0),
-                                      ),
-                                    ),
-                                    focusedBorder: UnderlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.transparent,
-                                        width: 1,
-                                      ),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(4.0),
-                                        topRight: Radius.circular(4.0),
-                                      ),
-                                    ),
-                                  ),
-                                  style: TextStyle(
-                                    fontFamily: 'Clash Display',
-                                    color: isDarkTheme
-                                        ? Colors.white
-                                        : Colors.black,
-                                    fontSize: screenWidth *
-                                        0.035, // Ukuran teks pada tombol
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                  validator: (value) {
-                                    // Validasi teks input
-                                    return null;
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                      child: DropdownSearch<String>(
+                        popupProps: PopupProps.menu(
+                          fit: FlexFit.loose,
+                          menuProps: MenuProps(
+                            backgroundColor:
+                                isDarkTheme ? Colors.black : Colors.white,
+                            elevation: 0,
+                          ),
+                          showSelectedItems: true,
                         ),
+                        items: [
+                          getTranslatedText('All'),
+                          getTranslatedText('Daily'),
+                          getTranslatedText('Weekly'),
+                          getTranslatedText('Monthly'),
+                          getTranslatedText('Yearly'),
+                        ],
+                        dropdownDecoratorProps: DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            labelText: getTranslatedText("Time Period"),
+                            // hintText: "waktu in menu mode",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.transparent),
+                            ),
+                          ),
+                        ),
+                        onChanged: print,
+                        selectedItem: getTranslatedText("All"),
+                      ),
+                    ),
+                    Container(
+                      width: mediaQueryWidth * 0.25,
+                      height: bodyHeight * 0.048,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? Colors.white24 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.transparent, // Warna garis tepi
+                          width: 0.5, // Lebar garis tepi
+                        ),
+                      ),
+                      child: DropdownSearch<String>(
+                        popupProps: PopupProps.menu(
+                          fit: FlexFit.loose,
+                          menuProps: MenuProps(
+                            backgroundColor:
+                                isDarkTheme ? Colors.black : Colors.white,
+                            elevation: 0,
+                          ),
+                          showSelectedItems: true,
+                        ),
+                        items: [
+                          getTranslatedText("All"),
+                          getTranslatedText("10 Line"),
+                          getTranslatedText("20 Line"),
+                          getTranslatedText('30 Line'),
+                          getTranslatedText('40 Line')
+                        ],
+                        dropdownDecoratorProps: DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            labelText: getTranslatedText("Line"),
+                            // hintText: "waktu in menu mode",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.transparent),
+                            ),
+                          ),
+                        ),
+                        onChanged: print,
+                        selectedItem: getTranslatedText("All"),
                       ),
                     ),
                     ElevatedButton(

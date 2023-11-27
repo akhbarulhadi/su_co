@@ -13,13 +13,15 @@ class SidebarDrawer extends StatefulWidget {
 }
 
 class SidebarDrawerState extends State<SidebarDrawer> {
-  String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
+  String selectedLanguage = 'IDN';
+  String userName = '';
+  String userRoles = '';
 
   @override
   void initState() {
     super.initState();
-    loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     loadSelectedLanguage();
+    loadUserInfo(); // Memuat informasi pengguna saat halaman dimulai
   }
 
   void loadSelectedLanguage() async {
@@ -29,29 +31,26 @@ class SidebarDrawerState extends State<SidebarDrawer> {
     });
   }
 
+  void loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('nama') ?? '';
+      userRoles = prefs.getString('roles') ?? '';
+    });
+  }
+
   // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
       // Teks dalam bahasa Indonesia
       switch (text) {
-        case 'Main Page':
-          return 'Halaman Utama';
-        case 'REPORT':
-          return 'LAPORAN';
-        case 'INPUT ORDER':
-          return 'MASUKAN PESANAN';
-        case 'SCHEDULE':
-          return 'JADWAL';
         case 'USER MANAGEMENT':
           return 'MANAJEMEN PENGGUNA';
         case 'SETTINGS':
           return 'PENGATURAN';
         case 'LOG OUT':
           return 'KELUAR';
-        case 'AVAILABLE ITEMS':
-          return 'KETERSEDIAAN BARANG';
-        case 'ORDER HISTORY':
-          return 'RIWAYAT PEMESANAN';
+
         default:
           return text;
       }
@@ -61,6 +60,12 @@ class SidebarDrawerState extends State<SidebarDrawer> {
     }
   }
 
+    // Fungsi untuk membersihkan data di SharedPreferences
+  Future<void> _clearUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -68,19 +73,19 @@ class SidebarDrawerState extends State<SidebarDrawer> {
         padding: EdgeInsets.zero,
         children: [
           SizedBox(height: 40.0,),
-            ListTile(
-              leading: Image(
-                image: AssetImage('lib/assets/user.png'),
-              ),
-              title: Text('Damar'),
-              subtitle: Text('Admin'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditProfile()),
-                );
-              },
+          ListTile(
+            leading: Image(
+              image: AssetImage('lib/assets/user.png'),
             ),
+            title: Text(userName), // Menampilkan nama pengguna
+            subtitle: Text(userRoles), // Menampilkan peran pengguna
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditProfile()),
+              );
+            },
+          ),
           ListTile(
             leading: Icon(Icons.settings_accessibility_outlined),
             title: Text(getTranslatedText('USER MANAGEMENT')),
@@ -104,7 +109,8 @@ class SidebarDrawerState extends State<SidebarDrawer> {
           ListTile(
             leading: Icon(Icons.logout),
             title: Text(getTranslatedText('LOG OUT')),
-            onTap: () {
+            onTap: () async {
+              await _clearUserInfo();
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => Login()),

@@ -16,17 +16,28 @@ class SidebarDrawer extends StatefulWidget {
 
 class SidebarDrawerState extends State<SidebarDrawer> {
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
+  String userName = '';
+  String userRoles = '';
 
   @override
   void initState() {
     super.initState();
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
+    loadUserInfo(); // Memuat informasi pengguna saat halaman dimulai
   }
 
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       selectedLanguage = prefs.getString('selectedLanguage') ?? 'IDN';
+    });
+  }
+
+  void loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('nama') ?? '';
+      userRoles = prefs.getString('roles') ?? '';
     });
   }
 
@@ -63,26 +74,34 @@ class SidebarDrawerState extends State<SidebarDrawer> {
     }
   }
 
+  // Fungsi untuk membersihkan data di SharedPreferences
+  Future<void> _clearUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          SizedBox(height: 40.0,),
-            ListTile(
-              leading: Image(
-                image: AssetImage('lib/assets/user.png'),
-              ),
-              title: Text('Damar'),
-              subtitle: Text('Staff Gudang'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditProfile()),
-                );
-              },
+          SizedBox(
+            height: 40.0,
+          ),
+          ListTile(
+            leading: Image(
+              image: AssetImage('lib/assets/user.png'),
             ),
+            title: Text(userName), // Menampilkan nama pengguna
+            subtitle: Text(userRoles), // Menampilkan peran pengguna
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditProfile()),
+              );
+            },
+          ),
           ListTile(
             leading: Icon(Icons.dashboard),
             title: Text(getTranslatedText('Main Page')),
@@ -126,7 +145,8 @@ class SidebarDrawerState extends State<SidebarDrawer> {
           ListTile(
             leading: Icon(Icons.logout),
             title: Text(getTranslatedText('LOG OUT')),
-            onTap: () {
+            onTap: () async {
+              await _clearUserInfo();
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => Login()),

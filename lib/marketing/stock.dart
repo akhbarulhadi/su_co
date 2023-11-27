@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -56,7 +57,7 @@ class StockState extends State<Stock> {
 
   Future<void> _updatePrice(BuildContext context, int index, String newStatus) async {
     final response = await http.post(
-      Uri.parse('http://192.168.28.100:8000/api/pesanan/update-harga'),
+     Uri.parse(ApiConfig.update_harga),
       body: {'id_produk': _listdata[index]['id_produk'].toString(), 'harga_produk': newStatus},
     );
 
@@ -88,7 +89,7 @@ class StockState extends State<Stock> {
 
   Future _getdata() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.28.100:8000/api/stock'));
+      final response = await http.get( Uri.parse(ApiConfig.stock));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

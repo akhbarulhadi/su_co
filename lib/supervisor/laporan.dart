@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -58,7 +59,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
   Future _getdata() async {
     try {
       final response =
-      await http.get(Uri.parse('http://192.168.28.100:8000/api/pesanan'));
+      await http.get(Uri.parse(ApiConfig.pesanan));
       print(response.body); // Cetak respons ke konsol
 
       if (response.statusCode == 200) {

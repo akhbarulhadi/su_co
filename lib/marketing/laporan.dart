@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -58,8 +59,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
   Future<void> _updateStatus(
       BuildContext context, int index, String newStatus) async {
     final response = await http.post(
-      Uri.parse(
-          'http://192.168.28.100:8000/api/pesanan/update-status'), // Ganti dengan URL endpoint Anda
+                Uri.parse(ApiConfig.status_update),
       body: {
         'id_pemesanan': _listdata[index]['id_pemesanan'].toString(),
         'status_pesanan': newStatus
@@ -88,7 +88,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
   Future _getdata() async {
     try {
       final response =
-          await http.get(Uri.parse('http://192.168.28.100:8000/api/pesanan'));
+          await http.get(Uri.parse(ApiConfig.pesanan),);
       print(response.body); // Cetak respons ke konsol
 
       if (response.statusCode == 200) {

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/admin/man_user.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'dart:convert';
 
 class AddUser extends StatefulWidget {
   const AddUser({super.key});
@@ -15,6 +17,7 @@ class AddUser extends StatefulWidget {
 class AddUserState extends State<AddUser> {
   bool isDarkTheme = false;
   String selectedLanguage = 'IDN';
+  final _formKey = GlobalKey<FormState>();
   TextEditingController idStaffController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController namaController = TextEditingController();
@@ -75,57 +78,30 @@ class AddUserState extends State<AddUser> {
   }
 
   Future<void> AddUser() async {
-    try {
-      final idStaff = idStaffController.text;
-      final password = passwordController.text;
-      final nama = namaController.text;
-      final jenisKelamin = jenis_kelaminController.text;
-      final alamat = alamatController.text;
-      final noTlp = no_tlpController.text;
-      final email = emailController.text;
-      final status = statusController.text;
-      final roles = rolesController.text;
+    final response = await http.post(
+    Uri.parse(ApiConfig.register),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'id_staff': idStaffController.text,
+        'password': passwordController.text,
+        'nama': namaController.text,
+        'jenis_kelamin': jenis_kelaminController.text,
+        'alamat': alamatController.text,
+        'no_tlp': no_tlpController.text,
+        'email': emailController.text,
+        'status': statusController.text,
+        'roles': rolesController.text,
+      }),
+    );
 
-      // Menggunakan package http untuk melakukan POST request ke API Laravel
-      final response = await http.post(
-        Uri.parse('http://192.168.100.8:8000/api/register'),
-        body: {
-          'id_staff': idStaff,
-          'password': password,
-          'nama': nama,
-          'jenis_kelamin': jenisKelamin,
-          'alamat': alamat,
-          'no_tlp': noTlp,
-          'email': email,
-          'status': status,
-          'roles': roles,
-        },
-      );
-
-      print('HTTP Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
-      if (response.statusCode == 200 ||
-          response.statusCode == 201 ||
-          response.statusCode == 302) {
-        if (response.headers.containsKey('location')) {
-          // Ada redirect, periksa URL tujuan
-          final redirectUrl = response.headers['location']!;
-          print('Redirected to: $redirectUrl');
-          // Handle redirect sesuai kebutuhan
-        } else {
-          // Pengguna berhasil ditambahkan
-          print('Pengguna berhasil ditambahkan');
-        }
-      } else {
-        // Gagal menambahkan pengguna, tampilkan pesan kesalahan
-        print('Gagal menambahkan pengguna: ${response.statusCode}');
-        print('Detail Pesan: ${response.body}');
-      }
-    } catch (e, stackTrace) {
-      print('Terjadi kesalahan: $e');
-      print('StackTrace: $stackTrace');
-      // Handle kesalahan lain yang mungkin muncul.
+    if (response.statusCode == 201) {
+      print("User berhasil dibuat!");
+      print("Response: ${response.body}");
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => UserManagementPage()));
+    } else {
+      print("Gagal membuat user.");
+      print("Response: ${response.body}");
     }
   }
 
@@ -188,194 +164,193 @@ class AddUserState extends State<AddUser> {
                       width: 0.3,
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: emailController,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 6,
-                          ),
-                          filled: false,
-                          labelText: getTranslatedText('Email'),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      TextField(
-                        controller: passwordController,
-                        obscureText: _obscureText,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 6,
-                          ),
-                          filled: false,
-                          labelText: getTranslatedText('Password'),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureText
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureText = !_obscureText;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: namaController,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 6,
-                          ),
-                          filled: false,
-                          labelText: getTranslatedText('Nama Lengkap'),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Radio(
-                            value: getTranslatedText('Laki-laki'),
-                            groupValue: jenis_kelaminController.text,
-                            onChanged: (String? value) {
-                              setState(() {
-                                jenis_kelaminController.text = value!;
-                              });
-                            },
-                          ),
-                          Text(getTranslatedText('Laki-laki')),
-                          Radio(
-                            value: getTranslatedText('Perempuan'),
-                            groupValue: jenis_kelaminController.text,
-                            onChanged: (String? value) {
-                              setState(() {
-                                jenis_kelaminController.text = value!;
-                              });
-                            },
-                          ),
-                          Text(getTranslatedText('Perempuan')),
-                        ],
-                      ),
-                      SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: alamatController,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 6,
-                          ),
-                          filled: false,
-                          labelText: getTranslatedText('Alamat '),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: no_tlpController,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 6,
-                          ),
-                          filled: false,
-                          labelText: getTranslatedText('No Telepon'),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: idStaffController,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 6,
-                          ),
-                          filled: false,
-                          labelText: getTranslatedText('Id Staff'),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: statusController,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 6,
-                          ),
-                          filled: false,
-                          labelText: getTranslatedText('Status'),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      DropdownSearch<String>(
-                        popupProps: PopupProps.menu(
-                          fit: FlexFit.loose,
-                          menuProps: MenuProps(
-                            backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
-                            elevation: 0,
-                          ),
-                          showSelectedItems: true,
-                        ),
-                        items: [
-                          getTranslatedText('marketing'),
-                          getTranslatedText('supervisor'),
-                          getTranslatedText('leader'),
-                          getTranslatedText('staff_gudang'),
-                          getTranslatedText('kepala_gudang'),
-                        ],
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(height: 16.0),
+                        TextFormField(
+                          controller: emailController,
+                          decoration: InputDecoration(
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 15,
                               vertical: 6,
                             ),
-                            labelText: getTranslatedText('User Type'),
+                            filled: false,
+                            labelText: getTranslatedText('Email'),
                           ),
                         ),
-                        onChanged: print,
-                      ),
-                      SizedBox(height: 16.0),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(60, 30, 60, 20),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Panggil fungsi AddUser untuk menambahkan pengguna
-                            AddUser();
-
-                            // Setelah berhasil menambahkan pengguna, Anda bisa navigasi atau melakukan tindakan lainnya
-                            // Contoh navigasi ke halaman DataPesanan:
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => UserManagementPage()),
-                            );
+                        SizedBox(height: 16.0),
+                        TextField(
+                          controller: passwordController,
+                          obscureText: _obscureText,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
+                            ),
+                            filled: false,
+                            labelText: getTranslatedText('Password'),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16.0),
+                        TextFormField(
+                          controller: namaController,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
+                            ),
+                            filled: false,
+                            labelText: getTranslatedText('Nama Lengkap'),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Radio(
+                              value: getTranslatedText('Laki-laki'),
+                              groupValue: jenis_kelaminController.text,
+                              onChanged: (String? value) {
+                                setState(() {
+                                  jenis_kelaminController.text = value!;
+                                });
+                              },
+                            ),
+                            Text(getTranslatedText('Laki-laki')),
+                            Radio(
+                              value: getTranslatedText('Perempuan'),
+                              groupValue: jenis_kelaminController.text,
+                              onChanged: (String? value) {
+                                setState(() {
+                                  jenis_kelaminController.text = value!;
+                                });
+                              },
+                            ),
+                            Text(getTranslatedText('Perempuan')),
+                          ],
+                        ),
+                        SizedBox(height: 16.0),
+                        TextFormField(
+                          controller: alamatController,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
+                            ),
+                            filled: false,
+                            labelText: getTranslatedText('Alamat '),
+                          ),
+                        ),
+                        SizedBox(height: 16.0),
+                        TextFormField(
+                          controller: no_tlpController,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
+                            ),
+                            filled: false,
+                            labelText: getTranslatedText('No Telepon'),
+                          ),
+                        ),
+                        SizedBox(height: 16.0),
+                        TextFormField(
+                          controller: idStaffController,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
+                            ),
+                            filled: false,
+                            labelText: getTranslatedText('Id Staff'),
+                          ),
+                        ),
+                        SizedBox(height: 16.0),
+                        TextFormField(
+                          controller: statusController,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
+                            ),
+                            filled: false,
+                            labelText: getTranslatedText('Status'),
+                          ),
+                        ),
+                        SizedBox(height: 16.0),
+                        DropdownSearch<String>(
+                          popupProps: PopupProps.menu(
+                            fit: FlexFit.loose,
+                            menuProps: MenuProps(
+                              backgroundColor:
+                                  isDarkTheme ? Colors.black : Colors.white,
+                              elevation: 0,
+                            ),
+                            showSelectedItems: true,
+                          ),
+                          items: [
+                            getTranslatedText('marketing'),
+                            getTranslatedText('supervisor'),
+                            getTranslatedText('leader'),
+                            getTranslatedText('staff_gudang'),
+                            getTranslatedText('kepala_gudang'),
+                          ],
+                          dropdownDecoratorProps: DropDownDecoratorProps(
+                            dropdownSearchDecoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 15,
+                                vertical: 6,
+                              ),
+                              labelText: getTranslatedText('User Type'),
+                            ),
+                          ),
+                          onChanged: (String? newValue) {
+                            // Handle dropdown value change
+                            rolesController.text = newValue!;
                           },
-                          child: Text(
-                            getTranslatedText('Add'),
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: Size(170, 44),
-                            padding: EdgeInsets.all(0),
-                            elevation: 3,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            primary: Color(0xFF3DA9FC),
-                          ),
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 16.0),
+                       Padding(
+                              padding: EdgeInsets.only(top: 30, left: 160),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    AddUser();
+                                  }
+                                },
+                                child: Text(
+                                  getTranslatedText('Continue'),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: Size(170, 44),
+                                  padding: EdgeInsets.all(0),
+                                  elevation: 3,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  primary: Color(0xFF3DA9FC),
+                                ),
+                              ),
+                            ),
+                      ],
+                    ),
                   ),
                 ),
               ],
