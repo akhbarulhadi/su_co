@@ -23,11 +23,12 @@ class PesananState extends State<Pesanan> {
   bool _isloading = true;
   final _formKey = GlobalKey<FormState>();
   TextEditingController idklienController = TextEditingController();
-  TextEditingController kodepemesananController = TextEditingController();
   TextEditingController jenispembayaranController = TextEditingController();
   TextEditingController hargatotalController = TextEditingController();
   TextEditingController batastanggalController = TextEditingController();
   TextEditingController jumlahpesananController = TextEditingController();
+  TextEditingController namaklienController = TextEditingController();
+
   List _stockData = [];
   String _selectedProductId = '';
 
@@ -87,11 +88,29 @@ class PesananState extends State<Pesanan> {
   }
 
   Future<void> createPesanan() async {
+    DateTime now = DateTime.now();
+    String year = now.year.toString().substring(2); // Extract the last two digits of the year
+    String month = now.month.toString().padLeft(2, '0'); // Ensure two digits for the month
+    String day = now.day.toString().padLeft(2, '0'); // Ensure two digits for the day
+
+    // Retrieve the last used unique code from SharedPreferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int lastUniqueCode = prefs.getInt('lastUniqueCode') ?? 0;
+
+    // Increment the unique code for the next product
+    int uniqueCode = lastUniqueCode + 1;
+
+    // Save the updated unique code in SharedPreferences
+    prefs.setInt('lastUniqueCode', uniqueCode);
+
+    // Combine the date and unique code to create the kode_produk
+    String kodePemesanan = '$day$month$year$uniqueCode';
+
     final response = await http.post(
      Uri.parse(ApiConfig.tambah_pesanan),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
-        "kode_pemesanan": kodepemesananController.text,
+        "kode_pemesanan": kodePemesanan,
         "id_produk": _selectedProductId,
         "id_klien": idklienController.text,
         "harga_total": hargatotalController.text,
@@ -464,6 +483,10 @@ class PesananState extends State<Pesanan> {
                                                           TextEditingController(
                                                               text: _listdata[index]['id_klien']
                                                                   .toString());
+                                                          namaklienController =
+                                                              TextEditingController(
+                                                                  text: _listdata[index]['nama_klien']
+                                                                      .toString());
                                                           return Form(
                                                             key: _formKey,
                                                             child: Center(
@@ -474,10 +497,11 @@ class PesananState extends State<Pesanan> {
                                                                     mainAxisSize: MainAxisSize.min,
                                                                     children: [
                                                                       TextFormField(
-                                                                        controller: kodepemesananController,
+                                                                        controller: namaklienController,
                                                                         obscureText: false,
+                                                                        enabled: false,
                                                                         decoration: InputDecoration(
-                                                                          labelText: 'Kode Pemesanan',
+                                                                          labelText: 'Nama Klien',
                                                                           contentPadding: EdgeInsets.all(13),
                                                                         ),
                                                                         style: TextStyle(fontSize: 16),
@@ -505,20 +529,23 @@ class PesananState extends State<Pesanan> {
                                                                           labelText: 'Select Product',
                                                                         ),
                                                                       ),
-                                                                      TextFormField(
-                                                                        controller: idklienController,
-                                                                        obscureText: false,
-                                                                        decoration: InputDecoration(
-                                                                          labelText: 'Id Client',
-                                                                          contentPadding: EdgeInsets.all(13),
+                                                                      Visibility(
+                                                                        visible: false,
+                                                                        child: TextFormField(
+                                                                          controller: idklienController,
+                                                                          obscureText: false,
+                                                                          decoration: InputDecoration(
+                                                                            labelText: 'Id Client',
+                                                                            contentPadding: EdgeInsets.all(13),
+                                                                          ),
+                                                                          style: TextStyle(fontSize: 16),
+                                                                          validator: (value) {
+                                                                            if (value == null || value.isEmpty) {
+                                                                              return 'Isi Datanya';
+                                                                            }
+                                                                            return null;
+                                                                          },
                                                                         ),
-                                                                        style: TextStyle(fontSize: 16),
-                                                                        validator: (value) {
-                                                                          if (value == null || value.isEmpty) {
-                                                                            return 'Isi Datanya';
-                                                                          }
-                                                                          return null;
-                                                                        },
                                                                       ),
                                                                       TextFormField(
                                                                         controller: hargatotalController,

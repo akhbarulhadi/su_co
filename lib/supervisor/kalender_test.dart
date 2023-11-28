@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/supervisor/basics_example.dart';
 import 'package:table_calendar/table_calendar.dart';
-
 import 'event.dart';
 
 class CalendarTest extends StatefulWidget {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 
 class Stock extends StatefulWidget {
   const Stock({Key? key}) : super(key: key);
@@ -19,24 +19,12 @@ class StockState extends State<Stock> {
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
   bool _isloading = true;
-
-  Future<void> editProductPrice(int id_produk, double harga_barang) async {
-    final String url = 'http://10.132.221.215//crudflutter/update_barang.php'; // Ganti dengan URL backend PHP Anda.
-
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'id_produk': id_produk, 'harga_barang': harga_barang}),
-    );
-
-    if (response.statusCode == 200) {
-      print("Harga berhasil diubah.");
-      // Tampilkan pesan sukses atau tindakan lainnya.
-    } else {
-      print("Gagal mengubah harga.");
-      // Tampilkan pesan kesalahan atau tindakan lainnya.
-    }
-  }
+  List _filteredData = [];
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController kodeprodukController = TextEditingController();
+  TextEditingController namaprodukController = TextEditingController();
+  TextEditingController jumlahprodukController = TextEditingController();
+  TextEditingController jenisprodukController = TextEditingController();
 
   @override
   void initState() {
@@ -45,10 +33,12 @@ class StockState extends State<Stock> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
+    _listdata = [];
+    _filteredData = [];
     _getdata();
-    //print(_listdata);
     super.initState();
   }
+
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -70,20 +60,93 @@ class StockState extends State<Stock> {
     super.dispose();
   }
 
+  Future<void> _updatePrice(BuildContext context, int index, String newStatus) async {
+    final response = await http.post(
+      Uri.parse(ApiConfig.update_harga),
+      body: {'id_produk': _listdata[index]['id_produk'].toString(), 'harga_produk': newStatus},
+    );
+
+    if (response.statusCode == 200) {
+      // Status berhasil diperbarui
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Status berhasil diperbarui'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Perbarui harga langsung dalam _filteredData
+      setState(() {
+        _filteredData[index]['harga_produk'] = newStatus;
+      });
+      Navigator.pop(context);
+
+    } else {
+      // Gagal memperbarui status
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memperbarui status'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   Future _getdata() async {
     try {
-      final respone = await http
-          .get(Uri.parse('http://10.132.221.215//crudflutter/barang.php'));
-      if (respone.statusCode == 200) {
-        //print(respone.body);
-        final data = jsonDecode(respone.body);
+      final response = await http.get( Uri.parse(ApiConfig.stock));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
-          _listdata = data;
+          _listdata = data['stock'];
+          _filteredData = _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<void> createProduk() async {
+    // Get the current date, month, and year
+    DateTime now = DateTime.now();
+    String year = now.year.toString().substring(2); // Extract the last two digits of the year
+    String month = now.month.toString().padLeft(2, '0'); // Ensure two digits for the month
+    String day = now.day.toString().padLeft(2, '0'); // Ensure two digits for the day
+
+    // Retrieve the last used unique code from SharedPreferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int lastUniqueCode = prefs.getInt('lastUniqueCode') ?? 0;
+
+    // Increment the unique code for the next product
+    int uniqueCode = lastUniqueCode + 1;
+
+    // Save the updated unique code in SharedPreferences
+    prefs.setInt('lastUniqueCode', uniqueCode);
+
+    // Combine the date and unique code to create the kode_produk
+    String kodeProduk = '$day$month$year$uniqueCode';
+
+    final response = await http.post(
+      Uri.parse(ApiConfig.add_product),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "kode_produk": kodeProduk,
+        "nama_produk": namaprodukController.text,
+        "jumlah_produk": jumlahprodukController.text,
+        "jenis_produk": jenisprodukController.text,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print("Data Produk berhasil dibuat!");
+      print("Response: ${response.body}");
+      // Tambahkan logika atau navigasi ke halaman berikutnya jika diperlukan
+    } else {
+      print("Gagal membuat data Produk.");
+      print("Response: ${response.body}");
     }
   }
 
@@ -117,32 +180,10 @@ class StockState extends State<Stock> {
           return 'Bulanan';
         case 'Yearly':
           return 'Tahunan';
-        case 'Add Stock Of Product':
-          return 'Tambah Stok Produk';
-        case 'Add':
-          return 'Tambah';
-        case 'Current Amount':
-          return 'Jumlah Saat Ini';
-        case '+ Product':
-          return '+ Produk';
-        case 'Add Product In The Warehouse':
-          return 'Tambah Barang Di Gudang';
-        case 'Product Code':
-          return 'Kode Produk';
-        case 'Product Name':
-          return 'Nama Produk';
-        case 'Number Of Product':
-          return 'Jumlah Produk';
-        case 'Type Of Product':
-          return 'Jenis Produk';
-        case 'Add Total Of Product':
-          return 'Tambah Jumlah Produk';
-        case 'Add Stock Of Product':
-          return 'Tambah Ketersediaan Produk';
-        case 'Current Stock':
-          return 'Ketersediaan Saat Ini';
-        case 'Add Stock':
-          return 'Tambah Ketersediaan';
+        case 'Change Price':
+          return 'Ubah Harga';
+        case 'Save':
+          return 'Simpan';
         case '':
           return '';
 
@@ -159,7 +200,8 @@ class StockState extends State<Stock> {
   Widget build(BuildContext context) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
-    final ThemeData themeData = isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    final ThemeData themeData =
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final screenWidth = MediaQuery.of(context).size.width;
     final myAppBar = AppBar(
       leading: IconButton(
@@ -171,7 +213,11 @@ class StockState extends State<Stock> {
       ),
       backgroundColor: Colors.transparent, // Mengubah warna AppBar
       elevation: 0, // Menghilangkan efek bayangan di bawah AppBar
-      iconTheme: IconThemeData(color: isDarkTheme ? Colors.white : Colors.black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+      iconTheme: IconThemeData(
+          color: isDarkTheme
+              ? Colors.white
+              : Colors
+              .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
@@ -183,10 +229,14 @@ class StockState extends State<Stock> {
         ),
       ),
       actions: <Widget>[
-        SizedBox(width: 45.0,),
+        SizedBox(
+          width: 45.0,
+        ),
       ],
     );
-    final bodyHeight = mediaQueryHeight - myAppBar.preferredSize.height - MediaQuery.of(context).padding.top;
+    final bodyHeight = mediaQueryHeight -
+        myAppBar.preferredSize.height -
+        MediaQuery.of(context).padding.top;
     return GestureDetector(
       onTap: () {
         if (_unfocusNode.canRequestFocus) {
@@ -210,59 +260,14 @@ class StockState extends State<Stock> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
-                      decoration: BoxDecoration(
-                        color: isDarkTheme ? Colors.white24 : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.transparent, // Warna garis tepi
-                          width: 0.5, // Lebar garis tepi
-                        ),
-                      ),
-                      child: DropdownSearch<String>(
-                        popupProps: PopupProps.menu(
-                          fit: FlexFit.loose,
-                          menuProps: MenuProps(
-                            backgroundColor: isDarkTheme ? Colors.black : Colors.white,
-                            elevation: 0,
-                          ),
-                          showSelectedItems: true,
-                        ),
-                        items: [
-                          getTranslatedText('All'),
-                          getTranslatedText('Daily'),
-                          getTranslatedText('Weekly'),
-                          getTranslatedText('Monthly'),
-                          getTranslatedText('Yearly'),
-                        ],
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            labelText: getTranslatedText("Time Period"),
-                            // hintText: "waktu in menu mode",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.transparent),
-                            ),
-                          ),
-                        ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText("All"),
-                      ),
-                    ),
-                    Container(
-                      width: mediaQueryWidth * 0.45,
+                      width: mediaQueryWidth * 0.6,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isDarkTheme ? Colors.white38 : Colors.black38,
-                          width: 1,          // Lebar garis tepi
+                          width: 1, // Lebar garis tepi
                         ),
                       ),
                       child: Padding(
@@ -276,8 +281,7 @@ class StockState extends State<Stock> {
                                 Icons.search_rounded,
                                 color: isDarkTheme
                                     ? Colors.white
-                                    : Color(
-                                    0xFF8B9BA8),
+                                    : Color(0xFF8B9BA8),
                                 size: 15,
                               ),
                             ),
@@ -286,6 +290,19 @@ class StockState extends State<Stock> {
                                 padding: EdgeInsets.only(left: 12),
                                 child: TextFormField(
                                   controller: _textController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = _listdata.where((item) {
+                                        // Customize this condition based on your search criteria
+                                        return item['nama_produk']
+                                            .toLowerCase()
+                                            .contains(query.toLowerCase()) ||
+                                            item['harga_produk']
+                                                .toLowerCase()
+                                                .contains(query.toLowerCase());
+                                      }).toList();
+                                    });
+                                  },
                                   obscureText: false,
                                   decoration: InputDecoration(
                                     hintText: getTranslatedText('Search...'),
@@ -309,11 +326,15 @@ class StockState extends State<Stock> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
+                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
-                                    color: isDarkTheme ? Colors.white : Colors.black,
-                                    fontSize: screenWidth * 0.035, // Ukuran teks pada tombol
+                                    color: isDarkTheme
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: screenWidth *
+                                        0.035, // Ukuran teks pada tombol
                                     fontWeight: FontWeight.normal,
                                   ),
                                   validator: (value) {
@@ -332,66 +353,114 @@ class StockState extends State<Stock> {
                         showDialog(
                           context: context,
                           builder: (context) {
-                            return AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8), // Ganti nilai sesuai keinginan Anda
-                              ),
-                              title: Center(child: Text(getTranslatedText('Add Product In The Warehouse'))),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  TextField(
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(labelText: getTranslatedText('Product Code'),
+
+                            return Form(
+                              key: _formKey,
+                              child: AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      8), // Ganti nilai sesuai keinginan Anda
+                                ),
+                                title: Center(
+                                    child: Text(
+                                        getTranslatedText('Change Price'))),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextFormField(
+                                      controller: namaprodukController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText:
+                                          getTranslatedText('Nama Produk')),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Isi Datanya';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                  ),
-                                  TextField(
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(labelText: getTranslatedText('Product Name'),
+                                    TextFormField(
+                                      controller: jumlahprodukController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                          labelText:
+                                          getTranslatedText('Jumlah Produk')),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Isi Datanya';
+                                        }
+                                        return null;
+                                      },
+                                    ),TextFormField(
+                                      controller: jenisprodukController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText:
+                                          getTranslatedText('Jenis Produk')),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Isi Datanya';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                  ),
-                                  TextField(
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(labelText: getTranslatedText('Number Of Product'),
-                                    ),
-                                  ),
-                                  TextField(
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(labelText: getTranslatedText('Type Of Product'),
-                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          if (_formKey.currentState!.validate()) {
+                                            createProduk();
+                                          }
+                                        },
+                                        child: Text('Buat Produk'),
+                                        style: ElevatedButton.styleFrom(
+                                          minimumSize: Size(100, 40),
+                                          padding: EdgeInsets.all(10),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(19),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 10.0,),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('Batal'),
+                                        style: TextButton.styleFrom(
+                                          minimumSize: Size(100, 40),
+                                          padding: EdgeInsets.all(10),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(19),
+                                            side: BorderSide(
+                                              color: Color(0xFF3DA9FC),
+                                              width: 1.0,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              actions: [
-                                Center(
-                                  child: TextButton(
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: Color(0xFF9766FF), // Ganti warna sesuai keinginan Anda
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8), // Ganti nilai sesuai keinginan Anda
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text(getTranslatedText('Add'),
-                                      style: TextStyle(color: Colors.white), // Warna teks tombol
-                                    ),
-                                  ),
-                                ),
-                              ],
                             );
                           },
                         );
                       },
                       child: Text(
-                        getTranslatedText('+ Product'),
+                        getTranslatedText('+ Add Product'),
                         style: TextStyle(
                           fontSize: 15,
-                        ),),
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        minimumSize: Size(90, 38),
-                        padding: EdgeInsets.all(0),
+                        minimumSize: Size(12, 38),
+                        padding: EdgeInsets.all(10),
                         elevation: 3,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -399,6 +468,7 @@ class StockState extends State<Stock> {
                         primary: Color(0xFF3DA9FC),
                       ),
                     ),
+
                   ],
                 ),
               ),
@@ -407,8 +477,12 @@ class StockState extends State<Stock> {
                     ? Center(
                   child: CircularProgressIndicator(),
                 )
+                    : _filteredData.isEmpty
+                    ? Center(
+                  child: Text(getTranslatedText('No Stock')),
+                )
                     : ListView.builder(
-                    itemCount: _listdata.length,
+                    itemCount: _filteredData.length,
                     itemBuilder: (context, index) {
                       return GestureDetector(
                         onTap: () {
@@ -417,27 +491,26 @@ class StockState extends State<Stock> {
                             context: context,
                             builder: (context) {
                               TextEditingController priceController =
-                              TextEditingController(text: _listdata[index]['jumlah'].toString());
+                              TextEditingController(
+                                  text: _filteredData[index]['harga_produk']);
 
                               return AlertDialog(
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8), // Ganti nilai sesuai keinginan Anda
+                                  borderRadius: BorderRadius.circular(
+                                      8), // Ganti nilai sesuai keinginan Anda
                                 ),
-                                title: Center(child: Text(getTranslatedText('Add Stok Of Product'))),
+                                title: Center(
+                                    child: Text(
+                                        getTranslatedText('Change Price'))),
                                 content: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     TextField(
                                       controller: priceController,
                                       keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(labelText: getTranslatedText('Current Stock'),
-                                        enabled: false,
-                                      ),
-                                    ),
-                                    TextField(
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(labelText: getTranslatedText('Add Stock'),
-                                      ),
+                                      decoration: InputDecoration(
+                                          labelText:
+                                          getTranslatedText('Price')),
                                     ),
                                   ],
                                 ),
@@ -445,27 +518,20 @@ class StockState extends State<Stock> {
                                   Center(
                                     child: TextButton(
                                       style: TextButton.styleFrom(
-                                        backgroundColor: Color(0xFF9766FF), // Ganti warna sesuai keinginan Anda
+                                        backgroundColor: Color(0xFF3DA9FC), // Ganti warna sesuai keinginan Anda
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8), // Ganti nilai sesuai keinginan Anda
+                                          borderRadius: BorderRadius.circular(
+                                              8), // Ganti nilai sesuai keinginan Anda
                                         ),
                                       ),
-                                      onPressed: () {
-                                        // Mengambil harga baru dari controller
-                                        double newPrice = double.parse(priceController.text);
-
-                                        // Kirim permintaan edit harga ke server
-                                        editProductPrice(_listdata[index]['id_produk'], newPrice);
-
-                                        // Perbarui harga di dalam _listdata
-                                        setState(() {
-                                          _listdata[index]['harga_barang'] = newPrice;
-                                        });
-
-                                        Navigator.of(context).pop();
+                                      onPressed: () async {
+                                        await _updatePrice(context, index, priceController.text);
                                       },
-                                      child: Text(getTranslatedText('Add'),
-                                        style: TextStyle(color: Colors.white), // Warna teks tombol
+                                      child: Text(
+                                        getTranslatedText('Save'),
+                                        style: TextStyle(
+                                            color: Colors
+                                                .white), // Warna teks tombol
                                       ),
                                     ),
                                   ),
@@ -485,35 +551,42 @@ class StockState extends State<Stock> {
                             mainAxisSize: MainAxisSize.max,
                             children: [
                               Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(16, 12, 16, 16),
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    16, 12, 16, 16),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.max,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                       children: [
                                         Padding(
-                                          padding:
-                                          EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(0, 4, 0, 0),
                                           child: Text(
-                                            getTranslatedText('Product Name'),
+                                            getTranslatedText(
+                                                'Product Name'),
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               color: Color(0xFFFFFFFE),
-                                              fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
+                                              fontSize: screenWidth *
+                                                  0.04, // Ukuran teks pada tombol
                                               fontWeight: FontWeight.normal,
                                             ),
                                           ),
                                         ),
                                         Padding(
-                                          padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(0, 4, 0, 0),
                                           child: Text(
-                                            _listdata[index]['nama_barang'],
+                                            _filteredData[index]['nama_produk'],
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               color: Color(0xFFFFFFFE),
-                                              fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
+                                              fontSize: screenWidth *
+                                                  0.04, // Ukuran teks pada tombol
                                               fontWeight: FontWeight.normal,
                                             ),
                                           ),
@@ -522,29 +595,33 @@ class StockState extends State<Stock> {
                                     ),
                                     SizedBox(height: bodyHeight * 0.02),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                       children: [
                                         Padding(
-                                          padding:
-                                          EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(0, 4, 0, 0),
                                           child: Text(
                                             getTranslatedText('Stock'),
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               color: Color(0xFFFFFFFE),
-                                              fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
+                                              fontSize: screenWidth *
+                                                  0.04, // Ukuran teks pada tombol
                                               fontWeight: FontWeight.normal,
                                             ),
                                           ),
                                         ),
                                         Padding(
-                                          padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(0, 4, 0, 0),
                                           child: Text(
-                                            _listdata[index]['jumlah'],
+                                            _filteredData[index]['jumlah_produk'].toString(),
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               color: Color(0xFFFFFFFE),
-                                              fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
+                                              fontSize: screenWidth *
+                                                  0.04, // Ukuran teks pada tombol
                                               fontWeight: FontWeight.normal,
                                             ),
                                           ),
@@ -553,29 +630,33 @@ class StockState extends State<Stock> {
                                     ),
                                     SizedBox(height: bodyHeight * 0.02),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                       children: [
                                         Padding(
-                                          padding:
-                                          EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(0, 4, 0, 0),
                                           child: Text(
                                             getTranslatedText('Price'),
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               color: Color(0xFFFFFFFE),
-                                              fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
+                                              fontSize: screenWidth *
+                                                  0.04, // Ukuran teks pada tombol
                                               fontWeight: FontWeight.normal,
                                             ),
                                           ),
                                         ),
                                         Padding(
-                                          padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(0, 4, 0, 0),
                                           child: Text(
-                                            _listdata[index]['harga_barang'],
+                                            _filteredData[index]['harga_produk'].toString(),
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               color: Color(0xFFFFFFFE),
-                                              fontSize: screenWidth * 0.04, // Ukuran teks pada tombol
+                                              fontSize: screenWidth *
+                                                  0.04, // Ukuran teks pada tombol
                                               fontWeight: FontWeight.normal,
                                             ),
                                           ),
@@ -591,7 +672,6 @@ class StockState extends State<Stock> {
                       );
                     }),
               ),
-
             ],
           ),
         ),

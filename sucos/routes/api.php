@@ -38,10 +38,15 @@ Route::post('pesanan/tambah-pesanan', [PesananController::class, 'store']);
 
 // untuk halaman stock
 Route::get('/stock', [StockController::class, 'show']);
-Route::post('pesanan/update-harga', [StockController::class, 'updateHarga']);
+Route::post('stock/update-harga', [StockController::class, 'updateHarga']);
+Route::post('/stock/add-stock', [StockController::class, 'store']);
+
 
 // untuk halaman data klien
 Route::post('/add/data-klien', [KlienController::class, 'store']);
 Route::get('/klien', [KlienController::class, 'showKlien']);
+
+// untuk halaman produksi
+
 
 // Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);

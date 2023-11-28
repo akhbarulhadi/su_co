@@ -34,4 +34,18 @@ class StockController extends Controller
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'kode_produk' => 'required',
+            'nama_produk' => 'required',
+            'jumlah_produk' => 'required',
+            'jenis_produk' => 'required',
+        ]);
+
+        $stock = Stock::create($data);
+
+        return response()->json(['message' => 'Data Produk berhasil dibuat', 'data' => $stock], 201);
+    }
 }
