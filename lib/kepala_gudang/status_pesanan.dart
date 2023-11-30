@@ -7,6 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'dart:math';
 
+import 'package:suco/kepala_gudang/dashboard.dart';
+
 class StatusPesanan extends StatefulWidget {
   const StatusPesanan({Key? key}) : super(key: key);
 
@@ -58,12 +60,42 @@ class _LaporanWidgetState extends State<StatusPesanan> {
     super.dispose();
   }
 
-  Future<void> _updateStatus(BuildContext context, int index, String newStatus) async {
+
+  Future<void> _updateProductAvailability(int index, int productId, int jumlahPesanan) async {
     final response = await http.post(
-         Uri.parse(ApiConfig.status_pesanan),
+      Uri.parse(ApiConfig.kurangi_stok1),
       body: {
-        'id_pemesanan': _listdata[index]['id_pemesanan'].toString(),
-        'status_pesanan': newStatus,
+        'id_produk': productId.toString(),
+        'jumlah_pesanan': jumlahPesanan.toString(),
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Berhasil mengurangkan jumlah_pesanan
+      print('Jumlah pesanan berhasil diperbarui');
+
+      // Update _filteredData secara langsung
+      setState(() {
+        for (int i = 0; i < _filteredData.length; i++) {
+          if (_filteredData[i]['id_produk'] == productId) {
+            _filteredData[i]['jumlah_produk'] -= jumlahPesanan;
+          }
+        }
+      });
+
+      await _updateStatus(index, _listdata[index]['id_pemesanan'], 'Siap Diantar');
+    } else {
+      // Gagal mengurangkan jumlah_pesanan
+      print('Gagal mengurangkan jumlah_pesanan');
+    }
+  }
+
+  Future<void> _updateStatus(int index, int idPemesanan, String status_pesanan) async {
+    final response = await http.post(
+      Uri.parse(ApiConfig.status_pesanan),
+      body: {
+        'id_pemesanan': idPemesanan.toString(),
+        'status_pesanan': status_pesanan.toString(),
       },
     );
 
@@ -78,16 +110,9 @@ class _LaporanWidgetState extends State<StatusPesanan> {
 
       // Perbarui status langsung dalam _filteredData
       setState(() {
-        _filteredData[index]['status_pesanan'] = newStatus;
+        _filteredData[index]['status_pesanan'] = status_pesanan;
       });
 
-      // Panggil fungsi untuk mengurangkan jumlah_produk di tabel ketersediaan
-      await _updateProductAvailability(
-          _listdata[index]['id_produk'],
-          _listdata[index]['jumlah_pesanan'], // Ubah ke string jika diperlukan
-      );
-
-      Navigator.pop(context);
     } else {
       // Gagal memperbarui status
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,25 +123,6 @@ class _LaporanWidgetState extends State<StatusPesanan> {
       );
     }
   }
-
-  Future<void> _updateProductAvailability(int productId, int jumlahPesanan) async {
-    final response = await http.post(
-      Uri.parse(ApiConfig.kurangi_stok),
-      body: {
-        'id_produk': productId.toString(),
-        'jumlah_pesanan': jumlahPesanan.toString(),
-      },
-    );
-
-    if (response.statusCode == 200) {
-      // Berhasil mengurangkan jumlah_pesanan
-      print('Jumlah pesanan berhasil diperbarui');
-    } else {
-      // Gagal mengurangkan jumlah_pesanan
-      print('Gagal mengurangkan jumlah_pesanan');
-    }
-  }
-
 
 
   Future _getdata() async {
@@ -490,20 +496,18 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                               String statusPesanan =
                               _filteredData[index]['status_pesanan'];
                               return GestureDetector(
-                                onTap: () {
-                                  if (_filteredData[index]['status_pesanan'] ==
-                                      'Menunggu') {
+                                onTap: () async {
+                                  if (_filteredData[index]['status_pesanan'] == 'Menunggu') {
                                     showDialog(
                                       context: context,
                                       builder: (context) {
                                         return AlertDialog(
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                           title: Center(
-                                              child: Text(
-                                                  'Pesanan sudah selesai diproses')),
+                                            child: Text('Pesanan sudah selesai diproses'),
+                                          ),
                                           content: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
@@ -513,14 +517,19 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                           actions: [
                                             TextButton(
                                               onPressed: () async {
-                                                // Mengubah status pesanan menjadi 'Selesai'
-                                                await _updateStatus(context,
-                                                    index, 'Siap Diantar');
+                                                int productId = _filteredData[index]['id_produk'];
+                                                int jumlahPesanan = int.parse(_filteredData[index]['jumlah_pesanan']);
+
+                                                // Panggil fungsi untuk mengurangi jumlah_produk di tabel ketersediaan_barang
+                                                await _updateProductAvailability(index, productId, jumlahPesanan);
+
+                                                Navigator.of(context).pop();
                                               },
                                               child: Text(
                                                 'Ya',
                                                 style: TextStyle(
-                                                    color: Colors.green),
+                                                  color: Colors.green,
+                                                ),
                                               ),
                                             ),
                                             TextButton(
@@ -531,7 +540,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                               child: Text(
                                                 'Tidak',
                                                 style: TextStyle(
-                                                    color: Colors.red),
+                                                  color: Colors.red,
+                                                ),
                                               ),
                                             ),
                                           ],

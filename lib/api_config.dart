@@ -3,7 +3,7 @@
 // import 'package:suco/api_config.dart';
 // Uri.parse(ApiConfig.namaFile),
 class ApiConfig {
-  static const String baseUrl = 'http://10.132.183.135:8000/api'; // Ganti dengan URL API Anda
+  static const String baseUrl = 'http://192.168.169.107:8000/api'; // Ganti dengan URL API Anda
   static const String login = '$baseUrl/login';
   static const String getProfile = '$baseUrl/get-profile';
   static const String editProfile = '$baseUrl/edit-profile';
@@ -22,6 +22,6 @@ class ApiConfig {
   static const String add_data_client= '$baseUrl/add/data-klien';
   static const String kurangi_stok = '$baseUrl/ketersediaan/update-availability';
   static const String add_product = '$baseUrl/stock/add-stock';
-
+  static const String kurangi_stok1 = '$baseUrl/pesanan/updateProductAvailability';
 
 }

@@ -35,6 +35,8 @@ Route::get('/pesanan/show-history', [PesananController::class, 'showHistory']);
 Route::post('pesanan/update-status', [PesananController::class, 'updateStatus']);
 Route::post('pesanan/update-status-siapdiantar', [PesananController::class, 'updateStatusSiapDiantar']);
 Route::post('pesanan/tambah-pesanan', [PesananController::class, 'store']);
+Route::post('pesanan/updateProductAvailability', [PesananController::class, 'updateProductAvailability']);
+
 
 // untuk halaman stock
 Route::get('/stock', [StockController::class, 'show']);

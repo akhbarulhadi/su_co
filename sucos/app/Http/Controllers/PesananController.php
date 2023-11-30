@@ -68,45 +68,43 @@ class PesananController extends Controller
 
     public function updateStatusSiapDiantar(Request $request)
     {
-        // Validasi request sesuai kebutuhan Anda
-        $request->validate([
-            'id_pemesanan' => 'required|integer',
-            'status_pesanan' => 'required|string',
-        ]);
+        $idPemesanan = $request->input('id_pemesanan');
 
-        // Perbarui status pesanan di database
-        $pesanan = Pesanan::find($request->id_pemesanan);
+        try {
+            // Temukan pesanan berdasarkan ID
+            $pesanan = Pesanan::find($idPemesanan);
 
-        if (!$pesanan) {
-            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+            // Perbarui status_pesanan menjadi 'Siap Diantar'
+            $pesanan->status_pesanan = 'Siap Diantar';
+            $pesanan->save();
+
+            return response()->json(['message' => 'Status pesanan berhasil diperbarui'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal memperbarui status pesanan'], 500);
         }
-
-        $pesanan->status_pesanan = $request->status_pesanan;
-        $pesanan->save();
-
-        // Kurangi jumlah_produk di tabel ketersediaan barang
-        $this->updateProductAvailability($pesanan->id_produk, $pesanan->jumlah_pesanan);
-
-        return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 
-    protected function updateProductAvailability($id_produk, $jumlah_pesanan)
+    public function updateProductAvailability(Request $request)
     {
-        $product = Stock::find($id_produk);
+        $productId = $request->input('id_produk');
+        $jumlahPesanan = $request->input('jumlah_pesanan');
 
-        if (!$product) {
-            return response()->json(['message' => 'Produk tidak ditemukan'], 404);
-        }
+        try {
+            // Temukan produk berdasarkan ID
+            $product = Stock::find($productId);
 
-        // Kurangi jumlah_produk berdasarkan jumlah_pesanan
-        if ($product->jumlah_produk >= $jumlah_pesanan) {
-            // Kurangi jumlah_produk
-            $product->jumlah_produk -= $jumlah_pesanan;
-            $product->save();
+            // Verifikasi apakah jumlah_produk cukup
+            if ($product->jumlah_produk >= $jumlahPesanan) {
+                // Perbarui jumlah_produk
+                $product->jumlah_produk -= $jumlahPesanan;
+                $product->save();
 
-            return response()->json(['message' => 'Jumlah produk berhasil diperbarui']);
-        } else {
-            return response()->json(['message' => 'Gagal mengurangkan jumlah_produk, stok tidak mencukupi'], 400);
+                return response()->json(['message' => 'Jumlah produk berhasil diperbarui'], 200);
+            } else {
+                return response()->json(['message' => 'Jumlah produk tidak mencukupi'], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal mengurangkan jumlah produk'], 500);
         }
     }
 }
