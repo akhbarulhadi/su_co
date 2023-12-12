@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KlienController;
 use App\Http\Controllers\PesananController;
+use App\Http\Controllers\ProduksiController;
 use App\Http\Controllers\StockController;
+use App\Models\Produksi;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +51,9 @@ Route::post('/add/data-klien', [KlienController::class, 'store']);
 Route::get('/klien', [KlienController::class, 'showKlien']);
 
 // untuk halaman produksi
-
-
+Route::post('/produksi', [ProduksiController::class, 'store']);
+Route::get('/roles-leader', [ProduksiController::class, 'user']);
+Route::post('/produksi/update-status', [ProduksiController::class, 'updateStatus']);
+Route::post('/produksi/update-stock', [ProduksiController::class, 'updateJumlahProduk']);
+Route::get('/jadwal', [ProduksiController::class, 'getproduksi']);
 // Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);

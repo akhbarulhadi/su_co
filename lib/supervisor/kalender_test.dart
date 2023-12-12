@@ -21,9 +21,7 @@ class CalenderState extends State<CalendarTest> {
   TextEditingController _eventController = TextEditingController();
   TextEditingController _roomnameController = TextEditingController();
   TextEditingController _leadernameController = TextEditingController();
-  TextEditingController _productcodeController = TextEditingController();
   TextEditingController _totalproductionController = TextEditingController();
-  TextEditingController _tanggalController = TextEditingController();
   late final ValueNotifier<List<Event>> _selectedEvents;
 
   @override
@@ -33,7 +31,6 @@ class CalenderState extends State<CalendarTest> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _selectedEvents =
         ValueNotifier(_getEventsForDay(_selectedDay ?? DateTime.now()));
-    _tanggalController.text = "Selected Day + " + _selectedDay.toString().split(" ")[0];
   }
 
   @override
@@ -173,12 +170,6 @@ class CalenderState extends State<CalendarTest> {
                             ),
                           ),
                           TextField(
-                            controller: _productcodeController,
-                            decoration: InputDecoration(
-                              labelText: 'Product Code',
-                            ),
-                          ),
-                          TextField(
                             controller: _totalproductionController,
                             decoration: InputDecoration(
                               labelText: 'Total Product',
@@ -194,7 +185,6 @@ class CalenderState extends State<CalendarTest> {
                             _eventController.text,
                             _roomnameController.text,
                             _leadernameController.text,
-                            _productcodeController.text,
                             _totalproductionController.text,
                           );
                           events[_selectedDay!] = [
@@ -204,7 +194,6 @@ class CalenderState extends State<CalendarTest> {
                           _eventController.clear();
                           _roomnameController.clear();
                           _leadernameController.clear();
-                          _productcodeController.clear();
                           _totalproductionController.clear();
                           _eventController
                               .clear(); // Membersihkan teks yang diinput
@@ -229,39 +218,37 @@ class CalenderState extends State<CalendarTest> {
                 style: TextStyle(color: Colors.black),
               ),
               Container(
-                padding: EdgeInsets.all(2.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15.0),
-                  color: Color(0xFF094067),
-                ),
+                decoration: BoxDecoration(),
                 child: TableCalendar(
                   locale: "en_US",
                   rowHeight: 43,
                   headerStyle: HeaderStyle(
-                    titleTextStyle: TextStyle(color: Colors.white), // Mengubah warna teks judul kalender menjadi putih
+                    titleTextStyle: TextStyle(
+                        color: Colors
+                            .black), // Mengubah warna teks judul kalender menjadi putih
                     formatButtonDecoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.white, // Warna garis tepi
+                        color: Colors.black, // Warna garis tepi
                         width: 0.5, // Lebar garis tepi
                       ),
-                      color: Colors.transparent, // Mengubah warna latar belakang tombol ganti format (minggu, bulan, tahun, dll.) jika diperlukan
+                      color: Colors
+                          .transparent, // Mengubah warna latar belakang tombol ganti format (minggu, bulan, tahun, dll.) jika diperlukan
                     ),
                     formatButtonTextStyle: TextStyle(
-                      color: Colors.white, // Mengubah warna teks tombol ganti format (minggu, bulan, tahun, dll.)
+                      color: Colors
+                          .black, // Mengubah warna teks tombol ganti format (minggu, bulan, tahun, dll.)
                     ),
                     leftChevronIcon: Icon(
                       Icons.chevron_left,
-                      color: Colors.white, // Mengubah warna ikon panah kiri jika diperlukan
+                      color: Colors
+                          .blue, // Mengubah warna ikon panah kiri jika diperlukan
                     ),
                     rightChevronIcon: Icon(
                       Icons.chevron_right,
-                      color: Colors.white, // Mengubah warna ikon panah kanan jika diperlukan
+                      color: Colors
+                          .blue, // Mengubah warna ikon panah kanan jika diperlukan
                     ),
-                  ),
-                  daysOfWeekStyle: DaysOfWeekStyle(
-                    weekdayStyle: TextStyle(color: Colors.white), // Mengubah warna teks hari kerja menjadi putih
-                    weekendStyle: TextStyle(color: Colors.white), // Mengubah warna teks akhir pekan menjadi putih
                   ),
                   availableGestures: AvailableGestures.all,
                   selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
@@ -276,10 +263,9 @@ class CalenderState extends State<CalendarTest> {
                     outsideDaysVisible: false,
                     weekendTextStyle: TextStyle(
                         color: Colors
-                            .white), // Mengubah warna teks hari Sabtu dan Minggu menjadi putih
+                            .black), // Mengubah warna teks hari Sabtu dan Minggu menjadi putih
                     defaultTextStyle: TextStyle(
-                        color: Colors.white
-                    ), // Ubah warna teks menjadi putih
+                        color: Colors.black), // Ubah warna teks menjadi putih
                     todayTextStyle: TextStyle(
                         color: Colors
                             .black), // Ubah warna teks hari ini menjadi putih
@@ -347,11 +333,11 @@ class CalenderState extends State<CalendarTest> {
                                       child: Column(
                                         mainAxisSize: MainAxisSize.max,
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
                                               Padding(
                                                 padding: EdgeInsetsDirectional
@@ -363,8 +349,7 @@ class CalenderState extends State<CalendarTest> {
                                                     color: Color(0xFFFFFFFE),
                                                     fontSize: screenWidth *
                                                         0.05, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                    FontWeight.bold,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                               ),
@@ -379,37 +364,18 @@ class CalenderState extends State<CalendarTest> {
                                                     fontSize: screenWidth *
                                                         0.04, // Ukuran teks pada tombol
                                                     fontWeight:
-                                                    FontWeight.normal,
+                                                        FontWeight.normal,
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          Row(
-                                            mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  event.productCode,
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFFFFFFFE),
-                                                    fontSize: screenWidth *
-                                                        0.04, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                    FontWeight.w300,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                          SizedBox(
+                                            height: bodyHeight * 0.02,
                                           ),
-                                          SizedBox( height: bodyHeight * 0.02,),
                                           Row(
                                             mainAxisAlignment:
-                                            MainAxisAlignment.start,
+                                                MainAxisAlignment.start,
                                             children: [
                                               Padding(
                                                 padding: EdgeInsetsDirectional
@@ -420,7 +386,9 @@ class CalenderState extends State<CalendarTest> {
                                                   size: 18,
                                                 ),
                                               ),
-                                              SizedBox( width: mediaQueryWidth * 0.02,),
+                                              SizedBox(
+                                                width: mediaQueryWidth * 0.02,
+                                              ),
                                               Padding(
                                                 padding: EdgeInsetsDirectional
                                                     .fromSTEB(0, 4, 0, 0),
@@ -432,7 +400,7 @@ class CalenderState extends State<CalendarTest> {
                                                     fontSize: screenWidth *
                                                         0.03, // Ukuran teks pada tombol
                                                     fontWeight:
-                                                    FontWeight.normal,
+                                                        FontWeight.normal,
                                                   ),
                                                 ),
                                               ),
@@ -440,7 +408,7 @@ class CalenderState extends State<CalendarTest> {
                                           ),
                                           Row(
                                             mainAxisAlignment:
-                                            MainAxisAlignment.start,
+                                                MainAxisAlignment.start,
                                             children: [
                                               Padding(
                                                 padding: EdgeInsetsDirectional
@@ -449,11 +417,14 @@ class CalenderState extends State<CalendarTest> {
                                                   width: mediaQueryWidth * 0.04,
                                                   height: bodyHeight * 0.04,
                                                   child: Image(
-                                                    image: AssetImage('lib/assets/user.png'),
+                                                    image: AssetImage(
+                                                        'lib/assets/user.png'),
                                                   ),
                                                 ),
                                               ),
-                                              SizedBox( width: mediaQueryWidth * 0.02,),
+                                              SizedBox(
+                                                width: mediaQueryWidth * 0.02,
+                                              ),
                                               Padding(
                                                 padding: EdgeInsetsDirectional
                                                     .fromSTEB(0, 4, 0, 0),
@@ -465,7 +436,7 @@ class CalenderState extends State<CalendarTest> {
                                                     fontSize: screenWidth *
                                                         0.03, // Ukuran teks pada tombol
                                                     fontWeight:
-                                                    FontWeight.normal,
+                                                        FontWeight.normal,
                                                   ),
                                                 ),
                                               ),
@@ -473,7 +444,7 @@ class CalenderState extends State<CalendarTest> {
                                           ),
                                           Row(
                                             mainAxisAlignment:
-                                            MainAxisAlignment.end,
+                                                MainAxisAlignment.end,
                                             children: [
                                               Padding(
                                                 padding: EdgeInsetsDirectional
@@ -486,20 +457,21 @@ class CalenderState extends State<CalendarTest> {
                                                     fontSize: screenWidth *
                                                         0.03, // Ukuran teks pada tombol
                                                     fontWeight:
-                                                    FontWeight.normal,
+                                                        FontWeight.normal,
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          SizedBox( height: bodyHeight * 0.01,),
+                                          SizedBox(
+                                            height: bodyHeight * 0.01,
+                                          ),
                                         ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-
                             );
                           });
                     }),

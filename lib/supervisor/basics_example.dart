@@ -128,7 +128,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData themeData = isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    final ThemeData themeData =
+        isDarkTheme ? ThemeData.dark() : ThemeData.light();
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
       theme: themeData, // Terapkan tema sesuai dengan preferensi tema gelap
@@ -136,17 +137,19 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         backgroundColor: isDarkTheme ? Colors.black : Colors.white,
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(
-                Icons.arrow_back,
+            icon: Icon(Icons.arrow_back,
                 color: isDarkTheme ? Colors.white : Colors.black),
             onPressed: () async {
               Navigator.of(context).pop();
             },
           ),
           actions: <Widget>[
-            SizedBox(width: 45.0,),
+            SizedBox(
+              width: 45.0,
+            ),
           ],
-          backgroundColor: Colors.transparent, // Mengubah warna AppBar menjadi merah
+          backgroundColor:
+              Colors.transparent, // Mengubah warna AppBar menjadi merah
           elevation: 0,
           title: Align(
             alignment: Alignment.center,
@@ -161,7 +164,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child:Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Align(
@@ -169,7 +172,16 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
-                        context, MaterialPageRoute(builder: (context) => Calendar()));
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Calendar(
+                          productName:
+                              "Nilai Produk", // Ganti dengan nilai yang sesuai
+                          jumlahPesanan:
+                              "Jumlah Pesanan", // Ganti dengan nilai yang sesuai
+                        ),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(
@@ -195,30 +207,40 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 ),
                 child: TableCalendar<Event>(
                   headerStyle: HeaderStyle(
-                    titleTextStyle: TextStyle(color: Colors.white), // Mengubah warna teks judul kalender menjadi putih
+                    titleTextStyle: TextStyle(
+                        color: Colors
+                            .white), // Mengubah warna teks judul kalender menjadi putih
                     formatButtonDecoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Colors.white, // Warna garis tepi
                         width: 0.5, // Lebar garis tepi
                       ),
-                      color: Colors.transparent, // Mengubah warna latar belakang tombol ganti format (minggu, bulan, tahun, dll.) jika diperlukan
+                      color: Colors
+                          .transparent, // Mengubah warna latar belakang tombol ganti format (minggu, bulan, tahun, dll.) jika diperlukan
                     ),
                     formatButtonTextStyle: TextStyle(
-                      color: Colors.white, // Mengubah warna teks tombol ganti format (minggu, bulan, tahun, dll.)
+                      color: Colors
+                          .white, // Mengubah warna teks tombol ganti format (minggu, bulan, tahun, dll.)
                     ),
                     leftChevronIcon: Icon(
                       Icons.chevron_left,
-                      color: Colors.white, // Mengubah warna ikon panah kiri jika diperlukan
+                      color: Colors
+                          .white, // Mengubah warna ikon panah kiri jika diperlukan
                     ),
                     rightChevronIcon: Icon(
                       Icons.chevron_right,
-                      color: Colors.white, // Mengubah warna ikon panah kanan jika diperlukan
+                      color: Colors
+                          .white, // Mengubah warna ikon panah kanan jika diperlukan
                     ),
                   ),
                   daysOfWeekStyle: DaysOfWeekStyle(
-                    weekdayStyle: TextStyle(color: Colors.white), // Mengubah warna teks hari kerja menjadi putih
-                    weekendStyle: TextStyle(color: Colors.white), // Mengubah warna teks akhir pekan menjadi putih
+                    weekdayStyle: TextStyle(
+                        color: Colors
+                            .white), // Mengubah warna teks hari kerja menjadi putih
+                    weekendStyle: TextStyle(
+                        color: Colors
+                            .white), // Mengubah warna teks akhir pekan menjadi putih
                   ),
                   firstDay: kFirstDay,
                   lastDay: kLastDay,
@@ -232,18 +254,30 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                   startingDayOfWeek: StartingDayOfWeek.monday,
                   calendarStyle: CalendarStyle(
                     outsideDaysVisible: false,
-                    weekendTextStyle: TextStyle(color: Colors.white), // Mengubah warna teks hari Sabtu dan Minggu menjadi putih
-                    defaultTextStyle: TextStyle(color: Colors.white), // Ubah warna teks menjadi putih
-                    todayTextStyle: TextStyle(color: Colors.white), // Ubah warna teks hari ini menjadi putih
-                    selectedTextStyle: TextStyle(color: Colors.white), // Ubah warna teks saat dipilih menjadi putih
+                    weekendTextStyle: TextStyle(
+                        color: Colors
+                            .white), // Mengubah warna teks hari Sabtu dan Minggu menjadi putih
+                    defaultTextStyle: TextStyle(
+                        color: Colors.white), // Ubah warna teks menjadi putih
+                    todayTextStyle: TextStyle(
+                        color: Colors
+                            .white), // Ubah warna teks hari ini menjadi putih
+                    selectedTextStyle: TextStyle(
+                        color: Colors
+                            .white), // Ubah warna teks saat dipilih menjadi putih
                     todayDecoration: BoxDecoration(
-                      color: Color(0xFF71C4EF), // Ganti warna latar belakang hari ini jika diperlukan
-                      shape: BoxShape.circle, // Ganti bentuk latar belakang hari ini jika diperlukan
+                      color: Color(
+                          0xFF71C4EF), // Ganti warna latar belakang hari ini jika diperlukan
+                      shape: BoxShape
+                          .circle, // Ganti bentuk latar belakang hari ini jika diperlukan
                     ),
                     selectedDecoration: BoxDecoration(
-                      color: Colors.blue, // Ganti warna latar belakang saat dipilih jika diperlukan
-                      shape: BoxShape.circle, // Ganti bentuk latar belakang saat dipilih jika diperlukan
-                    ),                  ),
+                      color: Colors
+                          .blue, // Ganti warna latar belakang saat dipilih jika diperlukan
+                      shape: BoxShape
+                          .circle, // Ganti bentuk latar belakang saat dipilih jika diperlukan
+                    ),
+                  ),
                   onDaySelected: _onDaySelected,
                   onRangeSelected: _onRangeSelected,
                   onFormatChanged: (format) {
