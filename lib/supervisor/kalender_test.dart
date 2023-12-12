@@ -23,6 +23,7 @@ class CalenderState extends State<CalendarTest> {
   TextEditingController _leadernameController = TextEditingController();
   TextEditingController _productcodeController = TextEditingController();
   TextEditingController _totalproductionController = TextEditingController();
+  TextEditingController _tanggalController = TextEditingController();
   late final ValueNotifier<List<Event>> _selectedEvents;
 
   @override
@@ -32,6 +33,7 @@ class CalenderState extends State<CalendarTest> {
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _selectedEvents =
         ValueNotifier(_getEventsForDay(_selectedDay ?? DateTime.now()));
+    _tanggalController.text = "Selected Day + " + _selectedDay.toString().split(" ")[0];
   }
 
   @override
@@ -227,37 +229,39 @@ class CalenderState extends State<CalendarTest> {
                 style: TextStyle(color: Colors.black),
               ),
               Container(
-                decoration: BoxDecoration(),
+                padding: EdgeInsets.all(2.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15.0),
+                  color: Color(0xFF094067),
+                ),
                 child: TableCalendar(
                   locale: "en_US",
                   rowHeight: 43,
                   headerStyle: HeaderStyle(
-                    titleTextStyle: TextStyle(
-                        color: Colors
-                            .black), // Mengubah warna teks judul kalender menjadi putih
+                    titleTextStyle: TextStyle(color: Colors.white), // Mengubah warna teks judul kalender menjadi putih
                     formatButtonDecoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.black, // Warna garis tepi
+                        color: Colors.white, // Warna garis tepi
                         width: 0.5, // Lebar garis tepi
                       ),
-                      color: Colors
-                          .transparent, // Mengubah warna latar belakang tombol ganti format (minggu, bulan, tahun, dll.) jika diperlukan
+                      color: Colors.transparent, // Mengubah warna latar belakang tombol ganti format (minggu, bulan, tahun, dll.) jika diperlukan
                     ),
                     formatButtonTextStyle: TextStyle(
-                      color: Colors
-                          .black, // Mengubah warna teks tombol ganti format (minggu, bulan, tahun, dll.)
+                      color: Colors.white, // Mengubah warna teks tombol ganti format (minggu, bulan, tahun, dll.)
                     ),
                     leftChevronIcon: Icon(
                       Icons.chevron_left,
-                      color: Colors
-                          .blue, // Mengubah warna ikon panah kiri jika diperlukan
+                      color: Colors.white, // Mengubah warna ikon panah kiri jika diperlukan
                     ),
                     rightChevronIcon: Icon(
                       Icons.chevron_right,
-                      color: Colors
-                          .blue, // Mengubah warna ikon panah kanan jika diperlukan
+                      color: Colors.white, // Mengubah warna ikon panah kanan jika diperlukan
                     ),
+                  ),
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(color: Colors.white), // Mengubah warna teks hari kerja menjadi putih
+                    weekendStyle: TextStyle(color: Colors.white), // Mengubah warna teks akhir pekan menjadi putih
                   ),
                   availableGestures: AvailableGestures.all,
                   selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
@@ -272,9 +276,10 @@ class CalenderState extends State<CalendarTest> {
                     outsideDaysVisible: false,
                     weekendTextStyle: TextStyle(
                         color: Colors
-                            .black), // Mengubah warna teks hari Sabtu dan Minggu menjadi putih
+                            .white), // Mengubah warna teks hari Sabtu dan Minggu menjadi putih
                     defaultTextStyle: TextStyle(
-                        color: Colors.black), // Ubah warna teks menjadi putih
+                        color: Colors.white
+                    ), // Ubah warna teks menjadi putih
                     todayTextStyle: TextStyle(
                         color: Colors
                             .black), // Ubah warna teks hari ini menjadi putih

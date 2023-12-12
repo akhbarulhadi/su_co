@@ -18,11 +18,11 @@ return new class extends Migration
             $table->foreign('id_produk')->references('id_produk')->on('ketersediaan_barang');
             $table->unsignedBigInteger('id_klien');
             $table->foreign('id_klien')->references('id_klien')->on('data_klien');
-            $table->string('harga_total');
+            $table->decimal('harga_total');
             $table->string('jenis_pembayaran');
             $table->string('jumlah_pesanan');
             $table->date('batas_tanggal');
-            $table->enum('status_pesanan', ['Menunggu', 'Siap Diantar', 'Selesai']);
+            $table->enum('status_pesanan', ['Menunggu', 'Siap Diantar', 'Selesai', 'Ditunda']);
             $table->timestamps();
         });
     }

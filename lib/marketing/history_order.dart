@@ -16,12 +16,14 @@ class HistoryOrder extends StatefulWidget {
 
 class HistoryOrderState extends State<HistoryOrder> {
   late TextEditingController _textController;
+  late TextEditingController _textperiodController;
   late FocusNode _unfocusNode;
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
   bool _isloading = true;
   List _filteredData = [];
+  String selectedPeriod = "";
 
   @override
   void initState() {
@@ -29,6 +31,7 @@ class HistoryOrderState extends State<HistoryOrder> {
     loadThemePreference(); // Muat preferensi tema gelap saat halaman dimulai
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     _textController = TextEditingController();
+    _textperiodController = TextEditingController();
     _unfocusNode = FocusNode();
     _listdata = [];
     _filteredData = [];
@@ -53,6 +56,7 @@ class HistoryOrderState extends State<HistoryOrder> {
   @override
   void dispose() {
     _textController.dispose();
+    _textperiodController.dispose();
     _unfocusNode.dispose();
     super.dispose();
   }
@@ -72,6 +76,22 @@ class HistoryOrderState extends State<HistoryOrder> {
     } catch (e) {
       print(e);
     }
+  }
+
+  bool isDateInRange(String date, String dateRange) {
+    List<String> dateRangeArray = dateRange.split('/');
+    if (dateRangeArray.length == 2) {
+      String startDateString = dateRangeArray[0].trim();
+      String endDateString = dateRangeArray[1].trim();
+
+      DateTime startDate = DateTime.parse(startDateString);
+      DateTime endDate = DateTime.parse(endDateString).add(Duration(days: 1));
+
+      DateTime dateToCheck = DateTime.parse(date);
+
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
+    }
+    return false;
   }
 
 // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
@@ -107,8 +127,8 @@ class HistoryOrderState extends State<HistoryOrder> {
           return 'Nama Produk';
         case 'No history yet':
           return 'Belum ada riwayat';
-        case '':
-          return '';
+        case 'Finished':
+          return 'Selesai';
         case '':
           return '';
         case '':
@@ -124,6 +144,22 @@ class HistoryOrderState extends State<HistoryOrder> {
     } else {
       // Teks dalam bahasa Inggris (default)
       return text;
+    }
+  }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
     }
   }
 
@@ -206,7 +242,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
+                            isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -232,8 +268,65 @@ class HistoryOrderState extends State<HistoryOrder> {
                             ),
                           ),
                         ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText("All"),
+                        onChanged: (selectedItem) {
+                          setState(() {
+                            // Set nilai pilihan dropdown
+                            selectedPeriod = selectedItem ?? getTranslatedText("All");
+
+                            // Set nilai pada search bar sesuai dengan pilihan dropdown
+                            if (selectedPeriod == getTranslatedText("Daily")) {
+                              _textController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+                            } else if (selectedPeriod == getTranslatedText("Weekly")) {
+                              // Mendapatkan tanggal awal dan akhir minggu saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+                              DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
+                            } else if (selectedPeriod == getTranslatedText("Monthly")) {
+                              // Mendapatkan tanggal awal dan akhir bulan saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfMonth = DateTime(now.year, now.month, 1);
+                              DateTime endOfMonth = DateTime(now.year, now.month + 1, 1).subtract(Duration(days: 1));
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
+                            } else if (selectedPeriod == getTranslatedText("Yearly")) {
+                              // Mendapatkan tanggal awal dan akhir tahun saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfYear = DateTime(now.year, 1, 1);
+                              DateTime endOfYear = DateTime(now.year, 12, 31);
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
+                            } else {
+                              _textController.text = "";
+                            }
+
+                            // Lakukan filter berdasarkan pilihan dropdown
+                            _filteredData = _listdata.where((item) {
+                              String lowerCaseQuery = _textController.text.toLowerCase();
+
+                              // Mencocokkan berdasarkan nama_perusahaan
+                              bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                              bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
+
+                              // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                              bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                  isDateInRange(
+                                    DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                    lowerCaseQuery,
+                                  );
+                              bool matchesBareng = matchesname && matchesupdated_at;
+                              bool matchesBareng2 = matchesname && matchesupdated_at2;
+
+                              // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                              return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
+                            }).toList();
+                          });
+                        },
+                        selectedItem: getTranslatedText('All'),
                       ),
                     ),
                     Container(
@@ -270,13 +363,23 @@ class HistoryOrderState extends State<HistoryOrder> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        // Customize this condition based on your search criteria
-                                        return item['nama_perusahaan']
-                                            .toLowerCase()
-                                            .contains(query.toLowerCase()) ||
-                                            item['updated_at']
-                                                .toLowerCase()
-                                                .contains(query.toLowerCase());
+                                        String lowerCaseQuery = query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan nama_perusahaan
+                                        bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                            isDateInRange(
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                              lowerCaseQuery,
+                                            );
+                                        bool matchesBareng = matchesname && matchesupdated_at;
+                                        bool matchesBareng2 = matchesname && matchesupdated_at2;
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
                                       }).toList();
                                     });
                                   },
@@ -345,27 +448,16 @@ class HistoryOrderState extends State<HistoryOrder> {
                                   showDialog(
                                     context: context,
                                     builder: (context) {
-                                      TextEditingController statusController =
-                                          TextEditingController(
-                                              text: _filteredData[index]
-                                                      ['status_pesanan']
-                                                  .toString());
-                                      TextEditingController
-                                          namaklienController =
-                                          TextEditingController(
-                                              text: _filteredData[index]
-                                                      ['nama_klien']
-                                                  .toString());
-                                      TextEditingController alamatController =
-                                          TextEditingController(
-                                              text: _filteredData[index]['alamat']
-                                                  .toString());
-                                      TextEditingController
-                                          namaprodukController =
-                                          TextEditingController(
-                                              text: _filteredData[index]
-                                                      ['nama_produk']
-                                                  .toString());
+                                      TextEditingController statusController = TextEditingController(
+                                        text: getTranslatedDatabase(_filteredData[index]['status_pesanan'].toString()),
+                                      );
+                                      TextEditingController namaklienController = TextEditingController(
+                                          text: _filteredData[index]['nama_klien'].toString());
+                                      TextEditingController alamatController = TextEditingController(
+                                          text: _filteredData[index]['alamat'].toString());
+                                      TextEditingController namaprodukController = TextEditingController(
+                                          text: _filteredData[index]['nama_produk'].toString());
+
                                       return AlertDialog(
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
@@ -467,7 +559,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                   padding: EdgeInsetsDirectional
                                                       .fromSTEB(0, 4, 0, 0),
                                                   child: Text(
-                                                    DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(
+                                                    DateFormat('dd-MM-yyyy').format(DateTime.parse(
                                                         _filteredData[index]['updated_at'])),
                                                     style: TextStyle(
                                                       fontFamily: 'Inter',
@@ -595,63 +687,6 @@ class HistoryOrderState extends State<HistoryOrder> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    // Tambahkan aksi yang ingin ditampilkan pada tampilan pencarian
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    // Ikon yang ditampilkan di sebelah kiri pada AppBar
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // Tampilkan hasil pencarian di sini (jika ada)
-    return Center(
-      child: Text('Hasil pencarian untuk: $query'),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // Tampilkan saran pencarian saat pengguna mengetik
-    return ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text('Saran 1'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 1');
-          },
-        ),
-        ListTile(
-          title: Text('Saran 2'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 2');
-          },
-        ),
-      ],
     );
   }
 }

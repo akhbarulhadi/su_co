@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('jumlah_produksi');
             $table->unsignedBigInteger('id_user');
             $table->foreign('id_user')->references('id_user')->on('users');
-            $table->enum('status_produksi', ['belum sesuai', 'sudah dibuat', 'sudah sesuai']);
+            $table->enum('status_produksi', ['belum sesuai', 'sudah dibuat', 'sudah sesuai', 'selesai']);
             $table->date('tanggal_produksi');
             $table->timestamps();
         });

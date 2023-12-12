@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class Stock extends StatefulWidget {
   const Stock({Key? key}) : super(key: key);
@@ -63,27 +64,94 @@ class StockState extends State<Stock> {
 
     if (response.statusCode == 200) {
       // Status berhasil diperbarui
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Status berhasil diperbarui'),
-          duration: Duration(seconds: 2),
-        ),
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       );
-
+      print('berhasil');
       // Perbarui harga langsung dalam _filteredData
       setState(() {
         _filteredData[index]['harga_produk'] = newStatus;
       });
-      Navigator.pop(context);
-
     } else {
       // Gagal memperbarui status
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal memperbarui status'),
-          duration: Duration(seconds: 2),
-        ),
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       );
+      print('gagal');
     }
   }
 
@@ -137,6 +205,10 @@ class StockState extends State<Stock> {
           return 'Ubah Harga';
         case 'Save':
           return 'Simpan';
+        case 'Not yet added':
+          return 'Belum ditambahkan';
+        case '':
+          return '';
         case '':
           return '';
 
@@ -322,9 +394,11 @@ class StockState extends State<Stock> {
                               showDialog(
                                 context: context,
                                 builder: (context) {
-                                  TextEditingController priceController =
-                                      TextEditingController(
-                                          text: _filteredData[index]['harga_produk']);
+                                  TextEditingController priceController = TextEditingController(
+                                    text: _filteredData[index]['harga_produk'] != null
+                                        ? '${_filteredData[index]['harga_produk']}'
+                                        : '',
+                                  );
 
                                   return AlertDialog(
                                     shape: RoundedRectangleBorder(
@@ -341,6 +415,7 @@ class StockState extends State<Stock> {
                                           controller: priceController,
                                           keyboardType: TextInputType.number,
                                           decoration: InputDecoration(
+                                              icon: Text('Rp'),
                                               labelText:
                                                   getTranslatedText('Price')),
                                         ),
@@ -483,7 +558,9 @@ class StockState extends State<Stock> {
                                               padding: EdgeInsetsDirectional
                                                   .fromSTEB(0, 4, 0, 0),
                                               child: Text(
-                                                _filteredData[index]['harga_produk'],
+                                                _filteredData[index]['harga_produk'] != null
+                                                    ? 'Rp ${_filteredData[index]['harga_produk']}'
+                                                    : getTranslatedText('Not yet added'),
                                                 style: TextStyle(
                                                   fontFamily: 'Inter',
                                                   color: Color(0xFFFFFFFE),
@@ -508,63 +585,6 @@ class StockState extends State<Stock> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    // Tambahkan aksi yang ingin ditampilkan pada tampilan pencarian
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    // Ikon yang ditampilkan di sebelah kiri pada AppBar
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // Tampilkan hasil pencarian di sini (jika ada)
-    return Center(
-      child: Text('Hasil pencarian untuk: $query'),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // Tampilkan saran pencarian saat pengguna mengetik
-    return ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text('Saran 1'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 1');
-          },
-        ),
-        ListTile(
-          title: Text('Saran 2'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 2');
-          },
-        ),
-      ],
     );
   }
 }

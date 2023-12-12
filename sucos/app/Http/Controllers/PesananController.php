@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
 use App\Models\Stock;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PesananController extends Controller
