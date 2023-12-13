@@ -348,15 +348,12 @@ class CalenderState extends State<Calendar> {
                             ),
                             child: Column(
                               children: [
-                                Visibility(
-                                  visible: false,
-                                  child:Text(
-                                  'Tanggal Dipilih: ${_selectedDay?.toLocal()}',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                  ),
+                                Text(
+                                'Tanggal Dipilih: ${_selectedDay?.toLocal()}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
                                 ),
                                 TableCalendar(
                                   headerStyle: HeaderStyle(

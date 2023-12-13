@@ -8,6 +8,7 @@ import 'package:suco/admin/add_user.dart';
 import 'package:suco/admin/sidebar.dart';
 import 'package:suco/admin/setting.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({Key? key}) : super(key: key);
@@ -17,11 +18,14 @@ class UserManagementPage extends StatefulWidget {
 }
 
 class UserManagementPageState extends State<UserManagementPage> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _textController;
+  TextEditingController passwordController = TextEditingController();
   late FocusNode _unfocusNode;
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
+  List _filteredData = [];
   bool _isloading = true;
 
   @override
@@ -32,7 +36,8 @@ class UserManagementPageState extends State<UserManagementPage> {
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
     _getdata();
-    //print(_listdata);
+    _listdata = [];
+    _filteredData = [];
     super.initState();
   }
 
@@ -56,11 +61,112 @@ class UserManagementPageState extends State<UserManagementPage> {
     _unfocusNode.dispose();
     super.dispose();
   }
+  Future<void> _resetPassword(
+      BuildContext context, int index, String newStatus) async {
+    final response = await http.post(
+      Uri.parse(ApiConfig.reset_password),
+      body: {
+        'id_user': _listdata[index]['id_user'].toString(),
+        'password': newStatus,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Status berhasil diperbarui
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+      print('berhasil');
+    } else {
+      // Gagal memperbarui status
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+      print('gagal');
+    }
+  }
 
   Future _getdata() async {
     try {
-      final response =
-          await http.get( Uri.parse(ApiConfig.users),);
+      final response = await http.get(
+        Uri.parse(ApiConfig.users),
+      );
       print(response.body); // Cetak respons ke konsol
 
       if (response.statusCode == 200) {
@@ -68,6 +174,7 @@ class UserManagementPageState extends State<UserManagementPage> {
         print(data); // Cetak data ke konsol
         setState(() {
           _listdata = data['users'];
+          _filteredData = _listdata;
           _isloading = false;
         });
       }
@@ -105,8 +212,8 @@ class UserManagementPageState extends State<UserManagementPage> {
           return '30 Baris';
         case '40 Line':
           return '40 Baris';
-        case '+ Add User':
-          return '+ Tambah Pengguna';
+        case '+ User':
+          return '+ Pengguna';
         case '':
           return '';
         case '':
@@ -126,7 +233,7 @@ class UserManagementPageState extends State<UserManagementPage> {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final ThemeData themeData =
-        isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final screenWidth = MediaQuery.of(context).size.width;
     final myAppBar = AppBar(
       backgroundColor: Colors.transparent, // Mengubah warna AppBar
@@ -135,7 +242,7 @@ class UserManagementPageState extends State<UserManagementPage> {
           color: isDarkTheme
               ? Colors.white
               : Colors
-                  .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+              .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
@@ -147,17 +254,8 @@ class UserManagementPageState extends State<UserManagementPage> {
         ),
       ),
       actions: <Widget>[
-        IconButton(
-          icon: Icon(
-            Icons.search,
-            color: isDarkTheme
-                ? Colors.white
-                : Colors.black, // Mengubah warna ikon menjadi hitam
-          ),
-          onPressed: () {
-            // Tampilkan tampilan pencarian di sini
-            showSearch(context: context, delegate: CustomSearchDelegate());
-          },
+        SizedBox(
+          width: 45.0,
         ),
       ],
     );
@@ -203,53 +301,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
-                            elevation: 0,
-                          ),
-                          showSelectedItems: true,
-                        ),
-                        items: [
-                          getTranslatedText('All'),
-                          getTranslatedText('Daily'),
-                          getTranslatedText('Weekly'),
-                          getTranslatedText('Monthly'),
-                          getTranslatedText('Yearly'),
-                        ],
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            labelText: getTranslatedText("Time Period"),
-                            // hintText: "waktu in menu mode",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.transparent),
-                            ),
-                          ),
-                        ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText("All"),
-                      ),
-                    ),
-                    Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
-                      decoration: BoxDecoration(
-                        color: isDarkTheme ? Colors.white24 : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.transparent, // Warna garis tepi
-                          width: 0.5, // Lebar garis tepi
-                        ),
-                      ),
-                      child: DropdownSearch<String>(
-                        popupProps: PopupProps.menu(
-                          fit: FlexFit.loose,
-                          menuProps: MenuProps(
-                            backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
+                            isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -279,13 +331,116 @@ class UserManagementPageState extends State<UserManagementPage> {
                         selectedItem: getTranslatedText("All"),
                       ),
                     ),
+                    Container(
+                      width: mediaQueryWidth * 0.4,
+                      height: bodyHeight * 0.048,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? Colors.white24 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDarkTheme ? Colors.white38 : Colors.black38,
+                          width: 1, // Lebar garis tepi
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.search_rounded,
+                                color: isDarkTheme
+                                    ? Colors.white
+                                    : Color(
+                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                size: 15,
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 12),
+                                child: TextFormField(
+                                  controller: _textController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = _listdata.where((item) {
+                                        String lowerCaseQuery =
+                                        query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan
+                                        bool matchesname =
+                                        item['nama_perusahaan']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+                                        bool matchescreated_at =
+                                        item['created_at']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+                                        bool matchesstatus =
+                                        item['status_pesanan']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesname ||
+                                            matchescreated_at ||
+                                            matchesstatus;
+                                      }).toList();
+                                    });
+                                  },
+                                  obscureText: false,
+                                  decoration: InputDecoration(
+                                    hintText: getTranslatedText('Search...'),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontFamily: 'Clash Display',
+                                    color: isDarkTheme
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: screenWidth *
+                                        0.035, // Ukuran teks pada tombol
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  validator: (value) {
+                                    // Validasi teks input
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(context,
                             MaterialPageRoute(builder: (context) => AddUser()));
                       },
                       child: Text(
-                        getTranslatedText('+ Add User'),
+                        getTranslatedText('+ User'),
                         style: TextStyle(
                           fontSize: 15,
                         ),
@@ -306,194 +461,210 @@ class UserManagementPageState extends State<UserManagementPage> {
               Expanded(
                 child: _isloading
                     ? Center(
-                        child: CircularProgressIndicator(),
-                      )
+                  child: CircularProgressIndicator(),
+                )
+                    : _filteredData.isEmpty
+                    ? Center(
+                  child: Text(getTranslatedText('No Order')),
+                )
                     : ListView.builder(
-                        itemCount: _listdata.length,
-                        itemBuilder: ((context, index) {
-                          return Card(
-                            clipBehavior: Clip.antiAliasWithSaveLayer,
-                            color: Color(0xFF094067),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsetsDirectional.fromSTEB(
-                                      16, 5, 16, 5),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
+                  itemCount: _filteredData.length,
+                  itemBuilder: ((context, index) {
+                    TextEditingController namaController = TextEditingController(
+                        text: _filteredData[index]['nama'].toString());
+                    TextEditingController idStaffController = TextEditingController(
+                        text: _filteredData[index]['id_staff'].toString());
+                    return GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8), // Ganti nilai sesuai keinginan Anda
+                              ),
+                              title: Center(
+                                  child: Text(getTranslatedText(
+                                      'User Detail'))),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
                                     children: [
-                                      CircleAvatar(
-                                        radius: mediaQueryWidth * 0.045,
-                                        backgroundColor: Color(0xFF7839CD),
-                                        child: _listdata[index]['foto'] != null
-                                            ? CircleAvatar(
-                                                radius: mediaQueryWidth * 0.042,
-                                                backgroundImage: NetworkImage(
-                                                  'http://192.168.100.8:8000/storage/foto/${_listdata[index]['foto']}'
-                                                ),
-                                              )
-                                            : CircleAvatar(
-                                                radius: mediaQueryWidth * 0.042,
-                                                backgroundColor: Colors.grey,
-                                              ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  12, 0, 0, 0),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                _listdata[index]['nama'],
-                                                style: TextStyle(
-                                                  fontFamily: 'Inter',
-                                                  color: Colors.white,
-                                                  fontSize: screenWidth * 0.04,
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  _listdata[index]['email'],
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Colors.white,
-                                                    fontSize:
-                                                        screenWidth * 0.028,
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  _listdata[index]['no_tlp'],
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Colors.white,
-                                                    fontSize:
-                                                        screenWidth * 0.028,
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    _listdata[index]['roles'],
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      color: Colors.white,
-                                                      fontSize:
-                                                          screenWidth * 0.028,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    _listdata[index]['status'],
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      color: Colors.white,
-                                                      fontSize:
-                                                          screenWidth * 0.028,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
+                                      Visibility(
+                                        visible: false, // Set this to false to hide the TextField
+                                        child: TextField(
+                                          controller: idStaffController,
+                                          keyboardType: TextInputType.text,
+                                          decoration: InputDecoration(
+                                            labelText: getTranslatedText('Client Name'),
                                           ),
+                                          enabled: false,
                                         ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () async {
+                                          await _resetPassword(context, index, idStaffController.text);
+                                        },
+                                        icon: Icon(Icons.lock_reset_rounded),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                  TextField(
+                                    controller: namaController,
+                                    keyboardType: TextInputType.text,
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Client Name')),
+                                    enabled: false,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: Card(
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        color: Color(0xFF094067),
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  16, 5, 16, 5),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  CircleAvatar(
+                                    radius: mediaQueryWidth * 0.045,
+                                    backgroundColor: Color(0xFF7839CD),
+                                    child: _filteredData[index]['foto'] !=
+                                        null
+                                        ? CircleAvatar(
+                                      radius:
+                                      mediaQueryWidth * 0.042,
+                                      backgroundImage: NetworkImage(
+                                          'http://192.168.100.8:8000/storage/foto/${_filteredData[index]['foto']}'),
+                                    )
+                                        : CircleAvatar(
+                                      radius:
+                                      mediaQueryWidth * 0.042,
+                                      backgroundColor:
+                                      Colors.grey,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsetsDirectional
+                                          .fromSTEB(12, 0, 0, 0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.max,
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _filteredData[index]['nama'],
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: Colors.white,
+                                              fontSize:
+                                              screenWidth * 0.04,
+                                              fontWeight:
+                                              FontWeight.normal,
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding:
+                                            EdgeInsetsDirectional
+                                                .fromSTEB(
+                                                0, 4, 0, 0),
+                                            child: Text(
+                                              _filteredData[index]['email'],
+                                              style: TextStyle(
+                                                fontFamily: 'Inter',
+                                                color: Colors.white,
+                                                fontSize:
+                                                screenWidth * 0.028,
+                                                fontWeight:
+                                                FontWeight.normal,
+                                              ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding:
+                                            EdgeInsetsDirectional
+                                                .fromSTEB(
+                                                0, 4, 0, 0),
+                                            child: Text(
+                                              _filteredData[index]
+                                              ['no_tlp'],
+                                              style: TextStyle(
+                                                fontFamily: 'Inter',
+                                                color: Colors.white,
+                                                fontSize:
+                                                screenWidth * 0.028,
+                                                fontWeight:
+                                                FontWeight.normal,
+                                              ),
+                                            ),
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                            children: [
+                                              Text(
+                                                _filteredData[index]
+                                                ['roles'],
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  color: Colors.white,
+                                                  fontSize:
+                                                  screenWidth *
+                                                      0.028,
+                                                  fontWeight:
+                                                  FontWeight.normal,
+                                                ),
+                                              ),
+                                              Text(
+                                                _filteredData[index]
+                                                ['status'],
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  color: Colors.white,
+                                                  fontSize:
+                                                  screenWidth *
+                                                      0.028,
+                                                  fontWeight:
+                                                  FontWeight.normal,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        }),
+                          ],
+                        ),
                       ),
+                    );
+                  }),
+                ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    // Tambahkan aksi yang ingin ditampilkan pada tampilan pencarian
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    // Ikon yang ditampilkan di sebelah kiri pada AppBar
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // Tampilkan hasil pencarian di sini (jika ada)
-    return Center(
-      child: Text('Hasil pencarian untuk: $query'),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // Tampilkan saran pencarian saat pengguna mengetik
-    return ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text('Saran 1'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 1');
-          },
-        ),
-        ListTile(
-          title: Text('Saran 2'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 2');
-          },
-        ),
-      ],
     );
   }
 }

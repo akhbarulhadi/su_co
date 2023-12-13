@@ -26,12 +26,12 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'id_staff' => 'required|int|unique:users',
-            'password' => 'required|string|min:8',
+            'id_staff' => 'required|string|unique:users',
+            'password' => 'required|string',
             'nama' => 'required|string',
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
             'alamat' => 'required|string',
-            'no_tlp' => 'required|string|unique:users',
+            'no_tlp' => 'required|string|min:10|unique:users',
             'email' => 'required|string|unique:users',
             'status' => 'required|in:aktif,tidak-aktif',
             'roles' => 'required|in:marketing,supervisor,leader,staff_gudang,kepala_gudang,admin',
@@ -182,5 +182,26 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         return $request->user();
+    }
+
+    public function resetPassword(Request $request)
+    {
+        // Validasi request sesuai kebutuhan Anda
+        $request->validate([
+            'id_user' => 'required|integer',
+            'password' => 'required|string',
+        ]);
+
+        // Perbarui status pesanan di database
+        $user = User::find($request->id_user);
+
+        if (!$user) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+        }
+
+        $user->password = $request->password;
+        $user->save();
+
+        return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 }

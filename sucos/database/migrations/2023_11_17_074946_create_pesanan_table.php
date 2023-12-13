@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreign('id_produk')->references('id_produk')->on('ketersediaan_barang');
             $table->unsignedBigInteger('id_klien');
             $table->foreign('id_klien')->references('id_klien')->on('data_klien');
-            $table->decimal('harga_total');
+            $table->decimal('harga_total', 10, 0);
             $table->string('jenis_pembayaran');
             $table->string('jumlah_pesanan');
             $table->date('batas_tanggal');

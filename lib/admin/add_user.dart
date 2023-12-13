@@ -6,6 +6,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'dart:convert';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class AddUser extends StatefulWidget {
   const AddUser({super.key});
@@ -16,6 +17,7 @@ class AddUser extends StatefulWidget {
 
 class AddUserState extends State<AddUser> {
   bool isDarkTheme = false;
+  bool isSubmitPressed = false;
   String selectedLanguage = 'IDN';
   final _formKey = GlobalKey<FormState>();
   TextEditingController idStaffController = TextEditingController();
@@ -28,6 +30,10 @@ class AddUserState extends State<AddUser> {
   TextEditingController statusController = TextEditingController();
   TextEditingController rolesController = TextEditingController();
   bool _obscureText = true;
+  bool isDataBenar = false;
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
 
   @override
   void initState() {
@@ -79,36 +85,145 @@ class AddUserState extends State<AddUser> {
 
   Future<void> AddUser() async {
     final response = await http.post(
-    Uri.parse(ApiConfig.register),
+      Uri.parse(ApiConfig.register),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         'id_staff': idStaffController.text,
-        'password': passwordController.text,
+        'password': idStaffController.text,
         'nama': namaController.text,
         'jenis_kelamin': jenis_kelaminController.text,
         'alamat': alamatController.text,
         'no_tlp': no_tlpController.text,
         'email': emailController.text,
-        'status': statusController.text,
+        'status': 'aktif',
         'roles': rolesController.text,
       }),
     );
 
     if (response.statusCode == 201) {
       print("User berhasil dibuat!");
-      print("Response: ${response.body}");
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => UserManagementPage()));
+      setState(() {
+        isDataBenar = false; // Set data ke false
+        emailController.clear(); // Kosongkan form
+        namaController.clear();
+        alamatController.clear();
+        no_tlpController.clear();
+        idStaffController.clear();
+        jenis_kelaminController.clear();
+        rolesController.clear();
+      });
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText('Do you want to fill in the data again ?'),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UserManagementPage()));
+                    },
+                    child: Text(getTranslatedText('No, Thank You')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 10.0,
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Fill in the Data Again')),
+                    style: TextButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                        side: BorderSide(
+                          color: Color(0xFF3DA9FC), // Warna border
+                          width: 1.0, // Lebar border
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
     } else {
       print("Gagal membuat user.");
-      print("Response: ${response.body}");
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData =
-        isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
       theme: themeData,
@@ -155,7 +270,7 @@ class AddUserState extends State<AddUser> {
                     color: isDarkTheme
                         ? Colors.white10
                         : Colors
-                            .white, // Ganti dengan warna latar belakang yang sesuai
+                        .white, // Ganti dengan warna latar belakang yang sesuai
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isDarkTheme
@@ -172,6 +287,7 @@ class AddUserState extends State<AddUser> {
                         SizedBox(height: 16.0),
                         TextFormField(
                           controller: emailController,
+                          keyboardType: TextInputType.text,
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 15,
@@ -180,36 +296,19 @@ class AddUserState extends State<AddUser> {
                             filled: false,
                             labelText: getTranslatedText('Email'),
                           ),
-                        ),
-                        SizedBox(height: 16.0),
-                        TextField(
-                          controller: passwordController,
-                          obscureText: _obscureText,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 6,
-                            ),
-                            filled: false,
-                            labelText: getTranslatedText('Password'),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureText
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: Colors.grey,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureText = !_obscureText;
-                                });
-                              },
-                            ),
-                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Isi Datanya';
+                            } else if (!value.contains('@')) {
+                              return 'Email harus mengandung karakter "@"';
+                            }
+                            return null;
+                          },
                         ),
                         SizedBox(height: 16.0),
                         TextFormField(
                           controller: namaController,
+                          keyboardType: TextInputType.text,
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 15,
@@ -218,34 +317,17 @@ class AddUserState extends State<AddUser> {
                             filled: false,
                             labelText: getTranslatedText('Nama Lengkap'),
                           ),
-                        ),
-                        Row(
-                          children: [
-                            Radio(
-                              value: getTranslatedText('Laki-laki'),
-                              groupValue: jenis_kelaminController.text,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  jenis_kelaminController.text = value!;
-                                });
-                              },
-                            ),
-                            Text(getTranslatedText('Laki-laki')),
-                            Radio(
-                              value: getTranslatedText('Perempuan'),
-                              groupValue: jenis_kelaminController.text,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  jenis_kelaminController.text = value!;
-                                });
-                              },
-                            ),
-                            Text(getTranslatedText('Perempuan')),
-                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Isi Datanya';
+                            }
+                            return null;
+                          },
                         ),
                         SizedBox(height: 16.0),
                         TextFormField(
                           controller: alamatController,
+                          keyboardType: TextInputType.text,
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 15,
@@ -254,10 +336,17 @@ class AddUserState extends State<AddUser> {
                             filled: false,
                             labelText: getTranslatedText('Alamat '),
                           ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Isi Datanya';
+                            }
+                            return null;
+                          },
                         ),
                         SizedBox(height: 16.0),
                         TextFormField(
                           controller: no_tlpController,
+                          keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 15,
@@ -266,6 +355,16 @@ class AddUserState extends State<AddUser> {
                             filled: false,
                             labelText: getTranslatedText('No Telepon'),
                           ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Isi Datanya';
+                            } else if (value.length < 10) {
+                              return 'Minimal 10 angka';
+                            } else if (!isNumeric(value)) {
+                              return 'Nomor telepon harus mengandung angka saja';
+                            }
+                            return null;
+                          },
                         ),
                         SizedBox(height: 16.0),
                         TextFormField(
@@ -278,26 +377,55 @@ class AddUserState extends State<AddUser> {
                             filled: false,
                             labelText: getTranslatedText('Id Staff'),
                           ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Isi Datanya';
+                            }
+                            return null;
+                          },
                         ),
-                        SizedBox(height: 16.0),
-                        TextFormField(
-                          controller: statusController,
-                          decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 6,
+                        Row(
+                          children: [
+                            Radio(
+                              value: 'Laki-laki',
+                              groupValue: jenis_kelaminController.text,
+                              onChanged: (String? value) {
+                                setState(() {
+                                  jenis_kelaminController.text = value!;
+                                });
+                              },
                             ),
-                            filled: false,
-                            labelText: getTranslatedText('Status'),
-                          ),
+                            Text(getTranslatedText('Laki-laki')),
+                            Radio(
+                              value: 'Perempuan',
+                              groupValue: jenis_kelaminController.text,
+                              onChanged: (String? value) {
+                                setState(() {
+                                  jenis_kelaminController.text = value!;
+                                });
+                              },
+                            ),
+                            Text(getTranslatedText('Perempuan')),
+                          ],
                         ),
+                        // Validasi Radio Buttons
+                        if (isSubmitPressed &&
+                            (jenis_kelaminController.text == null ||
+                                jenis_kelaminController.text.isEmpty))
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13.0),
+                            child: Text(
+                              'Pilih jenis kelamin',
+                              style: TextStyle(color: Colors.red, fontSize: 12),
+                            ),
+                          ),
                         SizedBox(height: 16.0),
                         DropdownSearch<String>(
                           popupProps: PopupProps.menu(
                             fit: FlexFit.loose,
                             menuProps: MenuProps(
                               backgroundColor:
-                                  isDarkTheme ? Colors.black : Colors.white,
+                              isDarkTheme ? Colors.black : Colors.white,
                               elevation: 0,
                             ),
                             showSelectedItems: true,
@@ -319,36 +447,51 @@ class AddUserState extends State<AddUser> {
                             ),
                           ),
                           onChanged: (String? newValue) {
-                            // Handle dropdown value change
-                            rolesController.text = newValue!;
+                            setState(() {
+                              rolesController.text = newValue!;
+                            });
                           },
                         ),
+                        // Validasi Dropdown
+                        if (isSubmitPressed &&
+                            (rolesController.text == null ||
+                                rolesController.text!.isEmpty))
+                          Padding(
+                            padding: const EdgeInsets.only(left: 14.0),
+                            child: Text(
+                              'Pilih role',
+                              style: TextStyle(color: Colors.red, fontSize: 12),
+                            ),
+                          ),
                         SizedBox(height: 16.0),
-                       Padding(
-                              padding: EdgeInsets.only(top: 30, left: 160),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (_formKey.currentState!.validate()) {
-                                    AddUser();
-                                  }
-                                },
-                                child: Text(
-                                  getTranslatedText('Continue'),
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  minimumSize: Size(170, 44),
-                                  padding: EdgeInsets.all(0),
-                                  elevation: 3,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  primary: Color(0xFF3DA9FC),
-                                ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 30, left: 160),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                isSubmitPressed = true;
+                              });
+                              if (_formKey.currentState!.validate()) {
+                                AddUser();
+                              }
+                            },
+                            child: Text(
+                              getTranslatedText('Continue'),
+                              style: TextStyle(
+                                fontSize: 18,
                               ),
                             ),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: Size(170, 44),
+                              padding: EdgeInsets.all(0),
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              primary: Color(0xFF3DA9FC),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

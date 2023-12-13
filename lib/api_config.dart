@@ -3,7 +3,7 @@
 // import 'package:suco/api_config.dart';
 // Uri.parse(ApiConfig.namaFile),
 class ApiConfig {
-  static const String baseUrl = 'http://10.170.1.13:8000/api'; // Ganti dengan URL API Anda
+  static const String baseUrl = 'http://192.168.1.4:8000/api'; // Ganti dengan URL API Anda
   static const String login = '$baseUrl/login';
   static const String getProfile = '$baseUrl/get-profile';
   static const String editProfile = '$baseUrl/edit-profile';
@@ -28,5 +28,6 @@ class ApiConfig {
   static const String jadwal_produksi= '$baseUrl/jadwal';
   static const String status= '$baseUrl/produksi/update-status';
   static const String tambah_jumlah_produk= '$baseUrl/produksi/update-stock';
+  static const String reset_password= '$baseUrl/resetpassword';
 
 }

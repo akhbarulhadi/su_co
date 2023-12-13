@@ -5,8 +5,8 @@ import 'package:suco/staff_gudang/sidebar.dart';
 import 'package:suco/staff_gudang/stock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:dropdown_search/dropdown_search.dart';
 import 'dart:convert';
-
 
 class TableEventsExample extends StatefulWidget {
   @override
@@ -17,6 +17,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   bool isDarkTheme = false;
   String selectedLanguage = 'IDN';
   List<Map<String, dynamic>> produksiData = [];
+  late TextEditingController _textController;
+  bool _isloading = true;
 
   @override
   void initState() {
@@ -24,6 +26,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     loadThemePreference();
     loadSelectedLanguage();
     loadProduksi();
+    _textController = TextEditingController();
+    bool _isloading = true;
   }
 
   void loadSelectedLanguage() async {
@@ -49,6 +53,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         print(data);
         setState(() {
           produksiData = List.from(data['produksi']);
+          _isloading = false;
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -74,72 +79,72 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     }
   }
 
-void _showConfirmationDialog(int idProduk, int jumlahProduksi) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Konfirmasi'),
-        content: Text('Anda yakin ingin menambahkan stok?'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _addStock(idProduk, jumlahProduksi);
-            },
-            child: Text('Ya, Tambahkan'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-Future<void> _addStock(int idProduk, int jumlahProduksi) async {
-  try {
-    var request = http.Request('POST', Uri.parse(ApiConfig.tambah_jumlah_produk));
-    request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    request.body = 'id_produk=$idProduk&jumlah_produk=$jumlahProduksi';
-
-    var response = await http.Client().send(request);
-
-    // Read the response stream and convert it to a String
-    var responseBody = await response.stream.bytesToString();
-
-    // Handle the initial response
-    if (response.statusCode == 302) {
-      // If it's a redirect, handle it manually
-      var redirectedUrl = response.headers['location'];
-      if (redirectedUrl != null) {
-        var redirectedResponse = await http.get(Uri.parse(redirectedUrl));
-        
-        // Handle the response after the redirect
-        if (redirectedResponse.statusCode == 200) {
-          print('Stok berhasil ditambahkan!');
-        } else {
-          print('Error setelah redirect: ${redirectedResponse.statusCode}');
-          print('Respon: ${redirectedResponse.body}');
-        }
-      } else {
-        print('Error: Redirected URL tidak diberikan');
-      }
-    } else if (response.statusCode == 200) {
-      print('Stok berhasil ditambahkan!');
-    } else {
-      print('Error: ${response.statusCode}');
-      print('Respon: $responseBody');
-    }
-  } catch (e) {
-    print('Error: $e');
+  void _showConfirmationDialog(int idProduk, int jumlahProduksi) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Konfirmasi'),
+          content: Text('Anda yakin ingin menambahkan stok?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _addStock(idProduk, jumlahProduksi);
+              },
+              child: Text('Ya, Tambahkan'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Batal'),
+            ),
+          ],
+        );
+      },
+    );
   }
-}
 
+  Future<void> _addStock(int idProduk, int jumlahProduksi) async {
+    try {
+      var request =
+          http.Request('POST', Uri.parse(ApiConfig.tambah_jumlah_produk));
+      request.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      request.body = 'id_produk=$idProduk&jumlah_produk=$jumlahProduksi';
+
+      var response = await http.Client().send(request);
+
+      // Read the response stream and convert it to a String
+      var responseBody = await response.stream.bytesToString();
+
+      // Handle the initial response
+      if (response.statusCode == 302) {
+        // If it's a redirect, handle it manually
+        var redirectedUrl = response.headers['location'];
+        if (redirectedUrl != null) {
+          var redirectedResponse = await http.get(Uri.parse(redirectedUrl));
+
+          // Handle the response after the redirect
+          if (redirectedResponse.statusCode == 200) {
+            print('Stok berhasil ditambahkan!');
+          } else {
+            print('Error setelah redirect: ${redirectedResponse.statusCode}');
+            print('Respon: ${redirectedResponse.body}');
+          }
+        } else {
+          print('Error: Redirected URL tidak diberikan');
+        }
+      } else if (response.statusCode == 200) {
+        print('Stok berhasil ditambahkan!');
+      } else {
+        print('Error: ${response.statusCode}');
+        print('Respon: $responseBody');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +158,12 @@ Future<void> _addStock(int idProduk, int jumlahProduksi) async {
       elevation: 0,
       iconTheme: IconThemeData(
         color: isDarkTheme ? Colors.white : Colors.black,
+      ),
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context);
+        },
       ),
       title: Align(
         alignment: Alignment.center,
@@ -178,54 +189,197 @@ Future<void> _addStock(int idProduk, int jumlahProduksi) async {
       theme: themeData,
       home: Scaffold(
         backgroundColor: isDarkTheme ? Colors.black : Colors.white,
-        drawer: SidebarDrawer(),
         appBar: myAppBar,
-        body: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Column(
-            children: [
-              SizedBox(height: bodyHeight * 0.03),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xFFC3DCED),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 12, 16, 16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          getTranslatedText('Activity'),
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.w600,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Container(
+                    width: mediaQueryWidth * 0.25,
+                    height: bodyHeight * 0.048,
+                    decoration: BoxDecoration(
+                      color: isDarkTheme ? Colors.white24 : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownSearch<String>(
+                      popupProps: PopupProps.menu(
+                        fit: FlexFit.loose,
+                        menuProps: MenuProps(
+                          backgroundColor:
+                              isDarkTheme ? Colors.black : Colors.white,
+                          elevation: 0,
+                        ),
+                        showSelectedItems: true,
+                      ),
+                      items: [
+                        getTranslatedText('All'),
+                        getTranslatedText('Daily'),
+                        getTranslatedText('Weekly'),
+                        getTranslatedText('Monthly'),
+                        getTranslatedText('Yearly'),
+                      ],
+                      dropdownDecoratorProps: DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          labelText: getTranslatedText("Time Period"),
+                          // hintText: "waktu in menu mode",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.transparent),
                           ),
                         ),
-                        SizedBox(height: bodyHeight * 0.01),
-
-                        // Added ListView.builder to display production data
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: produksiData.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final item = produksiData[index];
-                            return buildProductionItem(item, screenWidth);
-                          },
-                        ),
-                      ],
+                      ),
+                      onChanged: print,
+                      selectedItem: getTranslatedText("All"),
                     ),
                   ),
-                ),
+                  Container(
+                    width: mediaQueryWidth * 0.4,
+                    height: bodyHeight * 0.048,
+                    decoration: BoxDecoration(
+                      color: isDarkTheme ? Colors.white24 : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDarkTheme ? Colors.white38 : Colors.black38,
+                        width: 1, // Lebar garis tepi
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.search_rounded,
+                              color: isDarkTheme
+                                  ? Colors.white
+                                  : Color(
+                                      0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                              size: 15,
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 12),
+                              child: TextFormField(
+                                controller: _textController,
+                                obscureText: false,
+                                decoration: InputDecoration(
+                                  hintText: getTranslatedText('Search...'),
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.transparent,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(4.0),
+                                      topRight: Radius.circular(4.0),
+                                    ),
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.transparent,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(4.0),
+                                      topRight: Radius.circular(4.0),
+                                    ),
+                                  ),
+                                ),
+                                style: TextStyle(
+                                  fontFamily: 'Clash Display',
+                                  color:
+                                      isDarkTheme ? Colors.white : Colors.black,
+                                  fontSize: screenWidth *
+                                      0.035, // Ukuran teks pada tombol
+                                  fontWeight: FontWeight.normal,
+                                ),
+                                validator: (value) {
+                                  // Validasi teks input
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: mediaQueryWidth * 0.25,
+                    height: bodyHeight * 0.048,
+                    decoration: BoxDecoration(
+                      color: isDarkTheme ? Colors.white24 : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.transparent, // Warna garis tepi
+                        width: 0.5, // Lebar garis tepi
+                      ),
+                    ),
+                    child: DropdownSearch<String>(
+                      popupProps: PopupProps.menu(
+                        fit: FlexFit.loose,
+                        menuProps: MenuProps(
+                          backgroundColor:
+                              isDarkTheme ? Colors.black : Colors.white,
+                          elevation: 0,
+                        ),
+                        showSelectedItems: true,
+                        disabledItemFn: (String s) =>
+                            s.startsWith(getTranslatedText('Finished')),
+                      ),
+                      items: [
+                        getTranslatedText("All"),
+                        getTranslatedText("Cancelled"),
+                        getTranslatedText("Finished"),
+                        getTranslatedText('Waiting'),
+                      ],
+                      dropdownDecoratorProps: DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          labelText: getTranslatedText("Select Status"),
+                          // hintText: "status in menu mode",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.transparent),
+                          ),
+                        ),
+                      ),
+                      onChanged: print,
+                      selectedItem: getTranslatedText("All"),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            SizedBox(height: bodyHeight * 0.03),
+            Expanded(
+              child: _isloading
+                  ? Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : ListView.builder(
+                      itemCount: produksiData.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final item = produksiData[index];
+                        return buildProductionItem(item, screenWidth);
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );
@@ -243,7 +397,7 @@ Future<void> _addStock(int idProduk, int jumlahProduksi) async {
     print('Item: $item');
     return InkWell(
       onTap: () {
-         _showConfirmationDialog(item['id_produk'], item['jumlah_produksi']);
+        _showConfirmationDialog(item['id_produk'], item['jumlah_produksi']);
       },
       child: Card(
         clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -402,4 +556,3 @@ Future<void> _addStock(int idProduk, int jumlahProduksi) async {
     );
   }
 }
-
