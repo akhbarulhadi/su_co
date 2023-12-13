@@ -7,13 +7,16 @@ import '../utils.dart';
 import 'kalender_test.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:suco/supervisor/jadwal.dart';
+import 'package:intl/intl.dart';
 
 class Calendar extends StatefulWidget {
+  final int idproduct;
   final String productName;
   final String jumlahPesanan;
 
   const Calendar({
     Key? key,
+    required this.idproduct,
     required this.productName,
     required this.jumlahPesanan,
   }) : super(key: key);
@@ -24,6 +27,7 @@ class Calendar extends StatefulWidget {
 
 class CalenderState extends State<Calendar> {
   TextEditingController productNameController = TextEditingController();
+  TextEditingController productNameprodukController = TextEditingController();
   TextEditingController namaRuanganController = TextEditingController();
   TextEditingController jumlahPesananController = TextEditingController();
 
@@ -34,6 +38,11 @@ class CalenderState extends State<Calendar> {
   DateTime? _selectedDay;
   List<dynamic> listuser = [];
   String selectedLeader = '';
+  bool shouldShowProductName() {
+    // Add your condition here
+    // For example, if you want to show the product name when the selected leader is not empty
+    return selectedLeader.isNotEmpty;
+  }
 
   @override
   void initState() {
@@ -44,7 +53,8 @@ class CalenderState extends State<Calendar> {
     if (listuser.isNotEmpty) {
       selectedLeader = listuser[0]['id_user'].toString();
     }
-    productNameController.text = widget.productName;
+    productNameController.text = widget.idproduct.toString();
+    productNameprodukController.text = widget.productName;
     jumlahPesananController.text = widget.jumlahPesanan;
   }
 
@@ -68,34 +78,50 @@ class CalenderState extends State<Calendar> {
   }
 
   Future<void> sendDataToDatabase() async {
-    final response = await http.post(
-      Uri.parse(ApiConfig.produksi),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "id_produk": productNameController.text,
-        'nama_ruangan': namaRuanganController.text,
-        'id_user': selectedLeader,
-        'jumlah_produksi': jumlahPesananController.text,
-        'Tanggal_produksi': _selectedDay?.toIso8601String() ?? '',
-      }),
-    );
+    try {
+      print("Product Name: ${productNameController.text}");
+      print("Selected Leader: $selectedLeader");
+      print("Jumlah Pesanan: ${jumlahPesananController.text}");
 
-    if (response.statusCode == 201) {
-      print("Jadwal Produksi berhasil dibuat!");
-      print("Response: ${response.body}");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Jadwal Produksi Berhasil Ditambahkan'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-      // Tambahkan logika atau navigasi ke halaman berikutnya jika diperlukan
-    } else {
-      print("Gagal membuat Jadwal Produksi.");
-      print("Response: ${response.body}");
+      int? idproduct = int.tryParse(productNameController.text);
+      int? leaderId = int.tryParse(selectedLeader);
+      int? orderAmount = int.tryParse(jumlahPesananController.text);
+
+      if (idproduct != null && leaderId != null && orderAmount != null) {
+        String formattedDate =
+            _selectedDay?.toIso8601String()?.split('T')[0] ?? '';
+
+        final response = await http.post(
+          Uri.parse(ApiConfig.produksi),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "id_produk": idproduct,
+            "id_user": leaderId,
+            "nama_ruangan": namaRuanganController.text,
+            "jumlah_produksi": orderAmount,
+            "tanggal_produksi": formattedDate,
+          }),
+        );
+
+        if (response.statusCode == 201) {
+          print("Jadwal Produksi berhasil dibuat!");
+          print("Response: ${response.body}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Jadwal Produksi Berhasil Ditambahkan'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          // Tambahkan logika atau navigasi ke halaman berikutnya jika diperlukan
+        } else {
+          print("Gagal membuat Jadwal Produksi.");
+          print("Response: ${response.body}");
+        }
+      }
+    } catch (e) {
+      print(e);
     }
   }
-
 
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -134,6 +160,7 @@ class CalenderState extends State<Calendar> {
 
   @override
   Widget build(BuildContext context) {
+    final String idproduct = widget.idproduct.toString();
     final String productName = widget.productName;
     final String jumlahPesanan = widget.jumlahPesanan;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -188,24 +215,28 @@ class CalenderState extends State<Calendar> {
               children: [
                 Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
-                  child: TextFormField(
-                    obscureText: false,
-                    controller: productNameController,
-                    decoration: InputDecoration(
-                      labelText: getTranslatedText('Product Name'),
-                      contentPadding: EdgeInsets.all(13),
-                      labelStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
+                  child: Visibility(
+                    visible:
+                        shouldShowProductName(), // Replace with your condition
+                    child: TextFormField(
+                      obscureText: false,
+                      controller: productNameprodukController,
+                      decoration: InputDecoration(
+                        labelText: getTranslatedText('Product Name'),
+                        contentPadding: EdgeInsets.all(13),
+                        labelStyle: TextStyle(
                           color: Colors.white,
                         ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -317,11 +348,14 @@ class CalenderState extends State<Calendar> {
                             ),
                             child: Column(
                               children: [
-                                Text(
+                                Visibility(
+                                  visible: false,
+                                  child:Text(
                                   'Tanggal Dipilih: ${_selectedDay?.toLocal()}',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
+                                  ),
                                   ),
                                 ),
                                 TableCalendar(

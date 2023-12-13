@@ -59,6 +59,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
 
 void _showConfirmationDialog(
   BuildContext context,
+  int idproduct,
   String productName,
   String jumlahPesanan,
 ) {
@@ -72,7 +73,7 @@ void _showConfirmationDialog(
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Tutup dialog konfirmasi
-              _navigateToSchedulePage(productName, jumlahPesanan);
+              _navigateToSchedulePage(idproduct, productName, jumlahPesanan);
             },
             child: Text("Ya"),
           ),
@@ -89,6 +90,7 @@ void _showConfirmationDialog(
 }
 
 void _navigateToSchedulePage(
+  int idproduct,
   String productName,
   String jumlahPesanan,
 ) {
@@ -97,6 +99,7 @@ void _navigateToSchedulePage(
     context,
     MaterialPageRoute(
       builder: (context) => Calendar(
+        idproduct: idproduct,
         productName: productName,
         jumlahPesanan: jumlahPesanan,
       ),
@@ -463,6 +466,8 @@ void _navigateToSchedulePage(
                               if (statusPesanan == 'Menunggu') {
                                 _showConfirmationDialog(
                                   context,
+                                  _listdata[index]['id_produk'] ??
+                                      "", // Pastikan nama_produk tidak null
                                   _listdata[index]['nama_produk'] ??
                                       "", // Pastikan nama_produk tidak null
                                   _listdata[index]['jumlah_pesanan'] ??
@@ -713,7 +718,7 @@ void _navigateToSchedulePage(
                                                     .fromSTEB(0, 4, 0, 0),
                                                 child: Text(
                                                   _listdata[index]
-                                                      ['nama_produk'],
+                                                      ['nama_produk'].toString(),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color(0xFF101518),
