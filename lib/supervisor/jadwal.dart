@@ -12,18 +12,15 @@ class TableEventsExample extends StatefulWidget {
 }
 
 class _TableEventsExampleState extends State<TableEventsExample> {
-  bool isDarkTheme = false;
+   bool isDarkTheme = false;
   String selectedLanguage = 'IDN';
   bool _isDisposed = false;
-  String currentStatus = 'sudah dibuat';
   List<Map<String, dynamic>> produksiData = [];
-  late TextEditingController _textController;
-  bool _isloading = true;
+  List<bool> isItemClicked = [];
 
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController();
     loadThemePreference();
     loadSelectedLanguage();
     loadProduksi();
@@ -43,7 +40,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     });
   }
 
-  Future<void> loadProduksi() async {
+ Future<void> loadProduksi() async {
     try {
       final response = await http.get(Uri.parse(ApiConfig.jadwal_produksi));
 
@@ -52,7 +49,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         print(data); // Tambahkan ini untuk melihat respons data di konsol
         setState(() {
           produksiData = List.from(data['produksi']);
-          _isloading = false;
+          isItemClicked = List.generate(produksiData.length, (index) => false);
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -63,123 +60,102 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     }
   }
 
-  Future<void> _updateStatus(
-      BuildContext context, int idProduksi, String newStatus) async {
-    if (mounted) {
-      // Periksa apakah status sebelumnya adalah "Sudah Dibuat"
-      if (newStatus == 'Sudah Sesuai' && currentStatus != 'sudah dibuat') {
+Future<void> _updateStatus(
+    BuildContext context, int idProduksi, String newStatus, int index) async {
+  if (mounted) {
+    // Periksa status sebelumnya, harus "Sudah Dibuat" untuk diubah menjadi "Sudah Sesuai"
+    if (newStatus.toLowerCase() == 'sudah sesuai') {
+      if (produksiData[index]['status_produksi'] != 'sudah dibuat') {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                'Status harus "Sudah Dibuat" sebelum dapat diubah ke "Sudah Sesuai".'),
+            content: Text('Status harus "Sudah Dibuat" untuk diubah menjadi "Sudah Sesuai".'),
             duration: Duration(seconds: 2),
           ),
         );
         return;
       }
+    }
 
-      final response = await http.post(
-        Uri.parse(ApiConfig.status),
-        body: {
-          'id_produksi': idProduksi.toString(),
-          'status_produksi': newStatus,
-        },
+    final response = await http.post(
+      Uri.parse(ApiConfig.status),
+      body: {
+        'id_produksi': idProduksi.toString(),
+        'status_produksi': newStatus.toLowerCase(),
+      },
+    );
+
+    if (!_isDisposed && response.statusCode == 200 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Status berhasil diperbarui'),
+          duration: Duration(seconds: 2),
+        ),
       );
 
-      if (!_isDisposed && response.statusCode == 200 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Status berhasil diperbarui'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        // Perbarui data produksi setelah berhasil memperbarui status
-        await loadProduksi();
-        setState(() {
-          // Tambahkan pembaruan state yang diperlukan setelah memperbarui data
-        });
-      } else if (!_isDisposed && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memperbarui status'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      // Perbarui data produksi setelah berhasil memperbarui status
+      await loadProduksi();
+      setState(() {
+        isItemClicked[index] = true; // Setel item sudah diklik
+        // Tambahkan pembaruan state yang diperlukan setelah memperbarui data
+      });
+    } else if (!_isDisposed && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memperbarui status'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
+}
 
-  Future<void> _showConfirmationDialog(
-      BuildContext context, int idProduksi, String newStatus) async {
-    if (mounted) {
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          if (!_isDisposed) {
-            return AlertDialog(
-              title: Text('Konfirmasi'),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: <Widget>[
-                    Text(
-                        'Apakah Anda yakin ingin mengubah status produksi ini?'),
-                  ],
-                ),
+
+ Future<void> _showConfirmationDialog(
+    BuildContext context, int idProduksi, String newStatus, int index) async {
+  if (mounted) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        if (!_isDisposed) {
+          // Perbarui logika untuk mencegah pembaruan status jika status sudah berubah
+          bool canUpdateStatus = !isItemClicked[index];
+          return AlertDialog(
+            title: Text('Konfirmasi'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text('Apakah Anda yakin ingin mengubah status produksi ini?'),
+                ],
               ),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Ya'),
-                  onPressed: () async {
-                    if (!_isDisposed) {
-                      await _updateStatus(context, idProduksi, newStatus);
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-                TextButton(
-                  child: Text('Batal'),
-                  onPressed: () {
-                    if (!_isDisposed) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-              ],
-            );
-          } else {
-            return Offstage();
-          }
-        },
-      );
-    }
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Ya'),
+                onPressed: () async {
+                  if (!_isDisposed && canUpdateStatus) {
+                    await _updateStatus(context, idProduksi, newStatus, index);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+              TextButton(
+                child: Text('Batal'),
+                onPressed: () {
+                  if (!_isDisposed) {
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            ],
+          );
+        } else {
+          return Offstage();
+        }
+      },
+    );
   }
-
-  String getTranslatedText(String text) {
-    if (selectedLanguage == 'IDN') {
-      switch (text) {
-        case 'Schedule':
-          return 'Jadwal';
-        case 'Date':
-          return 'Tanggal';
-        case 'Activity':
-          return 'Aktivitas';
-        case '':
-          return '';
-        case '':
-          return '';
-        case '':
-          return '';
-
-        default:
-          return text;
-      }
-    } else {
-      // Teks dalam bahasa Inggris (default)
-      return text;
-    }
-  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -189,12 +165,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     final ThemeData themeData =
         isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final myAppBar = AppBar(
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
       backgroundColor: Colors.transparent,
       elevation: 0,
       iconTheme: IconThemeData(
@@ -212,7 +182,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
       ),
       actions: <Widget>[
         SizedBox(
-          width: 47.0,
+          width: 45.0,
         ),
       ],
     );
@@ -224,204 +194,64 @@ class _TableEventsExampleState extends State<TableEventsExample> {
       theme: themeData,
       home: Scaffold(
         backgroundColor: isDarkTheme ? Colors.black : Colors.white,
+        drawer: SidebarDrawer(),
         appBar: myAppBar,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Container(
-                    width: mediaQueryWidth * 0.25,
-                    height: bodyHeight * 0.048,
-                    decoration: BoxDecoration(
-                      color: isDarkTheme ? Colors.white24 : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: DropdownSearch<String>(
-                      popupProps: PopupProps.menu(
-                        fit: FlexFit.loose,
-                        menuProps: MenuProps(
-                          backgroundColor:
-                              isDarkTheme ? Colors.black : Colors.white,
-                          elevation: 0,
-                        ),
-                        showSelectedItems: true,
-                      ),
-                      items: [
-                        getTranslatedText('All'),
-                        getTranslatedText('Daily'),
-                        getTranslatedText('Weekly'),
-                        getTranslatedText('Monthly'),
-                        getTranslatedText('Yearly'),
-                      ],
-                      dropdownDecoratorProps: DropDownDecoratorProps(
-                        dropdownSearchDecoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          labelText: getTranslatedText("Time Period"),
-                          // hintText: "waktu in menu mode",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.transparent),
-                          ),
-                        ),
-                      ),
-                      onChanged: print,
-                      selectedItem: getTranslatedText("All"),
-                    ),
+        body: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            children: [
+              SizedBox(height: bodyHeight * 0.03),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFFC3DCED),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  Container(
-                    width: mediaQueryWidth * 0.4,
-                    height: bodyHeight * 0.048,
-                    decoration: BoxDecoration(
-                      color: isDarkTheme ? Colors.white24 : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDarkTheme ? Colors.white38 : Colors.black38,
-                        width: 1, // Lebar garis tepi
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(
-                              Icons.search_rounded,
-                              color: isDarkTheme
-                                  ? Colors.white
-                                  : Color(
-                                      0xFF8B9BA8), // Ganti dengan warna yang sesuai
-                              size: 15,
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 12),
-                              child: TextFormField(
-                                controller: _textController,
-                                obscureText: false,
-                                decoration: InputDecoration(
-                                  hintText: getTranslatedText('Search...'),
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.transparent,
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(4.0),
-                                      topRight: Radius.circular(4.0),
-                                    ),
-                                  ),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.transparent,
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(4.0),
-                                      topRight: Radius.circular(4.0),
-                                    ),
-                                  ),
-                                ),
-                                style: TextStyle(
-                                  fontFamily: 'Clash Display',
-                                  color:
-                                      isDarkTheme ? Colors.white : Colors.black,
-                                  fontSize: screenWidth *
-                                      0.035, // Ukuran teks pada tombol
-                                  fontWeight: FontWeight.normal,
-                                ),
-                                validator: (value) {
-                                  // Validasi teks input
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: mediaQueryWidth * 0.25,
-                    height: bodyHeight * 0.048,
-                    decoration: BoxDecoration(
-                      color: isDarkTheme ? Colors.white24 : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.transparent, // Warna garis tepi
-                        width: 0.5, // Lebar garis tepi
-                      ),
-                    ),
-                    child: DropdownSearch<String>(
-                      popupProps: PopupProps.menu(
-                        fit: FlexFit.loose,
-                        menuProps: MenuProps(
-                          backgroundColor:
-                              isDarkTheme ? Colors.black : Colors.white,
-                          elevation: 0,
-                        ),
-                        showSelectedItems: true,
-                        disabledItemFn: (String s) =>
-                            s.startsWith(getTranslatedText('Finished')),
-                      ),
-                      items: [
-                        getTranslatedText("All"),
-                        getTranslatedText("Cancelled"),
-                        getTranslatedText("Finished"),
-                        getTranslatedText('Waiting'),
-                      ],
-                      dropdownDecoratorProps: DropDownDecoratorProps(
-                        dropdownSearchDecoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          labelText: getTranslatedText("Select Status"),
-                          // hintText: "status in menu mode",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.transparent),
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(16, 12, 16, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          getTranslatedText('Activity'),
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Colors.black,
+                            fontSize: screenWidth * 0.05,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                      onChanged: print,
-                      selectedItem: getTranslatedText("All"),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: bodyHeight * 0.03),
-            Expanded(
-              child: _isloading
-                  ? Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  : ListView.builder(
-                      itemCount: produksiData.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final item = produksiData[index];
-                        return GestureDetector(
-                          onTap: () {
-                            print('Tapped index: $index');
-                            _showConfirmationDialog(
-                                context, index, 'Sudah Sesuai');
+                        SizedBox(height: bodyHeight * 0.01),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: produksiData.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final item = produksiData[index];
+                            return GestureDetector(
+                              onTap: () {
+                                if (!isItemClicked[index]) {
+                                  print('Tapped index: $index');
+                                  _showConfirmationDialog(
+                                      context, item['id_produksi'], 'Sudah Sesuai', index);
+                                } else {
+                                  print('Item sudah diklik dan status sudah sesuai');
+                                }
+                              },
+                              child:
+                                  buildProductionItem(item, screenWidth, index),
+                            );
                           },
-                          child: buildProductionItem(item, screenWidth, index),
-                        );
-                      },
+                        ),
+                      ],
                     ),
-            ),
-          ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -441,11 +271,16 @@ class _TableEventsExampleState extends State<TableEventsExample> {
 
     return GestureDetector(
       onTap: () {
-        if (index >= 0 && index < produksiData.length) {
-          _showConfirmationDialog(
-              context, produksiData[index]['id_produksi'], 'Sudah Sesuai');
+        if (!isItemClicked[index]) {
+          if (item['status_produksi'].toLowerCase() != 'sudah sesuai') {
+            print('Tapped index: $index');
+            _showConfirmationDialog(
+                context, item['id_produksi'], 'Sudah Sesuai', index);
+          } else {
+            print('Item sudah diklik dan status sudah sesuai');
+          }
         } else {
-          print('Error: Invalid index');
+          print('Item sudah diklik dan status sudah sesuai');
         }
       },
       child: Card(
@@ -522,6 +357,9 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                           size: 16,
                         ),
                       ),
+                      SizedBox(
+                        width: mediaQueryWidth * 0.02,
+                      ),
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
@@ -529,8 +367,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),
-                            fontSize: screenWidth * 0.03,
-                            fontWeight: FontWeight.w300,
+                            fontSize: screenWidth * 0.025,
+                            fontWeight: FontWeight.normal,
                           ),
                         ),
                       ),
@@ -566,42 +404,71 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                        child: Text(
-                          item['status_produksi'] ?? '',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            color: Color(0xFFFFFFFE),
-                            fontSize: screenWidth * 0.04,
-                            fontWeight: FontWeight.normal,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                          child: Text(
+                            item['status_produksi'] ?? '',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0xFFFFFFFE),
+                              fontSize: screenWidth * 0.04,
+                              fontWeight: FontWeight.normal,
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                        child: Text(
-                          item['jumlah_produksi'].toString(),
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            color: Color(0xFFFFFFFE),
-                            fontSize: screenWidth * 0.04,
-                            fontWeight: FontWeight.normal,
+                        Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                          child: Text(
+                            item['jumlah_produksi'].toString(),
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0xFFFFFFFE),
+                              fontSize: screenWidth * 0.04,
+                              fontWeight: FontWeight.normal,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: mediaQueryHeight * 0.01),
-                ],
+                      ],
+                    ),
+                    SizedBox(height: mediaQueryHeight * 0.01),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
+
+    String getTranslatedText(String text) {
+      if (selectedLanguage == 'IDN') {
+        switch (text) {
+          case 'Main Page':
+            return 'Halaman Utama';
+          case 'All':
+            return 'Semua';
+          case 'Daily':
+            return 'Harian';
+          case 'Weekly':
+            return 'Mingguan';
+          case 'Monthly':
+            return 'Bulanan';
+          case 'Yearly':
+            return 'Tahunan';
+          case 'Income':
+            return 'Pemasukan';
+          case 'Client Order List':
+            return 'Daftar Pesanan Klien';
+          case 'Activity':
+            return 'Kegiatan';
+          default:
+            return text;
+        }
+      } else {
+        return text;
+      }
+    }
   }
-}

@@ -281,10 +281,10 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
   Widget buildProductionItem(Map<String, dynamic> item, double screenWidth) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
-    final screenWidth = MediaQuery.of(context).size.width;
+
     if (item == null) {
       print('Error: Item is null');
-      return Container(); // Atau widget lain sebagai penanganan error
+      return Container();
     }
 
     print('Item: $item');
@@ -310,8 +310,7 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                       child: Text(
-                        item['nama_produk'] ??
-                            '', // Ganti dengan kunci yang sesuai
+                        item['nama_produk'] ?? '',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFFFFFFE),
@@ -323,8 +322,7 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                       child: Text(
-                        item['tanggal_produksi'] ??
-                            '', // Ganti dengan data yang sesuai dari produksi
+                        item['tanggal_produksi'] ?? '',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFFFFFFE),
@@ -364,10 +362,13 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
                         size: 16,
                       ),
                     ),
+                    SizedBox(
+                      width: mediaQueryWidth * 0.02,
+                    ),
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                       child: Text(
-                        'Ruang Produksi Lane-001',
+                        item['nama_ruangan'] ?? '',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFFFFFFE),
@@ -411,12 +412,10 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Menampilkan status produksi di sebelah kiri
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                       child: Text(
-                        item['status_produksi'] ??
-                            '', // Ganti dengan data yang sesuai dari produksi
+                        item['status_produksi'] ?? '',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFFFFFFE),
@@ -425,12 +424,10 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
                         ),
                       ),
                     ),
-                    // Menampilkan jumlah produksi di sebelah kanan
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                       child: Text(
-                        item['jumlah_produksi']
-                            .toString(), // Konversi ke String
+                        item['jumlah_produksi'].toString(),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFFFFFFE),

@@ -115,7 +115,8 @@ class CalenderState extends State<Calendar> {
           // Tambahkan logika atau navigasi ke halaman berikutnya jika diperlukan
         } else {
           print("Gagal membuat Jadwal Produksi.");
-          print("Response: ${response.body}");
+          print("Response Status Code: ${response.statusCode}");
+          print("Response Body: ${response.body}");
         }
       }
     } catch (e) {
@@ -348,12 +349,15 @@ class CalenderState extends State<Calendar> {
                             ),
                             child: Column(
                               children: [
-                                Text(
-                                'Tanggal Dipilih: ${_selectedDay?.toLocal()}',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
+                                Visibility(
+                                  visible: false,
+                                  child: Text(
+                                    'Tanggal Dipilih: ${_selectedDay?.toLocal()}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                 ),
                                 TableCalendar(
                                   headerStyle: HeaderStyle(

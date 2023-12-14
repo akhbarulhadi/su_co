@@ -95,11 +95,10 @@ class ProduksiController extends Controller
         ]);
     }
     
-    
+
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'kode_produksi' => 'required',
+        $request->validate([
             'id_produk' => 'required|exists:ketersediaan_barang,id_produk',
             'id_user' => 'required|exists:users,id_user',
             'nama_ruangan' => 'required|string',
@@ -107,38 +106,23 @@ class ProduksiController extends Controller
             'tanggal_produksi' => 'required|date',
         ]);
 
-        $produksi = Produksi::create($data);
+        // Generate kode produksi secara otomatis
+        $kodeProduksi = 'PROD-' . date('YmdHis') . rand(1000, 9999);
 
-        return response()->json(['message' => 'Jadwal Produksi berhasil dibuat', 'data' => $produksi], 201);
+        // Set status produksi ke "belum sesuai"
+        $statusProduksi = 'belum selesai';
+
+        // Simpan data ke database
+        $laporanProduksi = new Produksi;
+        $laporanProduksi->kode_produksi = $kodeProduksi;
+        $laporanProduksi->id_produk = $request->id_produk;
+        $laporanProduksi->jumlah_produksi = $request->jumlah_produksi;
+        $laporanProduksi->id_user = $request->id_user;
+        $laporanProduksi->nama_ruangan = $request->nama_ruangan;
+        $laporanProduksi->status_produksi = $statusProduksi;
+        $laporanProduksi->tanggal_produksi = $request->tanggal_produksi;
+        $laporanProduksi->save();
+
+        return response()->json(['message' => 'Jadwal produksi berhasil disimpan'], 201);
     }
-
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'id_produk' => 'required|exists:ketersediaan_barang,id_produk',
-    //         'id_user' => 'required|exists:users,id_user',
-    //         'nama_ruangan' => 'required|string',
-    //         'jumlah_produksi' => 'required|integer|min:1',
-    //         'tanggal_produksi' => 'required|date',
-    //     ]);
-
-    //     // Generate kode produksi secara otomatis
-    //     $kodeProduksi = 'PROD-' . date('YmdHis') . rand(1000, 9999);
-
-    //     // Set status produksi ke "belum sesuai"
-    //     $statusProduksi = 'belum selesai';
-
-    //     // Simpan data ke database
-    //     $laporanProduksi = new Produksi;
-    //     $laporanProduksi->kode_produksi = $kodeProduksi;
-    //     $laporanProduksi->id_produk = $request->id_produk;
-    //     $laporanProduksi->jumlah_produksi = $request->jumlah_produksi;
-    //     $laporanProduksi->id_user = $request->id_user;
-    //     $laporanProduksi->nama_ruangan = $request->nama_ruangan;
-    //     $laporanProduksi->status_produksi = $statusProduksi;
-    //     $laporanProduksi->tanggal_produksi = $request->tanggal_produksi;
-    //     $laporanProduksi->save();
-
-    //     return response()->json(['message' => 'Jadwal produksi berhasil disimpan'], 201);
-    // }
 }

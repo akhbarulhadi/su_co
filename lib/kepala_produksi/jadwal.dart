@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:suco/api_config.dart';
 import 'package:suco/kepala_produksi/sidebar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,11 +17,9 @@ class TableEventsExample extends StatefulWidget {
 class _TableEventsExampleState extends State<TableEventsExample> {
   bool isDarkTheme = false;
   String selectedLanguage = 'IDN';
-  bool _isDisposed = false;
-  String currentStatus = 'belum selesai';
   List<Map<String, dynamic>> produksiData = [];
   late TextEditingController _textController;
-  bool _isloading = true;
+  List<bool> isItemClicked = [];
 
   @override
   void initState() {
@@ -29,7 +28,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     loadSelectedLanguage();
     loadProduksi();
     _textController = TextEditingController();
-    bool _isloading = true;
   }
 
   void loadSelectedLanguage() async {
@@ -46,16 +44,25 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     });
   }
 
+  String _formatDate(String date) {
+    DateTime dateTime = DateTime.parse(date);
+    return DateFormat('dd-MM-yyyy').format(dateTime);
+  }
+
   Future<void> loadProduksi() async {
     try {
       final response = await http.get(Uri.parse(ApiConfig.jadwal_produksi));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data); // Tambahkan ini untuk melihat respons data di konsol
+        print(data); // Add this to see the response data in the console
         setState(() {
           produksiData = List.from(data['produksi']);
-          _isloading = false;
+          isItemClicked = List.generate(produksiData.length, (index) => false);
+
+          produksiData.forEach((item) {
+            item['tanggal_produksi'] = _formatDate(item['tanggal_produksi']);
+          });
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -67,16 +74,15 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   }
 
   Future<void> _updateStatus(
-      BuildContext context, int idProduksi, String newStatus) async {
+      BuildContext context, int idProduksi, String newStatus, int index) async {
     if (mounted) {
-      // Add a check to prevent updating to "Sudah Dibuat" if already in that state
-      if (newStatus == 'sudah dibuat') {
-        // Periksa status sebelumnya, harus "Belum Selesai" untuk diubah menjadi "Sudah Dibuat"
-        if (currentStatus != 'belum selesai') {
+      // Check the previous status, must be "Sudah Dibuat" to change to "Sudah Sesuai"
+      if (newStatus.toLowerCase() == 'sudah dibuat') {
+        if (produksiData[index]['status_produksi'] != 'belum selesai') {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Status harus "Belum Selesai" untuk diubah menjadi "Sudah Dibuat".'),
+                  'Status must be "belum selesai" to change to "Sudah Dibuat".'),
               duration: Duration(seconds: 2),
             ),
           );
@@ -88,27 +94,28 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         Uri.parse(ApiConfig.status),
         body: {
           'id_produksi': idProduksi.toString(),
-          'status_produksi': newStatus,
+          'status_produksi': newStatus.toLowerCase(),
         },
       );
 
-      if (!_isDisposed && response.statusCode == 200 && mounted) {
+      if (response.statusCode == 200 && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Status berhasil diperbarui'),
+            content: Text('Status successfully updated'),
             duration: Duration(seconds: 2),
           ),
         );
 
-        // Perbarui data produksi setelah berhasil memperbarui status
+        // Update production data after successfully updating the status
         await loadProduksi();
         setState(() {
-          // Tambahkan pembaruan state yang diperlukan setelah memperbarui data
+          isItemClicked[index] = true; // Set the item as clicked
+          // Add necessary state updates after updating data
         });
-      } else if (!_isDisposed && mounted) {
+      } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memperbarui status'),
+            content: Text('Failed to update status'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -117,46 +124,41 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   }
 
   Future<void> _showConfirmationDialog(
-      BuildContext context, int idProduksi, String newStatus) async {
+      BuildContext context, int idProduksi, String newStatus, int index) async {
     if (mounted) {
       return showDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          if (!_isDisposed) {
-            return AlertDialog(
-              title: Text('Konfirmasi'),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: <Widget>[
-                    Text(
-                        'Apakah Anda yakin ingin mengubah status produksi ini?'),
-                  ],
-                ),
+          bool canUpdateStatus = !isItemClicked[index];
+          return AlertDialog(
+            title: Text(getTranslatedText('Confirmation')),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text(getTranslatedText(
+                      'Are you sure you want to change the production status?')),
+                ],
               ),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Ya'),
-                  onPressed: () async {
-                    if (!_isDisposed) {
-                      await _updateStatus(context, idProduksi, newStatus);
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-                TextButton(
-                  child: Text('Batal'),
-                  onPressed: () {
-                    if (!_isDisposed) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-              ],
-            );
-          } else {
-            return Offstage();
-          }
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text(getTranslatedText('Yes')),
+                onPressed: () async {
+                  if (canUpdateStatus) {
+                    await _updateStatus(context, idProduksi, newStatus, index);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+              TextButton(
+                child: Text(getTranslatedText('Cancle')),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
         },
       );
     }
@@ -165,24 +167,18 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
       switch (text) {
-        case 'Main Page':
-          return 'Halaman Utama';
-        case 'All':
-          return 'Semua';
-        case 'Daily':
-          return 'Harian';
-        case 'Weekly':
-          return 'Mingguan';
-        case 'Monthly':
-          return 'Bulanan';
-        case 'Yearly':
-          return 'Tahunan';
-        case 'Income':
-          return 'Pemasukan';
-        case 'Client Order List':
-          return 'Daftar Pesanan Klien';
+        case 'Schedule':
+          return 'Jadwal';
         case 'Activity':
-          return 'Kegiatan';
+          return 'Aktivitas';
+        case 'Confirmation':
+          return 'Konfirmasi';
+        case 'Are you sure you want to change the production status?':
+          return 'Apakah Anda yakin ingin mengubah status produksi?';
+        case 'Yes':
+          return 'Ya';
+        case 'Cancle':
+          return 'Batal';
         default:
           return text;
       }
@@ -213,7 +209,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
       title: Align(
         alignment: Alignment.center,
         child: Text(
-          getTranslatedText('Jadwal'),
+          getTranslatedText('Schedule'),
           style: TextStyle(
             fontSize: 25.0,
             color: isDarkTheme ? Colors.white : Colors.black,
@@ -222,7 +218,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
       ),
       actions: <Widget>[
         SizedBox(
-          width: 47.0,
+          width: 45.0,
         ),
       ],
     );
@@ -274,7 +270,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                             vertical: 3,
                           ),
                           labelText: getTranslatedText("Time Period"),
-                          // hintText: "waktu in menu mode",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Colors.transparent),
@@ -293,7 +288,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isDarkTheme ? Colors.white38 : Colors.black38,
-                        width: 1, // Lebar garis tepi
+                        width: 1,
                       ),
                     ),
                     child: Padding(
@@ -307,8 +302,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                               Icons.search_rounded,
                               color: isDarkTheme
                                   ? Colors.white
-                                  : Color(
-                                      0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                  : Color(0xFF8B9BA8),
                               size: 15,
                             ),
                           ),
@@ -345,12 +339,10 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                   fontFamily: 'Clash Display',
                                   color:
                                       isDarkTheme ? Colors.white : Colors.black,
-                                  fontSize: screenWidth *
-                                      0.035, // Ukuran teks pada tombol
+                                  fontSize: screenWidth * 0.035,
                                   fontWeight: FontWeight.normal,
                                 ),
                                 validator: (value) {
-                                  // Validasi teks input
                                   return null;
                                 },
                               ),
@@ -367,8 +359,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       color: isDarkTheme ? Colors.white24 : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.transparent, // Warna garis tepi
-                        width: 0.5, // Lebar garis tepi
+                        color: Colors.transparent,
+                        width: 0.5,
                       ),
                     ),
                     child: DropdownSearch<String>(
@@ -396,7 +388,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                             vertical: 3,
                           ),
                           labelText: getTranslatedText("Select Status"),
-                          // hintText: "status in menu mode",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Colors.transparent),
@@ -412,7 +403,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
             ),
             SizedBox(height: bodyHeight * 0.03),
             Expanded(
-              child: _isloading
+              child: produksiData.isEmpty
                   ? Center(
                       child: CircularProgressIndicator(),
                     )
@@ -420,14 +411,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       itemCount: produksiData.length,
                       itemBuilder: (BuildContext context, int index) {
                         final item = produksiData[index];
-                        return GestureDetector(
-                          onTap: () {
-                            print('Tapped index: $index');
-                            _showConfirmationDialog(
-                                context, index, 'Sudah Dibuat');
-                          },
-                          child: buildProductionItem(item, screenWidth, index),
-                        );
+                        return buildProductionItem(item, screenWidth);
                       },
                     ),
             ),
@@ -437,26 +421,24 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     );
   }
 
-  Widget buildProductionItem(
-      Map<String, dynamic> item, double screenWidth, int index) {
+  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
-
+    final screenWidth = MediaQuery.of(context).size.width;
     if (item == null) {
       print('Error: Item is null');
       return Container();
     }
 
     print('Item: $item');
-
-    return GestureDetector(
+    return InkWell(
       onTap: () {
-        if (index >= 0 && index < produksiData.length) {
-          _showConfirmationDialog(
-              context, produksiData[index]['id_produksi'], 'Sudah Dibuat');
-        } else {
-          print('Error: Invalid index');
-        }
+        _showConfirmationDialog(
+          context,
+          item['id_produksi'], // Assuming 'id_produksi' is the correct key
+          'newStatus', // Replace 'newStatus' with the actual new status
+          produksiData.indexOf(item),
+        );
       },
       child: Card(
         clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -531,9 +513,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                           color: Color(0xFFFFFFFE),
                           size: 16,
                         ),
-                      ),
-                      SizedBox(
-                        width: mediaQueryWidth * 0.02,
                       ),
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
