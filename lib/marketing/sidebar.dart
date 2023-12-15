@@ -128,7 +128,7 @@ class SidebarDrawerState extends State<SidebarDrawer> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.input_outlined),
+            leading: Icon(Icons.add_circle_outline),
             title: Text(getTranslatedText('INPUT ORDER')),
             onTap: () {
               Navigator.push(

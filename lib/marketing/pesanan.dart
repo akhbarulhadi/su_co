@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:suco/marketing/data_client.dart';
 import 'package:intl/intl.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class Pesanan extends StatefulWidget {
   const Pesanan({Key? key}) : super(key: key);
@@ -29,7 +30,10 @@ class PesananState extends State<Pesanan> {
   TextEditingController batastanggalController = TextEditingController();
   TextEditingController jumlahpesananController = TextEditingController();
   TextEditingController namaklienController = TextEditingController();
-
+  bool isDataBenar = false;
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
   List _stockData = [];
   String _selectedProductId = '';
 
@@ -126,16 +130,96 @@ class PesananState extends State<Pesanan> {
     if (response.statusCode == 201) {
       print("Data Pesanan berhasil dibuat!");
       print("Response: ${response.body}");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Pesanan Berhasil Ditambahkan'),
-          duration: Duration(seconds: 3),
-        ),
+      setState(() {
+        isDataBenar = false; // Set data ke false
+        idklienController.clear();
+        hargatotalController.clear();
+        jenispembayaranController.clear();
+        jumlahpesananController.clear();
+        batastanggalController.clear();
+      });
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       );
       // Tambahkan logika atau navigasi ke halaman berikutnya jika diperlukan
     } else {
       print("Gagal membuat data Pesanan.");
       print("Response: ${response.body}");
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 

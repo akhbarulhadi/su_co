@@ -8,6 +8,7 @@ import 'kalender_test.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:suco/supervisor/jadwal.dart';
 import 'package:intl/intl.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class Calendar extends StatefulWidget {
   final int idproduct;
@@ -30,7 +31,10 @@ class CalenderState extends State<Calendar> {
   TextEditingController productNameprodukController = TextEditingController();
   TextEditingController namaRuanganController = TextEditingController();
   TextEditingController jumlahPesananController = TextEditingController();
-
+  bool isDataBenar = false;
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
   bool isDarkTheme = false;
   String selectedLanguage = 'IDN';
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -106,17 +110,119 @@ class CalenderState extends State<Calendar> {
         if (response.statusCode == 201) {
           print("Jadwal Produksi berhasil dibuat!");
           print("Response: ${response.body}");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Jadwal Produksi Berhasil Ditambahkan'),
-              duration: Duration(seconds: 3),
-            ),
+          setState(() {
+            isDataBenar = false; // Set data ke false
+            namaRuanganController.clear(); // Kosongkan form
+          });
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return GiffyDialog.image(
+                Image.asset(
+                  'lib/assets/success-tick-dribbble.gif',
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+                title: Text(
+                  getTranslatedText('Successfully'),
+                  textAlign: TextAlign.center,
+                ),
+                content: Text(
+                  getTranslatedText('Do you want to fill in the data again ?'),
+                  textAlign: TextAlign.center,
+                ),
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TableEventsExample(),
+                            ),
+                          );
+                        },
+                        child: Text(getTranslatedText('No, Thank You')),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(100, 40),
+                          padding: EdgeInsets.all(10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(19),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10.0,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(getTranslatedText('Fill in the Data Again')),
+                        style: TextButton.styleFrom(
+                          minimumSize: Size(100, 40),
+                          padding: EdgeInsets.all(10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(19),
+                            side: BorderSide(
+                              color: Color(0xFF3DA9FC), // Warna border
+                              width: 1.0, // Lebar border
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           );
-          // Tambahkan logika atau navigasi ke halaman berikutnya jika diperlukan
         } else {
           print("Gagal membuat Jadwal Produksi.");
           print("Response Status Code: ${response.statusCode}");
           print("Response Body: ${response.body}");
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return GiffyDialog.image(
+                Image.asset(
+                  'lib/assets/failed.gif',
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+                title: Text(
+                  getTranslatedText('Failed'),
+                  textAlign: TextAlign.center,
+                ),
+                content: Text(
+                  getTranslatedText(''),
+                  textAlign: TextAlign.center,
+                ),
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(getTranslatedText('Tutup')),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(100, 40),
+                          padding: EdgeInsets.all(10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(19),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
         }
       }
     } catch (e) {
@@ -392,7 +498,7 @@ class CalenderState extends State<Calendar> {
                                       color: Colors.white,
                                     ),
                                   ),
-                                  firstDay: kFirstDay,
+                                  firstDay: DateTime.now(),
                                   lastDay: kLastDay,
                                   focusedDay: _focusedDay,
                                   calendarFormat: _calendarFormat,
@@ -411,7 +517,7 @@ class CalenderState extends State<Calendar> {
                                       color: Colors.white,
                                     ),
                                     todayDecoration: BoxDecoration(
-                                      color: Color(0xFF71C4EF),
+                                      color: Colors.transparent,
                                       shape: BoxShape.circle,
                                     ),
                                     selectedDecoration: BoxDecoration(

@@ -22,7 +22,10 @@ class _LoginState extends State<Login> {
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   bool _passwordVisibility = true;
-
+  bool isDataBenar = false;
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
   @override
   void initState() {
     super.initState();
@@ -54,7 +57,11 @@ class _LoginState extends State<Login> {
 
         if (response.statusCode == 200) {
           final Map<String, dynamic>? data = json.decode(response.body);
-
+          setState(() {
+            isDataBenar = false; // Set data ke false
+            _emailController.clear();
+            _passwordController.clear();
+          });
           if (data != null) {
             final String roles = data['roles'] ?? '';
             final String token = data['access_token'] ?? '';

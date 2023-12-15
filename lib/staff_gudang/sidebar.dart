@@ -52,8 +52,8 @@ class SidebarDrawerState extends State<SidebarDrawer> {
           return 'LAPORAN';
         case 'INPUT':
           return 'INPUT';
-        case 'SCHEDULE':
-          return 'JADWAL';
+        case 'PRODUCTION':
+          return 'PRODUKSI';
         case 'USER MANAGEMENT':
           return 'MANAJEMEN PENGGUNA';
         case 'SETTINGS':
@@ -123,8 +123,8 @@ class SidebarDrawerState extends State<SidebarDrawer> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.event),
-            title: Text(getTranslatedText('SCHEDULE')),
+            leading: Icon(Icons.factory_outlined),
+            title: Text(getTranslatedText('PRODUCTION')),
             onTap: () {
               Navigator.push(
                 context,

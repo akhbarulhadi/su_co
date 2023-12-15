@@ -108,4 +108,25 @@ class PesananController extends Controller
             return response()->json(['message' => 'Gagal mengurangkan jumlah produk'], 500);
         }
     }
+
+
+    public function showPemasukan(Request $request)
+    {
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+
+        $pesanan = Pesanan::select('pesanan.status_pesanan')
+            ->whereNotIn('pesanan.status_pesanan', ['Menunggu', 'Siap Diantar', 'Ditunda'])
+            ->whereDate('pesanan.updated_at', '>=', $startDate)
+            ->whereDate('pesanan.updated_at', '<=', $endDate)
+            ->get();
+
+        $total_harga_selesai = Pesanan::where('status_pesanan', 'Selesai')
+            ->whereDate('pesanan.updated_at', '>=', $startDate)
+            ->whereDate('pesanan.updated_at', '<=', $endDate)
+            ->sum('harga_total');
+
+
+        return response()->json(['message' => 'Success', 'total_harga_selesai' => $total_harga_selesai]);
+    }
 }

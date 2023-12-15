@@ -32,7 +32,7 @@ class ProduksiController extends Controller
             // Ambil data produksi dari tabel laporan_produksi dengan join ke tabel ketersediaan_barang dan users
             $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
                 ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user') // Ubah id_user sesuai dengan nama kolom yang benar di tabel laporan_produksi
-                ->select('laporan_produksi.*', 'ketersediaan_barang.nama_produk', 'users.nama as nama_user') // Gunakan as untuk memberi alias pada kolom users.nama
+                ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user') // Gunakan as untuk memberi alias pada kolom users.nama
                 ->get();
 
             // Jika data ditemukan, kirimkan respons JSON
@@ -70,22 +70,22 @@ class ProduksiController extends Controller
             'id_produk' => 'required|integer',
             'jumlah_produk' => 'required|integer',
         ]);
-    
+
         // Temukan atau buat entri di tabel ketersediaan_barang berdasarkan id_produk
         $produk = Stock::firstOrNew(['id_produk' => $request->id_produk]);
-    
+
         // Simpan jumlah_produk yang ada sebelum pembaruan
         $existingQuantity = $produk->jumlah_produk;
-    
+
         // Tetapkan jumlah_produk yang baru
         $newQuantity = $request->jumlah_produk;
-    
+
         // Update jumlah_produk dengan total
         $produk->jumlah_produk = $existingQuantity + $newQuantity;
-    
+
         // Simpan perubahan
         $produk->save();
-    
+
         return response()->json([
             'message' => 'Stock berhasil diperbarui',
             'data' => [
@@ -94,7 +94,6 @@ class ProduksiController extends Controller
             ],
         ]);
     }
-    
 
     public function store(Request $request)
     {
@@ -124,5 +123,61 @@ class ProduksiController extends Controller
         $laporanProduksi->save();
 
         return response()->json(['message' => 'Jadwal produksi berhasil disimpan'], 201);
+    }
+
+    public function updateStatusSelesai(Request $request)
+    {
+        $idProduksi = $request->input('id_produksi');
+
+        try {
+            // Temukan pesanan berdasarkan ID
+            $produksi = Produksi::find($idProduksi);
+
+            // Perbarui status_pesanan menjadi 'Siap Diantar'
+            $produksi->status_produksi = 'selesai';
+            $produksi->save();
+
+            return response()->json(['message' => 'Status pesanan berhasil diperbarui'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal memperbarui status pesanan'], 500);
+        }
+    }
+
+    public function updateProductAvailability(Request $request)
+    {
+        $productId = $request->input('id_produk');
+        $jumlahProduksi = $request->input('jumlah_produksi');
+
+        try {
+            // Temukan produk berdasarkan ID
+            $product = Stock::find($productId);
+
+            // Perbarui jumlah_produk (tambahkan)
+            $product->jumlah_produk += $jumlahProduksi;
+            $product->save();
+
+            return response()->json(['message' => 'Jumlah produk berhasil diperbarui'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal menambah jumlah produk'], 500);
+        }
+    }
+
+    public function getProduksiStaffGudang()
+    {
+        try {
+            // Ambil data produksi dari tabel laporan_produksi dengan join ke tabel ketersediaan_barang dan users
+            $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
+                ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
+                ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
+                ->whereNotIn('laporan_produksi.status_produksi', ['belum selesai', 'sudah dibuat'])
+                ->orderByRaw("CASE WHEN laporan_produksi.status_produksi = 'sudah sesuai' THEN 1 WHEN laporan_produksi.status_produksi = 'selesai' THEN 2 ELSE 3 END")
+                ->get();
+
+            // Jika data ditemukan, kirimkan respons JSON
+            return response()->json(['message' => 'Success', 'produksi' => $produksi], 200);
+        } catch (\Exception $e) {
+            // Jika terjadi kesalahan, kirimkan respons JSON dengan pesan kesalahan
+            return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
+        }
     }
 }

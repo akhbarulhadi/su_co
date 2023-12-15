@@ -3,6 +3,7 @@ import 'package:suco/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class ChangePassWidget extends StatefulWidget {
   const ChangePassWidget({Key? key}) : super(key: key);
@@ -17,8 +18,11 @@ class ChangePassState extends State<ChangePassWidget> {
   bool _obscureText1 = true;
   bool _obscureText2 = true;
   bool _obscureText3 = true;
+  bool isDataBenar = false;
+  final _formKey = GlobalKey<FormState>();
   TextEditingController currentPasswordController = TextEditingController();
   TextEditingController newPasswordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
 
   @override
   void initState() {
@@ -68,10 +72,10 @@ class ChangePassState extends State<ChangePassWidget> {
   Future<void> changePassword(
       String currentPassword, String newPassword) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-     String storedToken = prefs.getString('access_token') ?? '';
+    String storedToken = prefs.getString('access_token') ?? '';
 
     final response = await http.post(
-     Uri.parse(ApiConfig.changePassword),
+      Uri.parse(ApiConfig.changePassword),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $storedToken',
@@ -84,17 +88,100 @@ class ChangePassState extends State<ChangePassWidget> {
 
     if (response.statusCode == 200) {
       print('Password berhasil diperbarui');
-      // Tambahkan logika atau navigasi sesuai kebutuhan setelah berhasil mengganti password
+      setState(() {
+        isDataBenar = false; // Set data ke false
+        currentPasswordController.clear(); // Kosongkan form
+        newPasswordController.clear();
+        confirmPasswordController.clear();
+      });
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
     } else {
       print('Gagal mengganti password: ${response.body}');
-      // Tambahkan logika atau tampilan pesan kesalahan sesuai kebutuhan
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData =
-        isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
       theme: themeData,
@@ -150,119 +237,139 @@ class ChangePassState extends State<ChangePassWidget> {
                     ),
                     child: Padding(
                       padding: EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            getTranslatedText('Change Password'),
-                            textAlign: TextAlign.start,
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 12, bottom: 24),
-                            child: Text(
-                              getTranslatedText(
-                                  'Please enter your current password and new password below.'),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              getTranslatedText('Change Password'),
                               textAlign: TextAlign.start,
-                              style: TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: 16),
                             ),
-                          ),
-                          TextFormField(
-                            controller: currentPasswordController,
-                            obscureText: _obscureText1,
-                            decoration: InputDecoration(
-                              labelText: getTranslatedText('Current Password'),
-                              contentPadding: EdgeInsets.all(24),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureText1
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureText1 = !_obscureText1;
-                                  });
-                                },
-                              ),
-                            ),
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          TextFormField(
-                            controller: newPasswordController,
-                            obscureText: _obscureText2,
-                            decoration: InputDecoration(
-                              labelText: getTranslatedText('New Password'),
-                              contentPadding: EdgeInsets.all(24),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureText2
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureText2 = !_obscureText2;
-                                  });
-                                },
-                              ),
-                            ),
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          TextFormField(
-                            obscureText: _obscureText3,
-                            decoration: InputDecoration(
-                              labelText:
-                                  getTranslatedText('Confirm New Password'),
-                              contentPadding: EdgeInsets.all(24),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureText3
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureText3 = !_obscureText3;
-                                  });
-                                },
-                              ),
-                            ),
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(50, 50, 50, 10),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                if (currentPasswordController.text.isNotEmpty &&
-                                    newPasswordController.text.isNotEmpty) {
-                                  changePassword(currentPasswordController.text,
-                                      newPasswordController.text);
-                                } else {
-                                  // Tampilkan pesan kesalahan atau lakukan sesuatu sesuai kebutuhan
-                                }
-                              },
+                            Padding(
+                              padding: EdgeInsets.only(top: 12, bottom: 24),
                               child: Text(
-                                getTranslatedText('Save Changes'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: Size(370, 44),
-                                padding: EdgeInsets.all(0),
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                primary: Color(0xFF3DA9FC),
+                                getTranslatedText(
+                                    'Please enter your current password and new password below.'),
+                                textAlign: TextAlign.start,
+                                style: TextStyle(fontSize: 14),
                               ),
                             ),
-                          ),
-                        ],
+                            TextFormField(
+                              controller: currentPasswordController,
+                              obscureText: _obscureText1,
+                              decoration: InputDecoration(
+                                labelText: getTranslatedText('Current Password'),
+                                contentPadding: EdgeInsets.all(24),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureText1
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureText1 = !_obscureText1;
+                                    });
+                                  },
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Isi Datanya';
+                                };
+                              },
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextFormField(
+                              controller: newPasswordController,
+                              obscureText: _obscureText2,
+                              decoration: InputDecoration(
+                                labelText: getTranslatedText('New Password'),
+                                contentPadding: EdgeInsets.all(24),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureText2
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureText2 = !_obscureText2;
+                                    });
+                                  },
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Isi Datanya';
+                                } else if (value.length < 8) {
+                                  return 'Minimal 8 karakter';
+                                } else if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d).+$')
+                                    .hasMatch(value)) {
+                                  return 'Password harus mengandung kombinasi huruf dan angka';
+                                }
+                                return null;
+                              },
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextFormField(
+                              obscureText: _obscureText3,
+                              controller: confirmPasswordController,
+                              decoration: InputDecoration(
+                                labelText:
+                                getTranslatedText('Confirm New Password'),
+                                contentPadding: EdgeInsets.all(24),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureText3
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureText3 = !_obscureText3;
+                                    });
+                                  },
+                                ),
+                              ),
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(50, 50, 50, 10),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (currentPasswordController.text.isNotEmpty &&
+                                      newPasswordController.text.isNotEmpty && _formKey.currentState!.validate()) {
+                                    changePassword(currentPasswordController.text,
+                                        newPasswordController.text);
+                                  } else {
+                                    // Tampilkan pesan kesalahan atau lakukan sesuatu sesuai kebutuhan
+                                  }
+                                },
+                                child: Text(
+                                  getTranslatedText('Save Changes'),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: Size(370, 44),
+                                  padding: EdgeInsets.all(0),
+                                  elevation: 3,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  primary: Color(0xFF3DA9FC),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

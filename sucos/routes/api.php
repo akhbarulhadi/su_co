@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->post('/edit-profile', [AuthController::class,
 
 // untuk halaman pesanan
 Route::get('/pesanan', [PesananController::class, 'showPesanan']);
+Route::get('/pesanan/pemasukan', [PesananController::class, 'showPemasukan']);
 Route::get('/pesanan/show-history', [PesananController::class, 'showHistory']);
 Route::post('pesanan/update-status', [PesananController::class, 'updateStatus']);
 Route::post('pesanan/update-status-siapdiantar', [PesananController::class, 'updateStatusSiapDiantar']);
@@ -56,4 +57,7 @@ Route::get('/roles-leader', [ProduksiController::class, 'user']);
 Route::post('/produksi/update-status', [ProduksiController::class, 'updateStatus']);
 Route::post('/produksi/update-stock', [ProduksiController::class, 'updateJumlahProduk']);
 Route::get('/jadwal', [ProduksiController::class, 'getproduksi']);
+Route::post('/produksi/update-status-selesai', [ProduksiController::class, 'updateStatusSelesai']);
+Route::post('/produksi/update-product', [ProduksiController::class, 'updateProductAvailability']);
+Route::get('/produksi/production-staffgudang', [ProduksiController::class, 'getProduksiStaffGudang']);
 // Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);

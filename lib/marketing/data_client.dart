@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/marketing/data_pesanan.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class DataClient extends StatefulWidget {
   const DataClient({super.key});
@@ -23,7 +24,10 @@ class KlientPage extends State<DataClient> {
   TextEditingController noTelpController = TextEditingController();
   TextEditingController faxController = TextEditingController();
   TextEditingController noBankController = TextEditingController();
-
+  bool isDataBenar = false;
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
 
   @override
   void initState() {
@@ -48,7 +52,7 @@ class KlientPage extends State<DataClient> {
 
   Future<void> createKlien() async {
     final response = await http.post(
-           Uri.parse(ApiConfig.add_data_client),
+      Uri.parse(ApiConfig.add_data_client),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "nama_perusahaan": namaPerusahaanController.text,
@@ -64,11 +68,122 @@ class KlientPage extends State<DataClient> {
     if (response.statusCode == 201) {
       print("Data Klien berhasil dibuat!");
       print("Response: ${response.body}");
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DataPesanan()));
+      setState(() {
+        isDataBenar = false; // Set data ke false
+        namaPerusahaanController.clear(); // Kosongkan form
+        namaKlienController.clear();
+        alamatController.clear();
+        emailController.clear();
+        noTelpController.clear();
+        faxController.clear();
+        noBankController.clear();
+      });
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText('Do you want to fill in the data again ?'),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DataPesanan()));
+                    },
+                    child: Text(getTranslatedText('No, Thank You')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 10.0,
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Fill in the Data Again')),
+                    style: TextButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                        side: BorderSide(
+                          color: Color(0xFF3DA9FC), // Warna border
+                          width: 1.0, // Lebar border
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
     } else {
       print("Gagal membuat data Klien.");
       print("Response: ${response.body}");
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
 
     }
   }
@@ -86,8 +201,8 @@ class KlientPage extends State<DataClient> {
           return 'Nama Klien';
         case 'Address':
           return 'Alamat';
-        case 'Continue':
-          return 'Selanjutnya';
+        case 'Add':
+          return 'Tambahkan';
         case '':
           return '';
 
@@ -103,7 +218,7 @@ class KlientPage extends State<DataClient> {
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData =
-        isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
       theme: themeData, // Terapkan tema sesuai dengan preferensi tema gelap
@@ -122,7 +237,7 @@ class KlientPage extends State<DataClient> {
               color: isDarkTheme
                   ? Colors.white
                   : Colors
-                      .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+                  .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
           title: Align(
             alignment: Alignment.center,
             child: Text(
@@ -154,7 +269,7 @@ class KlientPage extends State<DataClient> {
                       color: isDarkTheme
                           ? Colors.white10
                           : Colors
-                              .white, // Ganti dengan warna latar belakang yang sesuai
+                          .white, // Ganti dengan warna latar belakang yang sesuai
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isDarkTheme
@@ -172,6 +287,7 @@ class KlientPage extends State<DataClient> {
                           children: [
                             TextFormField(
                               controller: namaPerusahaanController,
+                              keyboardType: TextInputType.text,
                               decoration: InputDecoration(
                                 labelText: getTranslatedText('Company Name'),
                                 contentPadding: EdgeInsets.symmetric(
@@ -192,6 +308,7 @@ class KlientPage extends State<DataClient> {
                             SizedBox(height: 16.0),
                             TextFormField(
                               controller: namaKlienController,
+                              keyboardType: TextInputType.text,
                               decoration: InputDecoration(
                                 labelText: getTranslatedText('Client Name'),
                                 contentPadding: EdgeInsets.symmetric(
@@ -212,6 +329,7 @@ class KlientPage extends State<DataClient> {
                             SizedBox(height: 16.0),
                             TextFormField(
                               controller: alamatController,
+                              keyboardType: TextInputType.text,
                               decoration: InputDecoration(
                                 labelText: getTranslatedText('Address'),
                                 contentPadding: EdgeInsets.symmetric(
@@ -232,6 +350,7 @@ class KlientPage extends State<DataClient> {
                             SizedBox(height: 16.0),
                             TextFormField(
                               controller: emailController,
+                              keyboardType: TextInputType.text,
                               decoration: InputDecoration(
                                 contentPadding: EdgeInsets.symmetric(
                                   horizontal: 15,
@@ -245,6 +364,8 @@ class KlientPage extends State<DataClient> {
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Isi Datanya';
+                                } else if (!value.contains('@')) {
+                                  return 'Email harus mengandung karakter "@"';
                                 }
                                 return null;
                               },
@@ -255,6 +376,7 @@ class KlientPage extends State<DataClient> {
                                 Expanded(
                                   child: TextFormField(
                                     controller: noTelpController,
+                                    keyboardType: TextInputType.number,
                                     decoration: InputDecoration(
                                       labelText: 'Telp',
                                       contentPadding: EdgeInsets.symmetric(
@@ -268,6 +390,10 @@ class KlientPage extends State<DataClient> {
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Isi Datanya';
+                                      } else if (value.length < 10) {
+                                        return 'Minimal 10 angka';
+                                      } else if (!isNumeric(value)) {
+                                        return 'Nomor telepon harus mengandung angka saja';
                                       }
                                       return null;
                                     },
@@ -278,6 +404,7 @@ class KlientPage extends State<DataClient> {
                                 Expanded(
                                   child: TextFormField(
                                     controller: faxController,
+                                    keyboardType: TextInputType.number,
                                     decoration: InputDecoration(
                                       labelText: 'Fax',
                                       contentPadding: EdgeInsets.symmetric(
@@ -291,6 +418,10 @@ class KlientPage extends State<DataClient> {
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Isi Datanya';
+                                      } else if (value.length < 1) {
+                                        return 'Minimal 1 angka';
+                                      } else if (!isNumeric(value)) {
+                                        return 'Harus mengandung angka saja';
                                       }
                                       return null;
                                     },
@@ -301,6 +432,7 @@ class KlientPage extends State<DataClient> {
                             SizedBox(height: 16.0),
                             TextFormField(
                               controller: noBankController,
+                              keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 labelText: 'No Bank',
                                 contentPadding: EdgeInsets.symmetric(
@@ -314,6 +446,10 @@ class KlientPage extends State<DataClient> {
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Isi Datanya';
+                                } else if (value.length < 1) {
+                                  return 'Minimal 1 angka';
+                                } else if (!isNumeric(value)) {
+                                  return 'Harus mengandung angka saja';
                                 }
                                 return null;
                               },
@@ -327,7 +463,7 @@ class KlientPage extends State<DataClient> {
                                   }
                                 },
                                 child: Text(
-                                  getTranslatedText('Continue'),
+                                  getTranslatedText('Add'),
                                   style: TextStyle(
                                     fontSize: 18,
                                   ),

@@ -22,6 +22,21 @@ return new class extends Migration
             $table->enum('roles', ['marketing', 'supervisor', 'leader', 'staff_gudang', 'kepala_gudang', 'admin']);
             $table->timestamps();
         });
+        // Menambahkan satu data default
+        // User::table('users')->insert([
+        //     'id_staff' => '123',
+        //     'password' => bcrypt('admin1'), // Anda mungkin ingin mengenkripsi kata sandi
+        //     'nama' => '123',
+        //     'jenis_kelamin' => 'Laki-laki', // Sesuaikan dengan kebutuhan
+        //     'alamat' => 'Default',
+        //     'no_tlp' => '1234567890',
+        //     'foto' => 'default-profile.jpg', // Ganti dengan nama file foto default
+        //     'email' => 'admin1@gmail.com.com',
+        //     'status' => 'aktif', // Sesuaikan dengan kebutuhan
+        //     'roles' => 'admin', // Sesuaikan dengan kebutuhan
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ]);
     }
 
     public function down()

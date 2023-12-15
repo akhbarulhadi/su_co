@@ -7,8 +7,6 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import '../utils.dart';
-
 class TableEventsExample extends StatefulWidget {
   @override
   _TableEventsExampleState createState() => _TableEventsExampleState();
@@ -128,7 +126,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     if (mounted) {
       return showDialog<void>(
         context: context,
-        barrierDismissible: false,
         builder: (BuildContext context) {
           bool canUpdateStatus = !isItemClicked[index];
           return AlertDialog(
@@ -401,7 +398,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 ],
               ),
             ),
-            SizedBox(height: bodyHeight * 0.03),
             Expanded(
               child: produksiData.isEmpty
                   ? Center(
@@ -411,7 +407,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       itemCount: produksiData.length,
                       itemBuilder: (BuildContext context, int index) {
                         final item = produksiData[index];
-                        return buildProductionItem(item, screenWidth);
+                        return buildProductionItem(item, screenWidth, index);
                       },
                     ),
             ),
@@ -421,7 +417,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     );
   }
 
-  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth) {
+  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth, int index) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -431,14 +427,19 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     }
 
     print('Item: $item');
-    return InkWell(
+    return GestureDetector(
       onTap: () {
-        _showConfirmationDialog(
-          context,
-          item['id_produksi'], // Assuming 'id_produksi' is the correct key
-          'newStatus', // Replace 'newStatus' with the actual new status
-          produksiData.indexOf(item),
-        );
+        if (!isItemClicked[index]) {
+          if (item['status_produksi'].toLowerCase() == 'belum selesai') {
+            print('Tapped index: $index');
+            _showConfirmationDialog(
+                context, item['id_produksi'], 'Sudah Dibuat', index);
+          } else {
+            print('Item sudah diklik dan status sudah sesuai');
+          }
+        } else {
+          print('Item sudah diklik dan status sudah sesuai');
+        }
       },
       child: Card(
         clipBehavior: Clip.antiAliasWithSaveLayer,

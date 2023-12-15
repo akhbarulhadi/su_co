@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:suco/marketing/sidebar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:http/http.dart' as http;
+import 'package:suco/api_config.dart';
 
 
 class DashboardPageMarketing extends StatefulWidget {
@@ -14,12 +18,16 @@ class DashboardPageMarketing extends StatefulWidget {
 class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
+  String _totalHargaSelesai = '';
+  TextEditingController textController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     loadThemePreference(); // Muat preferensi tema gelap saat halaman dimulai
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
+    _getdatapemasukan('', ''); // Isi tanggal sesuai kebutuhan
+    textController = TextEditingController();
   }
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -33,6 +41,25 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
     setState(() {
       isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
     });
+  }
+
+  Future<void> _getdatapemasukan(String startDate, String endDate) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.pemasukan}?startDate=$startDate&endDate=$endDate'),
+      );
+      print(response.body);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data);
+        setState(() {
+          _totalHargaSelesai = data['total_harga_selesai'].toString();
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 
   // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
@@ -64,6 +91,18 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Riwayat Pesanan';
         case 'Completed on':
           return 'Selesai pada';
+        case 'No income yet' :
+          return 'Belum ada';
+        case 'Search...':
+          return 'Cari...';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
 
         default:
           return text;
@@ -108,7 +147,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
         drawer: SidebarDrawer(),
         appBar: myAppBar,
         body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
+          scrollDirection: Axis.vertical,
           child: Column(
             children: [
               Padding(
@@ -130,83 +169,132 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                             color: Color(0XFF53D258), // Ganti warna sesuai kebutuhan
                             size: 40,
                           ),
-                          Column(
-                            children: [
-                              SizedBox(height: bodyHeight * 0.01,),
-                              Text(
-                                getTranslatedText(
-                                    'Income'),
-                                style: TextStyle(
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(10, 11, 0, 0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  getTranslatedText(
+                                      'Income'),
+                                  style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.white,
                                     fontWeight: FontWeight.w300,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: bodyHeight * 0.01,),
-                              Text(
-                                'Rp. 100.000.000',
-                                style: TextStyle(
+                                Text(
+                                  _totalHargaSelesai != ''
+                                      ? 'Rp ${_totalHargaSelesai}'
+                                      : getTranslatedText('No income yet'),
+                                  style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      width: mediaQueryWidth * 0.3,
-                      height: bodyHeight * 0.06,
+                      width: mediaQueryWidth * 0.4,
+                      height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.transparent, // Warna garis tepi
-                          width: 0.5, // Lebar garis tepi
+                          color: isDarkTheme ? Colors.white38 : Colors.black38,
+                          width: 1, // Lebar garis tepi
                         ),
                       ),
-                      child: DropdownSearch<String>(
-                        popupProps: PopupProps.menu(
-                          fit: FlexFit.loose,
-                          menuProps: MenuProps(
-                            backgroundColor: isDarkTheme ? Colors.black : Colors.white,
-                            elevation: 0,
-                          ),
-                          showSelectedItems: true,
-                        ),
-                        items: [
-                          getTranslatedText(
-                              'All'),
-                          getTranslatedText(
-                              'Daily'),
-                          getTranslatedText(
-                              'Weekly'),
-                          getTranslatedText(
-                              'Monthly'),
-                          getTranslatedText(
-                              'Yearly'),
-                        ],
-                        dropdownDecoratorProps: DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            // labelText: "Jangka Waktu",
-                            // hintText: "waktu in menu mode",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: Colors.transparent,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.calendar_today,
+                                color: isDarkTheme
+                                    ? Colors.white
+                                    : Color(
+                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                size: 15,
                               ),
                             ),
-                          ),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 12),
+                                child: TextFormField(
+                                  controller: textController,
+                                  obscureText: false,
+                                  decoration: InputDecoration(
+                                    hintText: getTranslatedText('Search...'),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontFamily: 'Clash Display',
+                                    color:
+                                    isDarkTheme ? Colors.white : Colors.black,
+                                    fontSize: screenWidth *
+                                        0.035, // Ukuran teks pada tombol
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  readOnly: true,
+                                  //set it true, so that user will not able to edit text
+                                  onTap: () async {
+                                    DateTimeRange? pickedDateRange = await showDateRangePicker(
+                                      context: context,
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime(2100),
+                                    );
+
+                                    if (pickedDateRange != null) {
+                                      print(pickedDateRange.start); // Tanggal awal
+                                      print(pickedDateRange.end);   // Tanggal akhir
+
+                                      String formattedStartDate = DateFormat('yyyy-MM-dd').format(pickedDateRange.start!);
+                                      String formattedEndDate = DateFormat('yyyy-MM-dd').format(pickedDateRange.end!);
+                                      print('startDate: $formattedStartDate, endDate: $formattedEndDate'); // Tambahkan ini
+
+                                      setState(() {
+                                        textController.text = '$formattedStartDate/$formattedEndDate';
+                                        _getdatapemasukan(formattedStartDate, formattedEndDate);
+                                      });
+                                    }
+                                  },
+                                  validator: (value) {
+                                    // Validasi teks input
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText(
-                            'All'),
                       ),
                     ),
                   ],
@@ -279,19 +367,19 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                           .fromSTEB(0, 4, 0, 0),
                                       child: Align(
                                         alignment: Alignment.bottomRight,
-                                      child: Text(
-                                        getTranslatedText(
-                                            'See Detail'),
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          color: Color(0xFFFFFFFE),
-                                          fontSize: screenWidth *
-                                              0.03, // Ukuran teks pada tombol
-                                          fontWeight:
-                                          FontWeight.normal,
+                                        child: Text(
+                                          getTranslatedText(
+                                              'See Detail'),
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFFFFFFE),
+                                            fontSize: screenWidth *
+                                                0.03, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.normal,
+                                          ),
                                         ),
                                       ),
-                                    ),
                                     ),
 
                                   ],
