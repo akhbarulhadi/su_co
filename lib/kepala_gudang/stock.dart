@@ -108,6 +108,8 @@ class StockState extends State<Stock> {
           return 'Ubah Harga';
         case 'Save':
           return 'Simpan';
+        case 'Not yet added':
+          return 'Belum ditambahkan';
         case '':
           return '';
 
@@ -407,8 +409,9 @@ class StockState extends State<Stock> {
                                                 padding: EdgeInsetsDirectional
                                                     .fromSTEB(0, 4, 0, 0),
                                                 child: Text(
-                                                  _filteredData[index]
-                                                      ['harga_produk'],
+                                                  _filteredData[index]['harga_produk'] != null
+                                                      ? 'Rp ${_filteredData[index]['harga_produk']}'
+                                                      : getTranslatedText('Not yet added'),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color(0xFFFFFFFE),

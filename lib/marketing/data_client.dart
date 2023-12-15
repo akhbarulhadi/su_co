@@ -5,6 +5,7 @@ import 'package:suco/marketing/data_pesanan.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:giffy_dialog/giffy_dialog.dart';
+import 'package:suco/marketing/pesanan.dart';
 
 class DataClient extends StatefulWidget {
   const DataClient({super.key});
@@ -101,10 +102,10 @@ class KlientPage extends State<DataClient> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => DataPesanan()));
+                              builder: (context) => Pesanan()));
                     },
                     child: Text(getTranslatedText('No, Thank You')),
                     style: ElevatedButton.styleFrom(

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class TableEventsExample extends StatefulWidget {
   @override
@@ -49,7 +50,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
 
   Future<void> loadProduksi() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.jadwal_produksi));
+      final response = await http.get(Uri.parse(ApiConfig.get_production_leader));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -97,13 +98,46 @@ class _TableEventsExampleState extends State<TableEventsExample> {
       );
 
       if (response.statusCode == 200 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Status successfully updated'),
-            duration: Duration(seconds: 2),
-          ),
+        Navigator.of(context).pop();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/success-tick-dribbble.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Successfully'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Tutup')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
-
         // Update production data after successfully updating the status
         await loadProduksi();
         setState(() {
@@ -111,11 +145,45 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           // Add necessary state updates after updating data
         });
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update status'),
-            duration: Duration(seconds: 2),
-          ),
+        Navigator.of(context).pop();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/failed.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Failed'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Tutup')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
       }
     }
@@ -144,7 +212,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 onPressed: () async {
                   if (canUpdateStatus) {
                     await _updateStatus(context, idProduksi, newStatus, index);
-                    Navigator.of(context).pop();
                   }
                 },
               ),

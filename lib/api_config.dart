@@ -3,7 +3,7 @@
 // import 'package:suco/api_config.dart';
 // Uri.parse(ApiConfig.namaFile),
 class ApiConfig {
-  static const String baseUrl = 'http://192.168.1.4:8000/api'; // Ganti dengan URL API Anda
+  static const String baseUrl = 'http://192.168.38.100:8000/api'; // Ganti dengan URL API Anda
   static const String login = '$baseUrl/login';
   static const String getProfile = '$baseUrl/get-profile';
   static const String editProfile = '$baseUrl/edit-profile';
@@ -33,6 +33,8 @@ class ApiConfig {
   static const String produksi_selesai= '$baseUrl/produksi/update-product';
   static const String update_status_produksi_selesai= '$baseUrl/produksi/update-status-selesai';
   static const String get_production_staffgudang= '$baseUrl/produksi/production-staffgudang';
-
+  static const String get_production_supervisor= '$baseUrl/produksi/production-supervisor';
+  static const String get_production_leader= '$baseUrl/produksi/production-leader';
+  static const String get_production_history= '$baseUrl/produksi/production-history';
 
 }

@@ -180,4 +180,58 @@ class ProduksiController extends Controller
             return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
         }
     }
+
+    public function getProduksiSupervisor()
+    {
+        try {
+            // Ambil data produksi dari tabel laporan_produksi dengan join ke tabel ketersediaan_barang dan users
+            $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
+                ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
+                ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
+                ->orderByRaw("CASE WHEN laporan_produksi.status_produksi = 'sudah dibuat' THEN 1 WHEN laporan_produksi.status_produksi = 'belum selesai' THEN 2 WHEN laporan_produksi.status_produksi = 'sudah sesuai' THEN 3 ELSE 4 END")
+                ->get();
+
+            // Jika data ditemukan, kirimkan respons JSON
+            return response()->json(['message' => 'Success', 'produksi' => $produksi], 200);
+        } catch (\Exception $e) {
+            // Jika terjadi kesalahan, kirimkan respons JSON dengan pesan kesalahan
+            return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getProduksiLeader()
+    {
+        try {
+            // Ambil data produksi dari tabel laporan_produksi dengan join ke tabel ketersediaan_barang dan users
+            $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
+                ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
+                ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
+                ->orderByRaw("CASE WHEN laporan_produksi.status_produksi = 'belum selesai' THEN 1 WHEN laporan_produksi.status_produksi = 'sudah dibuat' THEN 2 WHEN laporan_produksi.status_produksi = 'sudah sesuai' THEN 3 ELSE 4 END")
+                ->get();
+
+            // Jika data ditemukan, kirimkan respons JSON
+            return response()->json(['message' => 'Success', 'produksi' => $produksi], 200);
+        } catch (\Exception $e) {
+            // Jika terjadi kesalahan, kirimkan respons JSON dengan pesan kesalahan
+            return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getProduksiHistory()
+    {
+        try {
+            // Ambil data produksi dari tabel laporan_produksi dengan join ke tabel ketersediaan_barang dan users
+            $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
+                ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
+                ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
+                ->whereNotIn('laporan_produksi.status_produksi', ['belum selesai', 'sudah dibuat', 'sudah sesuai'])
+                ->get();
+
+            // Jika data ditemukan, kirimkan respons JSON
+            return response()->json(['message' => 'Success', 'produksi' => $produksi], 200);
+        } catch (\Exception $e) {
+            // Jika terjadi kesalahan, kirimkan respons JSON dengan pesan kesalahan
+            return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
+        }
+    }
 }

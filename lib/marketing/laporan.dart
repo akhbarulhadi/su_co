@@ -61,6 +61,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
 
   @override
   void dispose() {
+    _textstatusController.dispose();
+    _textperiodController.dispose();
     _textController.dispose();
     _unfocusNode.dispose();
     super.dispose();
@@ -478,12 +480,12 @@ class _LaporanWidgetState extends State<LaporanWidget> {
 
                               // Mencocokkan berdasarkan nama_perusahaan
                               bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
-                              bool matchescreated_at = item['created_at'].toLowerCase().contains(lowerCaseQuery);
+                              bool matchescreated_at = item['batas_tanggal'].toLowerCase().contains(lowerCaseQuery);
 
                               // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                              bool matchescreated_at2 = (item['created_at'] != null) &&
+                              bool matchescreated_at2 = (item['batas_tanggal'] != null) &&
                                   isDateInRange(
-                                    DateFormat('yyyy-MM-dd').format(DateTime.parse(item['created_at'])),
+                                    DateFormat('yyyy-MM-dd').format(DateTime.parse(item['batas_tanggal'])),
                                     lowerCaseQuery,
                                   );
 
@@ -535,13 +537,13 @@ class _LaporanWidgetState extends State<LaporanWidget> {
 
                                         // Mencocokkan berdasarkan
                                         bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
-                                        bool matchescreated_at = item['created_at'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchescreated_at = item['batas_tanggal'].toLowerCase().contains(lowerCaseQuery);
                                         bool matchesstatus = item['status_pesanan'].toLowerCase().contains(lowerCaseQuery);
 
                                         // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                                        bool matchescreated_at2 = (item['created_at'] != null) &&
+                                        bool matchescreated_at2 = (item['batas_tanggal'] != null) &&
                                             isDateInRange(
-                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['created_at'])),
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['batas_tanggal'])),
                                               lowerCaseQuery,
                                             );
 

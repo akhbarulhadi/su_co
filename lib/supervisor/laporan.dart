@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -826,8 +827,8 @@ void _navigateToSchedulePage(
                                                 padding: EdgeInsetsDirectional
                                                     .fromSTEB(0, 4, 0, 0),
                                                 child: Text(
-                                                  _listdata[index]
-                                                      ['batas_tanggal'],
+                                                  DateFormat('dd-MM-yyyy').format(DateTime.parse(
+                                                      _listdata[index]['batas_tanggal'])),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color(0xFF101518),

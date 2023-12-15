@@ -6,7 +6,8 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'dart:math';
-
+import 'package:intl/intl.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 import 'package:suco/kepala_gudang/dashboard.dart';
 
 class StatusPesanan extends StatefulWidget {
@@ -25,6 +26,9 @@ class _LaporanWidgetState extends State<StatusPesanan> {
   bool _isloading = true;
   List _filteredData = [];
   Map<int, Color> colorMap = {}; // Menyimpan warna berdasarkan id_klien
+  String selectedPeriod = "";
+  String selectedStatus = "";
+
 
   @override
   void initState() {
@@ -60,6 +64,21 @@ class _LaporanWidgetState extends State<StatusPesanan> {
     super.dispose();
   }
 
+  bool isDateInRange(String date, String dateRange) {
+    List<String> dateRangeArray = dateRange.split('/');
+    if (dateRangeArray.length == 2) {
+      String startDateString = dateRangeArray[0].trim();
+      String endDateString = dateRangeArray[1].trim();
+
+      DateTime startDate = DateTime.parse(startDateString);
+      DateTime endDate = DateTime.parse(endDateString).add(Duration(days: 1));
+
+      DateTime dateToCheck = DateTime.parse(date);
+
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
+    }
+    return false;
+  }
 
   Future<void> _updateProductAvailability(int index, int productId, int jumlahPesanan) async {
     final response = await http.post(
@@ -101,12 +120,46 @@ class _LaporanWidgetState extends State<StatusPesanan> {
 
     if (response.statusCode == 200) {
       // Status berhasil diperbarui
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Status berhasil diperbarui'),
-          duration: Duration(seconds: 2),
-        ),
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       );
+      print('Berhasil');
 
       // Perbarui status langsung dalam _filteredData
       setState(() {
@@ -115,12 +168,46 @@ class _LaporanWidgetState extends State<StatusPesanan> {
 
     } else {
       // Gagal memperbarui status
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal memperbarui status'),
-          duration: Duration(seconds: 2),
-        ),
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       );
+      print('gagal');
     }
   }
 
@@ -296,6 +383,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    //ini dropdown jangka waktu
                     Container(
                       width: mediaQueryWidth * 0.25,
                       height: bodyHeight * 0.048,
@@ -312,7 +400,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
+                            isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -338,10 +426,66 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                             ),
                           ),
                         ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText("All"),
+                        onChanged: (selectedItem) {
+                          setState(() {
+                            // Set nilai pilihan dropdown
+                            selectedPeriod = selectedItem ?? getTranslatedText("All");
+
+                            // Set nilai pada search bar sesuai dengan pilihan dropdown
+                            if (selectedPeriod == getTranslatedText("Daily")) {
+                              _textController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+                            } else if (selectedPeriod == getTranslatedText("Weekly")) {
+                              // Mendapatkan tanggal awal dan akhir minggu saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+                              DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
+                            } else if (selectedPeriod == getTranslatedText("Monthly")) {
+                              // Mendapatkan tanggal awal dan akhir bulan saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfMonth = DateTime(now.year, now.month, 1);
+                              DateTime endOfMonth = DateTime(now.year, now.month + 1, 1).subtract(Duration(days: 1));
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
+                            } else if (selectedPeriod == getTranslatedText("Yearly")) {
+                              // Mendapatkan tanggal awal dan akhir tahun saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfYear = DateTime(now.year, 1, 1);
+                              DateTime endOfYear = DateTime(now.year, 12, 31);
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
+                            } else {
+                              _textController.text = "";
+                            }
+
+                            // Lakukan filter berdasarkan pilihan dropdown
+                            _filteredData = _listdata.where((item) {
+                              String lowerCaseQuery = _textController.text.toLowerCase();
+
+                              // Mencocokkan berdasarkan nama_perusahaan
+                              bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                              bool matchescreated_at = item['batas_tanggal'].toLowerCase().contains(lowerCaseQuery);
+
+                              // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                              bool matchescreated_at2 = (item['batas_tanggal'] != null) &&
+                                  isDateInRange(
+                                    DateFormat('yyyy-MM-dd').format(DateTime.parse(item['batas_tanggal'])),
+                                    lowerCaseQuery,
+                                  );
+
+                              // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                              return matchesname || matchescreated_at || matchescreated_at2;
+                            }).toList();
+                          });
+                        },
+                        selectedItem: getTranslatedText('All'),
                       ),
                     ),
+                    //ini searchbar
                     Container(
                       width: mediaQueryWidth * 0.4,
                       height: bodyHeight * 0.048,
@@ -365,7 +509,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                 color: isDarkTheme
                                     ? Colors.white
                                     : Color(
-                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
                                 size: 15,
                               ),
                             ),
@@ -377,14 +521,22 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        // Customize this condition based on your search criteria
-                                        return item['nama_perusahaan']
-                                                .toLowerCase()
-                                                .contains(
-                                                    query.toLowerCase()) ||
-                                            item['status_pesanan']
-                                                .toLowerCase()
-                                                .contains(query.toLowerCase());
+                                        String lowerCaseQuery = query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan
+                                        bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchescreated_at = item['batas_tanggal'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesstatus = item['status_pesanan'].toLowerCase().contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchescreated_at2 = (item['batas_tanggal'] != null) &&
+                                            isDateInRange(
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['batas_tanggal'])),
+                                              lowerCaseQuery,
+                                            );
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesname || matchescreated_at || matchescreated_at2 || matchesstatus;
                                       }).toList();
                                     });
                                   },
@@ -411,7 +563,6 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
-                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
@@ -433,6 +584,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                         ),
                       ),
                     ),
+                    //ini dropdown status
                     Container(
                       width: mediaQueryWidth * 0.25,
                       height: bodyHeight * 0.048,
@@ -449,7 +601,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
+                            isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -457,7 +609,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                         items: [
                           getTranslatedText("All"),
                           getTranslatedText("Waiting"),
-                          getTranslatedText('Ready To Deliver'),
+                          getTranslatedText('Ready Delivered'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -473,7 +625,32 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                             ),
                           ),
                         ),
-                        onChanged: print,
+                        onChanged: (selectedItem) {
+                          setState(() {
+                            // Set nilai pilihan dropdown
+                            selectedStatus = selectedItem ?? getTranslatedText("All");
+
+                            // Set nilai pada search bar sesuai dengan pilihan dropdown
+                            if (selectedStatus == getTranslatedText("Waiting")) {
+                              _textController.text = ("Menunggu");
+                            } else if (selectedStatus == getTranslatedText("Ready Delivered")) {
+                              _textController.text = ("Siap Diantar");
+                            } else {
+                              _textController.text = "";
+                            }
+
+                            // Lakukan filter berdasarkan pilihan dropdown
+                            _filteredData = _listdata.where((item) {
+                              String lowerCaseQuery = _textController.text.toLowerCase();
+
+                              // Mencocokkan berdasarkan
+                              bool matchesstatus = item['status_pesanan'].toLowerCase().contains(lowerCaseQuery);
+
+                              // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                              return matchesstatus;
+                            }).toList();
+                          });
+                        },
                         selectedItem: getTranslatedText("All"),
                       ),
                     ),
@@ -519,12 +696,10 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                               onPressed: () async {
                                                 int productId = _filteredData[index]['id_produk'];
                                                 int jumlahPesanan = int.parse(_filteredData[index]['jumlah_pesanan']);
-
+                                                Navigator.of(context).pop();
                                                 // Panggil fungsi untuk mengurangi jumlah_produk di tabel ketersediaan_barang
                                                 await _updateProductAvailability(index, productId, jumlahPesanan);
-
-                                                Navigator.of(context).pop();
-                                              },
+                                                },
                                               child: Text(
                                                 'Ya',
                                                 style: TextStyle(
@@ -946,8 +1121,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                                             .fromSTEB(
                                                                 0, 4, 0, 0),
                                                     child: Text(
-                                                      _filteredData[index]
-                                                          ['batas_tanggal'],
+                                                      DateFormat('dd-MM-yyyy').format(DateTime.parse(
+                                                          _filteredData[index]['batas_tanggal'])),
                                                       style: TextStyle(
                                                         fontFamily: 'Inter',
                                                         color:

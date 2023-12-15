@@ -63,16 +63,13 @@ class HistoryOrderState extends State<HistoryOrder> {
 
   Future _getdata() async {
     try {
-      final response = await http.get(
-        Uri.parse(ApiConfig.show_history),
-      );
+      final response = await http.get(Uri.parse(ApiConfig.show_history),);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
           _listdata = data['pesanan'];
-          _filteredData =
-              _listdata; // Initially, filtered data is the same as the complete data
+          _filteredData = _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
@@ -92,8 +89,7 @@ class HistoryOrderState extends State<HistoryOrder> {
 
       DateTime dateToCheck = DateTime.parse(date);
 
-      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) &&
-          dateToCheck.isBefore(endDate);
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
     }
     return false;
   }
@@ -157,7 +153,7 @@ class HistoryOrderState extends State<HistoryOrder> {
       switch (status) {
         case 'Selesai':
           return 'Finished';
-        // Tambahkan kases lain jika diperlukan
+      // Tambahkan kases lain jika diperlukan
         default:
           return status;
       }
@@ -172,7 +168,7 @@ class HistoryOrderState extends State<HistoryOrder> {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final ThemeData themeData =
-        isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final screenWidth = MediaQuery.of(context).size.width;
     final myAppBar = AppBar(
       leading: IconButton(
@@ -188,7 +184,7 @@ class HistoryOrderState extends State<HistoryOrder> {
           color: isDarkTheme
               ? Colors.white
               : Colors
-                  .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+              .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
@@ -246,7 +242,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
+                            isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -275,81 +271,58 @@ class HistoryOrderState extends State<HistoryOrder> {
                         onChanged: (selectedItem) {
                           setState(() {
                             // Set nilai pilihan dropdown
-                            selectedPeriod =
-                                selectedItem ?? getTranslatedText("All");
+                            selectedPeriod = selectedItem ?? getTranslatedText("All");
 
                             // Set nilai pada search bar sesuai dengan pilihan dropdown
                             if (selectedPeriod == getTranslatedText("Daily")) {
-                              _textController.text = DateFormat('yyyy-MM-dd')
-                                  .format(DateTime.now());
-                            } else if (selectedPeriod ==
-                                getTranslatedText("Weekly")) {
+                              _textController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+                            } else if (selectedPeriod == getTranslatedText("Weekly")) {
                               // Mendapatkan tanggal awal dan akhir minggu saat ini
                               DateTime now = DateTime.now();
-                              DateTime startOfWeek =
-                                  now.subtract(Duration(days: now.weekday - 1));
-                              DateTime endOfWeek =
-                                  startOfWeek.add(Duration(days: 6));
+                              DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+                              DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
 
                               _textController.text =
-                                  '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
-                            } else if (selectedPeriod ==
-                                getTranslatedText("Monthly")) {
+                              '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
+                            } else if (selectedPeriod == getTranslatedText("Monthly")) {
                               // Mendapatkan tanggal awal dan akhir bulan saat ini
                               DateTime now = DateTime.now();
-                              DateTime startOfMonth =
-                                  DateTime(now.year, now.month, 1);
-                              DateTime endOfMonth =
-                                  DateTime(now.year, now.month + 1, 1)
-                                      .subtract(Duration(days: 1));
+                              DateTime startOfMonth = DateTime(now.year, now.month, 1);
+                              DateTime endOfMonth = DateTime(now.year, now.month + 1, 1).subtract(Duration(days: 1));
 
                               _textController.text =
-                                  '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
-                            } else if (selectedPeriod ==
-                                getTranslatedText("Yearly")) {
+                              '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
+                            } else if (selectedPeriod == getTranslatedText("Yearly")) {
                               // Mendapatkan tanggal awal dan akhir tahun saat ini
                               DateTime now = DateTime.now();
                               DateTime startOfYear = DateTime(now.year, 1, 1);
                               DateTime endOfYear = DateTime(now.year, 12, 31);
 
                               _textController.text =
-                                  '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
+                              '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
                             } else {
                               _textController.text = "";
                             }
 
                             // Lakukan filter berdasarkan pilihan dropdown
                             _filteredData = _listdata.where((item) {
-                              String lowerCaseQuery =
-                                  _textController.text.toLowerCase();
+                              String lowerCaseQuery = _textController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan nama_perusahaan
-                              bool matchesname = item['nama_perusahaan']
-                                  .toLowerCase()
-                                  .contains(lowerCaseQuery);
-                              bool matchesupdated_at = item['updated_at']
-                                  .toLowerCase()
-                                  .contains(lowerCaseQuery);
+                              bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                              bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
 
                               // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                              bool matchesupdated_at2 =
-                                  (item['updated_at'] != null) &&
-                                      isDateInRange(
-                                        DateFormat('yyyy-MM-dd').format(
-                                            DateTime.parse(item['updated_at'])),
-                                        lowerCaseQuery,
-                                      );
-                              bool matchesBareng =
-                                  matchesname && matchesupdated_at;
-                              bool matchesBareng2 =
-                                  matchesname && matchesupdated_at2;
+                              bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                  isDateInRange(
+                                    DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                    lowerCaseQuery,
+                                  );
+                              bool matchesBareng = matchesname && matchesupdated_at;
+                              bool matchesBareng2 = matchesname && matchesupdated_at2;
 
                               // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                              return matchesBareng ||
-                                  matchesBareng2 ||
-                                  matchesname ||
-                                  matchesupdated_at ||
-                                  matchesupdated_at2;
+                              return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
                             }).toList();
                           });
                         },
@@ -390,39 +363,23 @@ class HistoryOrderState extends State<HistoryOrder> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        String lowerCaseQuery =
-                                            query.toLowerCase();
+                                        String lowerCaseQuery = query.toLowerCase();
 
                                         // Mencocokkan berdasarkan nama_perusahaan
-                                        bool matchesname =
-                                            item['nama_perusahaan']
-                                                .toLowerCase()
-                                                .contains(lowerCaseQuery);
-                                        bool matchesupdated_at =
-                                            item['updated_at']
-                                                .toLowerCase()
-                                                .contains(lowerCaseQuery);
+                                        bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
 
                                         // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                                        bool matchesupdated_at2 =
-                                            (item['updated_at'] != null) &&
-                                                isDateInRange(
-                                                  DateFormat('yyyy-MM-dd')
-                                                      .format(DateTime.parse(
-                                                          item['updated_at'])),
-                                                  lowerCaseQuery,
-                                                );
-                                        bool matchesBareng =
-                                            matchesname && matchesupdated_at;
-                                        bool matchesBareng2 =
-                                            matchesname && matchesupdated_at2;
+                                        bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                            isDateInRange(
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                              lowerCaseQuery,
+                                            );
+                                        bool matchesBareng = matchesname && matchesupdated_at;
+                                        bool matchesBareng2 = matchesname && matchesupdated_at2;
 
                                         // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                                        return matchesBareng ||
-                                            matchesBareng2 ||
-                                            matchesname ||
-                                            matchesupdated_at ||
-                                            matchesupdated_at2;
+                                        return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
                                       }).toList();
                                     });
                                   },
@@ -476,324 +433,260 @@ class HistoryOrderState extends State<HistoryOrder> {
               Expanded(
                 child: _isloading
                     ? Center(
-                        child: CircularProgressIndicator(),
-                      )
+                  child: CircularProgressIndicator(),
+                )
                     : _filteredData.isEmpty
-                        ? Center(
-                            child: Text(getTranslatedText('No history')),
-                          )
-                        : ListView.builder(
-                            itemCount: _filteredData.length,
-                            itemBuilder: ((context, index) {
-                              return GestureDetector(
-                                onTap: () {
-                                  // Menampilkan form edit harga saat Card ditekan
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      TextEditingController statusController = TextEditingController(
-                                        text: getTranslatedDatabase(_filteredData[index]['status_pesanan'].toString()),
-                                      );
-                                      TextEditingController namaklienController = TextEditingController(
-                                          text: _filteredData[index]['nama_klien'].toString());
-                                      TextEditingController alamatController = TextEditingController(
-                                          text: _filteredData[index]['alamat'].toString());
-                                      TextEditingController namaprodukController = TextEditingController(
-                                          text: _filteredData[index]['nama_produk'].toString());
-                                      return AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              8), // Ganti nilai sesuai keinginan Anda
-                                        ),
-                                        title: Center(
-                                            child: Text(getTranslatedText(
-                                                'Order Detail'))),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            TextField(
-                                              controller: namaklienController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                  labelText: getTranslatedText(
-                                                      'Client Name')),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: alamatController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                  labelText: getTranslatedText(
-                                                      'Address')),
-                                              enabled:
-                                                  false, // Mengatur TextField menjadi disable
-                                            ),
-                                            TextField(
-                                              controller: namaprodukController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                  labelText: getTranslatedText(
-                                                      'Product Name')),
-                                              enabled:
-                                                  false, // Mengatur TextField menjadi disable
-                                            ),
-                                            TextField(
-                                              controller: statusController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                  labelText: 'Status'),
-                                              enabled:
-                                                  false, // Mengatur TextField menjadi disable
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: Card(
-                                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                                  color: Color(0xFF094067), // warna latar Card
-                                  elevation: 4,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                    ? Center(
+                  child: Text(getTranslatedText('No history')),
+                )
+                    : ListView.builder(
+                  itemCount: _filteredData.length,
+                  itemBuilder: ((context, index) {
+                    return GestureDetector(
+                      onTap: () {
+                        // Menampilkan form edit harga saat Card ditekan
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            TextEditingController statusController = TextEditingController(
+                              text: getTranslatedDatabase(_filteredData[index]['status_pesanan'].toString()),
+                            );
+                            TextEditingController namaklienController = TextEditingController(
+                                text: _filteredData[index]['nama_klien'].toString());
+                            TextEditingController alamatController = TextEditingController(
+                                text: _filteredData[index]['alamat'].toString());
+                            TextEditingController namaprodukController = TextEditingController(
+                                text: _filteredData[index]['nama_produk'].toString());
+
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8), // Ganti nilai sesuai keinginan Anda
+                              ),
+                              title: Center(
+                                  child: Text(getTranslatedText(
+                                      'Order Detail'))),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextField(
+                                    controller: namaklienController,
+                                    keyboardType: TextInputType.text,
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Client Name')),
+                                    enabled: false,
                                   ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
+                                  TextField(
+                                    controller: alamatController,
+                                    keyboardType: TextInputType.text,
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Address')),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
+                                  ),
+                                  TextField(
+                                    controller: namaprodukController,
+                                    keyboardType: TextInputType.text,
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Product Name')),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
+                                  ),
+                                  TextField(
+                                    controller: statusController,
+                                    keyboardType: TextInputType.text,
+                                    decoration: InputDecoration(
+                                        labelText: 'Status'),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: Card(
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        color: Color(0xFF094067), // warna latar Card
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  16, 10, 16, 5),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment
+                                        .spaceBetween,
                                     children: [
                                       Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            16, 10, 16, 5),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Padding(
-                                                  padding: EdgeInsetsDirectional
-                                                      .fromSTEB(0, 4, 0, 0),
-                                                  child: Text(
-                                                    getTranslatedText(
-                                                        'Completed on'),
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      color: Color(0xFFFFFFFE),
-                                                      fontSize: screenWidth *
-                                                          0.03, // Ukuran teks pada tombol
-                                                      fontWeight:
-                                                          FontWeight.w300,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Padding(
-                                                  padding: EdgeInsetsDirectional
-                                                      .fromSTEB(0, 4, 0, 0),
-                                                  child: Text(
-                                                    DateFormat(
-                                                            'dd-MM-yyyy')
-                                                        .format(DateTime.parse(
-                                                            _filteredData[index]
-                                                                [
-                                                                'updated_at'])),
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      color: Color(0xFFFFFFFE),
-                                                      fontSize:
-                                                          screenWidth * 0.03,
-                                                      fontWeight:
-                                                          FontWeight.w300,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(
-                                              height: bodyHeight * 0.01,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFF094067),
-                                          border: Border.all(
-                                            color: Colors.black.withOpacity(
-                                                0.20000000298023224),
-                                          ),
-                                        ),
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  16, 12, 16, 16),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            children: [
-                                              Container(
-                                                width: mediaQueryWidth * 0.09,
-                                                height: bodyHeight * 0.09,
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFF06D5CD),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                alignment: AlignmentDirectional(
-                                                    0.00, 0.00),
-                                                child: Text(
-                                                  _filteredData[index]
-                                                          ['id_klien']
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Colors.white,
-                                                    fontSize: screenWidth *
-                                                        0.04, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsetsDirectional
-                                                      .fromSTEB(12, 0, 0, 0),
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
-                                                        children: [
-                                                          Text(
-                                                            _filteredData[index]
-                                                                [
-                                                                'nama_perusahaan'],
-                                                            style: TextStyle(
-                                                              fontFamily:
-                                                                  'Inter',
-                                                              color: Color(
-                                                                  0xFFFFFFFE),
-                                                              fontSize:
-                                                                  screenWidth *
-                                                                      0.04, // Ukuran teks pada tombol
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                                    0, 4, 0, 0),
-                                                        child: Text(
-                                                          _filteredData[index]
-                                                              ['alamat'],
-                                                          style: TextStyle(
-                                                            fontFamily: 'Inter',
-                                                            color: Color(
-                                                                0xFFFFFFFE),
-                                                            fontSize: screenWidth *
-                                                                0.028, // Ukuran teks pada tombol
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .normal,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
+                                        child: Text(
+                                          getTranslatedText(
+                                              'Completed on'),
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFFFFFFE),
+                                            fontSize: screenWidth *
+                                                0.03, // Ukuran teks pada tombol
+                                            fontWeight:
+                                            FontWeight.w300,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
+                                  Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment
+                                        .spaceBetween,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(0, 4, 0, 0),
+                                        child: Text(
+                                          DateFormat('dd-MM-yyyy').format(DateTime.parse(
+                                              _filteredData[index]['updated_at'])),
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFFFFFFE),
+                                            fontSize: screenWidth * 0.03,
+                                            fontWeight: FontWeight.w300,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height: bodyHeight * 0.01,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Color(0xFF094067),
+                                border: Border.all(
+                                  color: Colors.black.withOpacity(
+                                      0.20000000298023224),
                                 ),
-                              );
-                            }),
-                          ),
+                              ),
+                              child: Padding(
+                                padding:
+                                EdgeInsetsDirectional.fromSTEB(
+                                    16, 12, 16, 16),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Container(
+                                      width: mediaQueryWidth * 0.09,
+                                      height: bodyHeight * 0.09,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF06D5CD),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: AlignmentDirectional(
+                                          0.00, 0.00),
+                                      child: Text(
+                                        _filteredData[index]['id_klien']
+                                            .toString(),
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          color: Colors.white,
+                                          fontSize: screenWidth *
+                                              0.04, // Ukuran teks pada tombol
+                                          fontWeight:
+                                          FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional
+                                            .fromSTEB(12, 0, 0, 0),
+                                        child: Column(
+                                          mainAxisSize:
+                                          MainAxisSize.max,
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment
+                                              .start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment
+                                                  .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  _filteredData[index][
+                                                  'nama_perusahaan'],
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                    'Inter',
+                                                    color: Color(
+                                                        0xFFFFFFFE),
+                                                    fontSize:
+                                                    screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight
+                                                        .bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Padding(
+                                              padding:
+                                              EdgeInsetsDirectional
+                                                  .fromSTEB(
+                                                  0, 4, 0, 0),
+                                              child: Text(
+                                                _filteredData[index]
+                                                ['alamat'],
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  color: Color(
+                                                      0xFFFFFFFE),
+                                                  fontSize: screenWidth *
+                                                      0.028, // Ukuran teks pada tombol
+                                                  fontWeight:
+                                                  FontWeight
+                                                      .normal,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    // Tambahkan aksi yang ingin ditampilkan pada tampilan pencarian
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    // Ikon yang ditampilkan di sebelah kiri pada AppBar
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // Tampilkan hasil pencarian di sini (jika ada)
-    return Center(
-      child: Text('Hasil pencarian untuk: $query'),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // Tampilkan saran pencarian saat pengguna mengetik
-    return ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text('Saran 1'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 1');
-          },
-        ),
-        ListTile(
-          title: Text('Saran 2'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 2');
-          },
-        ),
-      ],
     );
   }
 }

@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:giffy_dialog/giffy_dialog.dart';
+import 'package:intl/intl.dart';
 
 class TableEventsExample extends StatefulWidget {
   const TableEventsExample({Key? key}) : super(key: key);
@@ -22,6 +23,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
   List _listdata = [];
   bool _isloading = true;
   List _filteredData = [];
+  String selectedPeriod = "";
 
   @override
   void initState() {
@@ -56,6 +58,22 @@ class TableEventsExampleState extends State<TableEventsExample> {
     super.dispose();
   }
 
+  bool isDateInRange(String date, String dateRange) {
+    List<String> dateRangeArray = dateRange.split('/');
+    if (dateRangeArray.length == 2) {
+      String startDateString = dateRangeArray[0].trim();
+      String endDateString = dateRangeArray[1].trim();
+
+      DateTime startDate = DateTime.parse(startDateString);
+      DateTime endDate = DateTime.parse(endDateString).add(Duration(days: 1));
+
+      DateTime dateToCheck = DateTime.parse(date);
+
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) &&
+          dateToCheck.isBefore(endDate);
+    }
+    return false;
+  }
 
   Future<void> _updateProductAvailability(int index, int productId, int jumlahProduksi) async {
     final response = await http.post(
@@ -358,8 +376,88 @@ class TableEventsExampleState extends State<TableEventsExample> {
                             ),
                           ),
                         ),
-                        onChanged: print,
-                        selectedItem: getTranslatedText("All"),
+                        onChanged: (selectedItem) {
+                          setState(() {
+                            // Set nilai pilihan dropdown
+                            selectedPeriod =
+                                selectedItem ?? getTranslatedText("All");
+
+                            // Set nilai pada search bar sesuai dengan pilihan dropdown
+                            if (selectedPeriod == getTranslatedText("Daily")) {
+                              _textController.text = DateFormat('yyyy-MM-dd')
+                                  .format(DateTime.now());
+                            } else if (selectedPeriod ==
+                                getTranslatedText("Weekly")) {
+                              // Mendapatkan tanggal awal dan akhir minggu saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfWeek =
+                              now.subtract(Duration(days: now.weekday - 1));
+                              DateTime endOfWeek =
+                              startOfWeek.add(Duration(days: 6));
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
+                            } else if (selectedPeriod ==
+                                getTranslatedText("Monthly")) {
+                              // Mendapatkan tanggal awal dan akhir bulan saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfMonth =
+                              DateTime(now.year, now.month, 1);
+                              DateTime endOfMonth =
+                              DateTime(now.year, now.month + 1, 1)
+                                  .subtract(Duration(days: 1));
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
+                            } else if (selectedPeriod ==
+                                getTranslatedText("Yearly")) {
+                              // Mendapatkan tanggal awal dan akhir tahun saat ini
+                              DateTime now = DateTime.now();
+                              DateTime startOfYear = DateTime(now.year, 1, 1);
+                              DateTime endOfYear = DateTime(now.year, 12, 31);
+
+                              _textController.text =
+                              '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
+                            } else {
+                              _textController.text = "";
+                            }
+
+                            // Lakukan filter berdasarkan pilihan dropdown
+                            _filteredData = _listdata.where((item) {
+                              String lowerCaseQuery =
+                              _textController.text.toLowerCase();
+
+                              // Mencocokkan berdasarkan nama_perusahaan
+                              bool matchesname = item['nama_perusahaan']
+                                  .toLowerCase()
+                                  .contains(lowerCaseQuery);
+                              bool matchesupdated_at = item['updated_at']
+                                  .toLowerCase()
+                                  .contains(lowerCaseQuery);
+
+                              // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                              bool matchesupdated_at2 =
+                                  (item['updated_at'] != null) &&
+                                      isDateInRange(
+                                        DateFormat('yyyy-MM-dd').format(
+                                            DateTime.parse(item['updated_at'])),
+                                        lowerCaseQuery,
+                                      );
+                              bool matchesBareng =
+                                  matchesname && matchesupdated_at;
+                              bool matchesBareng2 =
+                                  matchesname && matchesupdated_at2;
+
+                              // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                              return matchesBareng ||
+                                  matchesBareng2 ||
+                                  matchesname ||
+                                  matchesupdated_at ||
+                                  matchesupdated_at2;
+                            }).toList();
+                          });
+                        },
+                        selectedItem: getTranslatedText('All'),
                       ),
                     ),
                     Container(
@@ -384,8 +482,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                 Icons.search_rounded,
                                 color: isDarkTheme
                                     ? Colors.white
-                                    : Color(
-                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                    : Color(0xFF8B9BA8),
                                 size: 15,
                               ),
                             ),
@@ -397,14 +494,39 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        // Customize this condition based on your search criteria
-                                        return item['nama_perusahaan']
+                                        String lowerCaseQuery =
+                                        query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan nama_perusahaan
+                                        bool matchesname =
+                                        item['nama_user']
                                             .toLowerCase()
-                                            .contains(
-                                            query.toLowerCase()) ||
-                                            item['status_pesanan']
-                                                .toLowerCase()
-                                                .contains(query.toLowerCase());
+                                            .contains(lowerCaseQuery);
+                                        bool matchesupdated_at =
+                                        item['tanggal_produksi']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchesupdated_at2 =
+                                            (item['tanggal_produksi'] != null) &&
+                                                isDateInRange(
+                                                  DateFormat('yyyy-MM-dd')
+                                                      .format(DateTime.parse(
+                                                      item['tanggal_produksi'])),
+                                                  lowerCaseQuery,
+                                                );
+                                        bool matchesBareng =
+                                            matchesname && matchesupdated_at;
+                                        bool matchesBareng2 =
+                                            matchesname && matchesupdated_at2;
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesBareng ||
+                                            matchesBareng2 ||
+                                            matchesname ||
+                                            matchesupdated_at ||
+                                            matchesupdated_at2;
                                       }).toList();
                                     });
                                   },
@@ -431,7 +553,6 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
-                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
@@ -599,7 +720,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                       Padding(
                                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          _filteredData[index]['tanggal_produksi'],
+                                          DateFormat('dd-MM-yyyy').format(DateTime.parse(
+                                              _filteredData[index]['tanggal_produksi'])),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
