@@ -135,7 +135,7 @@ class AddUserState extends State<AddUser> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                               builder: (context) => UserManagementPage()));

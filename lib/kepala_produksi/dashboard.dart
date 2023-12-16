@@ -2,31 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:suco/api_config.dart';
 import 'package:suco/kepala_produksi/sidebar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dropdown_search/dropdown_search.dart';
+import 'package:table_calendar/table_calendar.dart';
+import '../utils.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:suco/supervisor/kalender.dart';
+import 'package:flutter/cupertino.dart';
+import 'dart:math';
 import 'package:intl/intl.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class DashboardPageLeaderProduction extends StatefulWidget {
   const DashboardPageLeaderProduction({Key? key}) : super(key: key);
 
   @override
-  _Dashboard1WidgetState createState() => _Dashboard1WidgetState();
+  DashboardPageLeaderProductionState createState() => DashboardPageLeaderProductionState();
 }
 
-class _Dashboard1WidgetState extends State<DashboardPageLeaderProduction> {
-   bool isDarkTheme = false;
-  String selectedLanguage = 'IDN';
-  bool _isDisposed = false;
+class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduction> {
+  bool isDarkTheme = false; // Variabel untuk tema gelap
+  String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List<Map<String, dynamic>> produksiData = [];
   List<bool> isItemClicked = [];
 
   @override
   void initState() {
     super.initState();
-    loadThemePreference();
-    loadSelectedLanguage();
+    loadThemePreference(); // Muat preferensi tema gelap saat halaman dimulai
+    loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     loadProduksi();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  String _formatDate(String date) {
+    DateTime dateTime = DateTime.parse(date);
+    return DateFormat('dd-MM-yyyy').format(dateTime);
   }
 
   void loadSelectedLanguage() async {
@@ -43,21 +57,20 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderProduction> {
     });
   }
 
-  String _formatDate(String date) {
-    DateTime dateTime = DateTime.parse(date);
-    return DateFormat('dd-MM-yyyy').format(dateTime);
-  }
-
- Future<void> loadProduksi() async {
+  Future<void> loadProduksi() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.jadwal_produksi));
+      final response = await http.get(Uri.parse(ApiConfig.get_production_leader_dashboard));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data); // Tambahkan ini untuk melihat respons data di konsol
+        print(data); // Add this to see the response data in the console
         setState(() {
           produksiData = List.from(data['produksi']);
           isItemClicked = List.generate(produksiData.length, (index) => false);
+
+          produksiData.forEach((item) {
+            item['tanggal_produksi'] = _formatDate(item['tanggal_produksi']);
+          });
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -68,116 +81,251 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderProduction> {
     }
   }
 
-Future<void> _updateStatus(
-    BuildContext context, int idProduksi, String newStatus, int index) async {
-  if (mounted) {
-    // Periksa status sebelumnya, harus "Sudah Dibuat" untuk diubah menjadi "Sudah Sesuai"
-    if (newStatus.toLowerCase() == 'sudah dibuat') {
-      if (produksiData[index]['status_produksi'] != 'belum selesai') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Status harus "belum selesai" untuk diubah menjadi "Sudah DIbuat".'),
-            duration: Duration(seconds: 2),
-          ),
+  Future<void> _updateStatus(
+      BuildContext context, int idProduksi, String newStatus, int index) async {
+    if (mounted) {
+      // Check the previous status, must be "Sudah Dibuat" to change to "Sudah Sesuai"
+      if (newStatus.toLowerCase() == 'sudah dibuat') {
+        if (produksiData[index]['status_produksi'] != 'belum selesai') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Status must be "belum selesai" to change to "Sudah Dibuat".'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+      }
+
+      final response = await http.post(
+        Uri.parse(ApiConfig.status),
+        body: {
+          'id_produksi': idProduksi.toString(),
+          'status_produksi': newStatus.toLowerCase(),
+        },
+      );
+
+      if (response.statusCode == 200 && mounted) {
+        Navigator.of(context).pop();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/success-tick-dribbble.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Successfully'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Tutup')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
-        return;
+        // Update production data after successfully updating the status
+        await loadProduksi();
+        setState(() {
+          isItemClicked[index] = true; // Set the item as clicked
+          // Add necessary state updates after updating data
+        });
+      } else if (mounted) {
+        Navigator.of(context).pop();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/failed.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Failed'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Tutup')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
       }
     }
-
-    final response = await http.post(
-      Uri.parse(ApiConfig.status),
-      body: {
-        'id_produksi': idProduksi.toString(),
-        'status_produksi': newStatus.toLowerCase(),
-      },
-    );
-
-    if (!_isDisposed && response.statusCode == 200 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Status berhasil diperbarui'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      // Perbarui data produksi setelah berhasil memperbarui status
-      await loadProduksi();
-      setState(() {
-        isItemClicked[index] = true; // Setel item sudah diklik
-        // Tambahkan pembaruan state yang diperlukan setelah memperbarui data
-      });
-    } else if (!_isDisposed && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal memperbarui status'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
   }
-}
 
-
- Future<void> _showConfirmationDialog(
-    BuildContext context, int idProduksi, String newStatus, int index) async {
-  if (mounted) {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        if (!_isDisposed) {
-          // Perbarui logika untuk mencegah pembaruan status jika status sudah berubah
+  Future<void> _showConfirmationDialog(
+      BuildContext context, int idProduksi, String newStatus, int index) async {
+    if (mounted) {
+      return showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
           bool canUpdateStatus = !isItemClicked[index];
           return AlertDialog(
-            title: Text('Konfirmasi'),
+            title: Text(getTranslatedText('Confirmation')),
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
-                  Text('Apakah Anda yakin ingin mengubah status produksi ini?'),
+                  Text(getTranslatedText(
+                      'Are you sure you want to change the production status?')),
                 ],
               ),
             ),
             actions: <Widget>[
               TextButton(
-                child: Text('Ya'),
+                child: Text(getTranslatedText('Yes')),
                 onPressed: () async {
-                  if (!_isDisposed && canUpdateStatus) {
+                  if (canUpdateStatus) {
                     await _updateStatus(context, idProduksi, newStatus, index);
-                    Navigator.of(context).pop();
                   }
                 },
               ),
               TextButton(
-                child: Text('Batal'),
+                child: Text(getTranslatedText('Cancle')),
                 onPressed: () {
-                  if (!_isDisposed) {
-                    Navigator.of(context).pop();
-                  }
+                  Navigator.of(context).pop();
                 },
               ),
             ],
           );
-        } else {
-          return Offstage();
-        }
-      },
-    );
+        },
+      );
+    }
   }
-}
+
+
+  // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
+  String getTranslatedText(String text) {
+    if (selectedLanguage == 'IDN') {
+      // Teks dalam bahasa Indonesia
+      switch (text) {
+        case 'Main Page':
+          return 'Halaman Utama';
+        case 'All':
+          return 'Semua';
+        case 'Daily':
+          return 'Harian';
+        case 'Weekly':
+          return 'Mingguan';
+        case 'Monthly':
+          return 'Bulanan';
+        case 'Yearly':
+          return 'Tahunan';
+        case 'Income':
+          return 'Pemasukan';
+        case 'Client Order List':
+          return 'Daftar Pesanan Klien';
+        case 'See Detail':
+          return 'Lihat Detail';
+        case 'Available Items':
+          return 'Ketersediaan Barang';
+        case 'Order History':
+          return 'Riwayat Pesanan';
+        case 'Completed on':
+          return 'Selesai pada';
+        case 'Change Status':
+          return 'Ubah Status';
+        case 'Finished':
+          return 'Selesai';
+        case 'Waiting':
+          return 'Menunggu';
+        case 'Edit':
+          return 'Ubah';
+        case '':
+          return '';
+
+        default:
+          return text;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return text;
+    }
+  }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+        case 'Menunggu':
+          return 'Waiting';
+        case 'Siap Diantar':
+          return 'Ready Delivered';
+        case '':
+          return '';
+        case '':
+          return '';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData themeData =
+    isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final screenWidth = MediaQuery.of(context).size.width;
-    final ThemeData themeData =
-        isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final myAppBar = AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: Colors.transparent, // Mengubah warna AppBar
+      elevation: 0, // Menghilangkan efek bayangan di bawah AppBar
       iconTheme: IconThemeData(
-        color: isDarkTheme ? Colors.white : Colors.black,
-      ),
+          color: isDarkTheme
+              ? Colors.white
+              : Colors
+              .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
@@ -199,7 +347,7 @@ Future<void> _updateStatus(
         MediaQuery.of(context).padding.top;
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
-      theme: themeData,
+      theme: themeData, // Terapkan tema sesuai dengan preferensi tema gelap
       home: Scaffold(
         backgroundColor: isDarkTheme ? Colors.black : Colors.white,
         drawer: SidebarDrawer(),
@@ -208,7 +356,7 @@ Future<void> _updateStatus(
           scrollDirection: Axis.vertical,
           child: Column(
             children: [
-              SizedBox(height: bodyHeight * 0.03),
+              SizedBox(height: bodyHeight * 0.01),
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Container(
@@ -227,30 +375,24 @@ Future<void> _updateStatus(
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.black,
-                            fontSize: screenWidth * 0.05,
+                            fontSize:
+                            screenWidth * 0.05, // Ukuran teks pada tombol
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(height: bodyHeight * 0.01),
-                        ListView.builder(
+                        produksiData.isEmpty
+                            ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                            : ListView.builder(
                           shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
+                          physics:
+                          NeverScrollableScrollPhysics(),
                           itemCount: produksiData.length,
                           itemBuilder: (BuildContext context, int index) {
                             final item = produksiData[index];
-                            return GestureDetector(
-                              onTap: () {
-                                if (!isItemClicked[index]) {
-                                  print('Tapped index: $index');
-                                  _showConfirmationDialog(
-                                      context, item['id_produksi'], 'Sudah Dibuat', index);
-                                } else {
-                                  print('Item sudah diklik dan status sudah dibuat');
-                                }
-                              },
-                              child:
-                                  buildProductionItem(item, screenWidth, index),
-                            );
+                            return buildProductionItem(item, screenWidth, index);
                           },
                         ),
                       ],
@@ -265,30 +407,28 @@ Future<void> _updateStatus(
     );
   }
 
-  Widget buildProductionItem(
-      Map<String, dynamic> item, double screenWidth, int index) {
+  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth, int index) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
-
+    final screenWidth = MediaQuery.of(context).size.width;
     if (item == null) {
       print('Error: Item is null');
       return Container();
     }
 
     print('Item: $item');
-
     return GestureDetector(
       onTap: () {
         if (!isItemClicked[index]) {
-          if (item['status_produksi'].toLowerCase() != 'sudah dibuat') {
+          if (item['status_produksi'].toLowerCase() == 'belum selesai') {
             print('Tapped index: $index');
             _showConfirmationDialog(
                 context, item['id_produksi'], 'Sudah Dibuat', index);
           } else {
-            print('Item sudah diklik dan status sudah dibuat');
+            print('Item sudah diklik dan status sudah sesuai');
           }
         } else {
-          print('Item sudah diklik dan status sudah dibuat');
+          print('Item sudah diklik dan status sudah sesuai');
         }
       },
       child: Card(
@@ -365,9 +505,6 @@ Future<void> _updateStatus(
                           size: 16,
                         ),
                       ),
-                      SizedBox(
-                        width: mediaQueryWidth * 0.02,
-                      ),
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
@@ -412,71 +549,42 @@ Future<void> _updateStatus(
                       ),
                     ],
                   ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                          child: Text(
-                            item['status_produksi'] ?? '',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              color: Color(0xFFFFFFFE),
-                              fontSize: screenWidth * 0.04,
-                              fontWeight: FontWeight.normal,
-                            ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['status_produksi'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.normal,
                           ),
                         ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                          child: Text(
-                            item['jumlah_produksi'].toString(),
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              color: Color(0xFFFFFFFE),
-                              fontSize: screenWidth * 0.04,
-                              fontWeight: FontWeight.normal,
-                            ),
+                      ),
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['jumlah_produksi'].toString(),
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.normal,
                           ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: mediaQueryHeight * 0.01),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: mediaQueryHeight * 0.01),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    }
-
-    String getTranslatedText(String text) {
-      if (selectedLanguage == 'IDN') {
-        switch (text) {
-          case 'Main Page':
-            return 'Halaman Utama';
-          case 'All':
-            return 'Semua';
-          case 'Daily':
-            return 'Harian';
-          case 'Weekly':
-            return 'Mingguan';
-          case 'Monthly':
-            return 'Bulanan';
-          case 'Yearly':
-            return 'Tahunan';
-          case 'Income':
-            return 'Pemasukan';
-          case 'Client Order List':
-            return 'Daftar Pesanan Klien';
-          case 'Activity':
-            return 'Kegiatan';
-          default:
-            return text;
-        }
-      } else {
-        return text;
-      }
-    }
+      ),
+    );
   }
+}

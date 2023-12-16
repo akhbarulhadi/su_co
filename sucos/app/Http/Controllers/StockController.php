@@ -14,6 +14,22 @@ class StockController extends Controller
         return response()->json(['message' => 'Success', 'stock' => $stock]);
     }
 
+    public function showKepalaGudang()
+    {
+        $stock = Stock::select('ketersediaan_barang.*')
+            ->take(5)
+            ->get();
+        return response()->json(['message' => 'Success', 'stock' => $stock]);
+    }
+
+    public function showDashbordMarketing()
+    {
+        $stock = Stock::select('ketersediaan_barang.*')
+            ->take(2)
+            ->get();
+        return response()->json(['message' => 'Success', 'stock' => $stock]);
+    }
+
     public function updateHarga(Request $request)
     {
         // Validasi request sesuai kebutuhan Anda

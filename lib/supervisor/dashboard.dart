@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
+import 'package:suco/supervisor/laporan.dart';
 import 'package:suco/supervisor/sidebar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../utils.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:suco/supervisor/kalender.dart';
+import 'package:flutter/cupertino.dart';
+import 'dart:math';
+import 'package:intl/intl.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 class DashboardPageSupervisor extends StatefulWidget {
   const DashboardPageSupervisor({Key? key}) : super(key: key);
@@ -15,75 +23,26 @@ class DashboardPageSupervisor extends StatefulWidget {
 class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
-  late final ValueNotifier<List<Event>> _selectedEvents;
-  CalendarFormat _calendarFormat = CalendarFormat.twoWeeks;
-  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
-      .toggledOff; // Can be toggled on/off by longpressing a date
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-  DateTime? _rangeStart;
-  DateTime? _rangeEnd;
+  List _listdata = [];
+  bool _isloading = true;
+  Map<int, Color> colorMap = {}; // Menyimpan warna berdasarkan id_klien
+  bool _isDisposed = false;
+  List<Map<String, dynamic>> produksiData = [];
+  List<bool> isItemClicked = [];
 
   @override
   void initState() {
     super.initState();
     loadThemePreference(); // Muat preferensi tema gelap saat halaman dimulai
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+    _listdata = [];
+    _getdatapesanan();
+    loadProduksi();
   }
 
   @override
   void dispose() {
-    _selectedEvents.dispose();
     super.dispose();
-  }
-
-  List<Event> _getEventsForDay(DateTime day) {
-    // Implementation example
-    return kEvents[day] ?? [];
-  }
-
-  List<Event> _getEventsForRange(DateTime start, DateTime end) {
-    // Implementation example
-    final days = daysInRange(start, end);
-
-    return [
-      for (final d in days) ..._getEventsForDay(d),
-    ];
-  }
-
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-        _rangeStart = null; // Important to clean those
-        _rangeEnd = null;
-        _rangeSelectionMode = RangeSelectionMode.toggledOff;
-      });
-
-      _selectedEvents.value = _getEventsForDay(selectedDay);
-    }
-  }
-
-  void _onRangeSelected(DateTime? start, DateTime? end, DateTime focusedDay) {
-    setState(() {
-      _selectedDay = null;
-      _focusedDay = focusedDay;
-      _rangeStart = start;
-      _rangeEnd = end;
-      _rangeSelectionMode = RangeSelectionMode.toggledOn;
-    });
-
-    // `start` or `end` could be null
-    if (start != null && end != null) {
-      _selectedEvents.value = _getEventsForRange(start, end);
-    } else if (start != null) {
-      _selectedEvents.value = _getEventsForDay(start);
-    } else if (end != null) {
-      _selectedEvents.value = _getEventsForDay(end);
-    }
   }
 
   void loadSelectedLanguage() async {
@@ -98,6 +57,277 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
     setState(() {
       isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
     });
+  }
+
+  void _showConfirmationDialog(
+    BuildContext context,
+    int idproduct,
+    String productName,
+    String jumlahPesanan,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Konfirmasi"),
+          content: Text("Apakah Anda yakin ingin membuat jadwal?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Tutup dialog konfirmasi
+                _navigateToSchedulePage(idproduct, productName, jumlahPesanan);
+              },
+              child: Text("Ya"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Tutup dialog konfirmasi
+              },
+              child: Text("Tidak"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _navigateToSchedulePage(
+    int idproduct,
+    String productName,
+    String jumlahPesanan,
+  ) {
+    print("Navigasi ke halaman pembuatan jadwal");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Calendar(
+          idproduct: idproduct,
+          productName: productName,
+          jumlahPesanan: jumlahPesanan,
+        ),
+      ),
+    );
+  }
+
+  Future _getdatapesanan() async {
+    try {
+      final response = await http.get(Uri.parse(ApiConfig.pesanan_dashboard_supervisor));
+      print(response.body); // Cetak respons ke konsol
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data); // Cetak data ke konsol
+        setState(() {
+          _listdata = data['pesanan'];
+          _isloading = false;
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Color getColorForId(int id) {
+    if (!colorMap.containsKey(id)) {
+      // Jika id belum ada dalam map, tambahkan warna baru
+      colorMap[id] = generateRandomColor();
+    }
+
+    return colorMap[id]!;
+  }
+
+  Color generateRandomColor() {
+    Random random = Random();
+    return Color.fromARGB(
+      255,
+      random.nextInt(256),
+      random.nextInt(256),
+      random.nextInt(256),
+    );
+  }
+
+  Future<void> loadProduksi() async {
+    try {
+      final response = await http.get(Uri.parse(ApiConfig.get_production_supervisor_dashboard));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data); // Tambahkan ini untuk melihat respons data di konsol
+        setState(() {
+          produksiData = List.from(data['produksi']);
+          isItemClicked = List.generate(produksiData.length, (index) => false);
+        });
+      } else {
+        print('Error: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> _updateStatus(
+      BuildContext context, int idProduksi, String newStatus, int index) async {
+    if (mounted) {
+      // Periksa status sebelumnya, harus "Sudah Dibuat" untuk diubah menjadi "Sudah Sesuai"
+      if (newStatus.toLowerCase() == 'sudah sesuai') {
+        if (produksiData[index]['status_produksi'] != 'sudah dibuat') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Status harus "Sudah Dibuat" untuk diubah menjadi "Sudah Sesuai".'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+      }
+
+      final response = await http.post(
+        Uri.parse(ApiConfig.status),
+        body: {
+          'id_produksi': idProduksi.toString(),
+          'status_produksi': newStatus.toLowerCase(),
+        },
+      );
+
+      if (!_isDisposed && response.statusCode == 200 && mounted) {
+        Navigator.of(context).pop();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/success-tick-dribbble.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Successfully'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Tutup')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+        // Perbarui data produksi setelah berhasil memperbarui status
+        await loadProduksi();
+        setState(() {
+          isItemClicked[index] = true; // Setel item sudah diklik
+          // Tambahkan pembaruan state yang diperlukan setelah memperbarui data
+        });
+      } else if (!_isDisposed && mounted) {
+        Navigator.of(context).pop();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/failed.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Failed'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Tutup')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
+  Future<void> _showConfirmationDialog2(
+      BuildContext context, int idProduksi, String newStatus, int index) async {
+    if (mounted) {
+      return showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          if (!_isDisposed) {
+            // Perbarui logika untuk mencegah pembaruan status jika status sudah berubah
+            bool canUpdateStatus = !isItemClicked[index];
+            return AlertDialog(
+              title: Text('Konfirmasi'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text(
+                        'Apakah Anda yakin ingin mengubah status produksi ini?'),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Ya'),
+                  onPressed: () async {
+                    if (!_isDisposed && canUpdateStatus) {
+                      await _updateStatus(
+                          context, idProduksi, newStatus, index);
+                    }
+                  },
+                ),
+                TextButton(
+                  child: Text('Batal'),
+                  onPressed: () {
+                    if (!_isDisposed) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ],
+            );
+          } else {
+            return Offstage();
+          }
+        },
+      );
+    }
   }
 
   // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
@@ -149,10 +379,34 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
     }
   }
 
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+        case 'Menunggu':
+          return 'Waiting';
+        case 'Siap Diantar':
+          return 'Ready Delivered';
+        case '':
+          return '';
+        case '':
+          return '';
+        // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData =
-    isDarkTheme ? ThemeData.dark() : ThemeData.light();
+        isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -194,7 +448,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           scrollDirection: Axis.vertical,
           child: Column(
             children: [
-              SizedBox(height: bodyHeight * 0.03),
+              SizedBox(height: bodyHeight * 0.01),
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Container(
@@ -223,7 +477,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          '2',
+                                          _listdata.length.toString(),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
@@ -253,14 +507,22 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                           0, 4, 0, 0),
                                       child: Align(
                                         alignment: Alignment.bottomRight,
-                                        child: Text(
-                                          getTranslatedText('See Detail'),
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            color: Color(0xFFFFFFFE),
-                                            fontSize: screenWidth *
-                                                0.03, // Ukuran teks pada tombol
-                                            fontWeight: FontWeight.normal,
+                                        child: TextButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) => LaporanWidget()));
+                                          },
+                                          child: Text(
+                                            getTranslatedText('See Detail'),
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: Color(0xFFFFFFFE),
+                                              fontSize: screenWidth *
+                                                  0.03, // Ukuran teks pada tombol
+                                              fontWeight: FontWeight.normal,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -273,7 +535,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                         ),
                       ),
                       SizedBox(
-                        height: bodyHeight * 0.01,
+                        height: bodyHeight * 0.00,
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -294,251 +556,303 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                             mainAxisSize: MainAxisSize.max,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Card(
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                color: Color(0xFF0A4F81), // warna latar Card
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          16, 10, 16, 5),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  'Laptop',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFFFFFFFE),
-                                                    fontSize: screenWidth *
-                                                        0.05, // Ukuran teks pada tombol
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                              _isloading
+                                  ? Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : _listdata.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                              getTranslatedText('No Order')),
+                                        )
+                                      : ListView.builder(
+                                          shrinkWrap: true,
+                                          physics:
+                                              NeverScrollableScrollPhysics(),
+                                          itemCount: _listdata.length,
+                                          itemBuilder: (context, index) {
+                                            int idKlien =
+                                                _listdata[index]['id_klien'];
+                                            String statusPesanan =
+                                                _listdata[index]
+                                                    ['status_pesanan'];
+                                            return GestureDetector(
+                                              onTap: () {
+                                                if (statusPesanan ==
+                                                    'Menunggu') {
+                                                  _showConfirmationDialog(
+                                                    context,
+                                                    _listdata[index]
+                                                            ['id_produk'] ??
+                                                        "", // Pastikan nama_produk tidak null
+                                                    _listdata[index]
+                                                            ['nama_produk'] ??
+                                                        "", // Pastikan nama_produk tidak null
+                                                    _listdata[index][
+                                                            'jumlah_pesanan'] ??
+                                                        "", // Pastikan jumlah_pesanan tidak null
+                                                  );
+                                                }
+                                              },
+                                              child: Card(
+                                                clipBehavior:
+                                                    Clip.antiAliasWithSaveLayer,
+                                                color: Color(0xFF0A4F81),
+                                                // warna latar Card
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
                                                 ),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  '10 pcs',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFFFFFFFE),
-                                                    fontSize: screenWidth *
-                                                        0.04, // Ukuran teks pada tombol
-                                                    fontWeight: FontWeight.w400,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Container(
-                                                width: mediaQueryWidth * 0.07,
-                                                height: bodyHeight * 0.07,
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFF06D5CD),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                alignment: AlignmentDirectional(
-                                                    0.00, 0.00),
-                                                child: Text(
-                                                  'id',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Colors.white,
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsetsDirectional
-                                                      .fromSTEB(12, 0, 0, 0),
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(16, 10,
+                                                                  16, 5),
+                                                      child: Column(
+                                                        mainAxisSize:
+                                                            MainAxisSize.max,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
-                                                          Text(
-                                                            'Nama Klien',
-                                                            style: TextStyle(
-                                                              fontFamily:
-                                                                  'Inter',
-                                                              color: Color(
-                                                                  0xFFFFFFFE),
-                                                              fontSize:
-                                                                  screenWidth *
-                                                                      0.04, // Ukuran teks pada tombol
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                            ),
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Padding(
+                                                                padding:
+                                                                    EdgeInsetsDirectional
+                                                                        .fromSTEB(
+                                                                            0,
+                                                                            4,
+                                                                            0,
+                                                                            0),
+                                                                child: Text(
+                                                                  _listdata[
+                                                                          index]
+                                                                      [
+                                                                      'nama_produk'],
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontFamily:
+                                                                        'Inter',
+                                                                    color: Color(
+                                                                        0xFFFFFFFE),
+                                                                    fontSize:
+                                                                        screenWidth *
+                                                                            0.05,
+                                                                    // Ukuran teks pada tombol
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              Padding(
+                                                                padding:
+                                                                    EdgeInsetsDirectional
+                                                                        .fromSTEB(
+                                                                            0,
+                                                                            4,
+                                                                            0,
+                                                                            0),
+                                                                child: Text(
+                                                                  _listdata[
+                                                                          index]
+                                                                      [
+                                                                      'jumlah_pesanan'],
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontFamily:
+                                                                        'Inter',
+                                                                    color: Color(
+                                                                        0xFFFFFFFE),
+                                                                    fontSize:
+                                                                        screenWidth *
+                                                                            0.04,
+                                                                    // Ukuran teks pada tombol
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w400,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Container(
+                                                                width:
+                                                                    mediaQueryWidth *
+                                                                        0.07,
+                                                                height:
+                                                                    bodyHeight *
+                                                                        0.07,
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: getColorForId(
+                                                                      idKlien),
+                                                                  shape: BoxShape
+                                                                      .circle,
+                                                                ),
+                                                                alignment:
+                                                                    AlignmentDirectional(
+                                                                        0.00,
+                                                                        0.00),
+                                                                child: Text(
+                                                                  _listdata[index]
+                                                                          [
+                                                                          'id_klien']
+                                                                      .toString(),
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontFamily:
+                                                                        'Inter',
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        screenWidth *
+                                                                            0.03,
+                                                                    // Ukuran teks pada tombol
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .normal,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              Expanded(
+                                                                child: Padding(
+                                                                  padding: EdgeInsetsDirectional
+                                                                      .fromSTEB(
+                                                                          12,
+                                                                          0,
+                                                                          0,
+                                                                          0),
+                                                                  child: Column(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .max,
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Row(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.spaceBetween,
+                                                                        children: [
+                                                                          Text(
+                                                                            _listdata[index]['nama_klien'],
+                                                                            style:
+                                                                                TextStyle(
+                                                                              fontFamily: 'Inter',
+                                                                              color: Color(0xFFFFFFFE),
+                                                                              fontSize: screenWidth * 0.04,
+                                                                              // Ukuran teks pada tombol
+                                                                              fontWeight: FontWeight.bold,
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Padding(
+                                                                padding:
+                                                                    EdgeInsetsDirectional
+                                                                        .fromSTEB(
+                                                                            0,
+                                                                            4,
+                                                                            0,
+                                                                            0),
+                                                                child: Text(
+                                                                  getTranslatedDatabase(
+                                                                      _listdata[
+                                                                              index]
+                                                                          [
+                                                                          'status_pesanan']),
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontFamily:
+                                                                        'Inter',
+                                                                    color: Color(
+                                                                        0xFFFFFFFE),
+                                                                    fontSize:
+                                                                        screenWidth *
+                                                                            0.03,
+                                                                    // Ukuran teks pada tombol
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w300,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              Padding(
+                                                                padding:
+                                                                    EdgeInsetsDirectional
+                                                                        .fromSTEB(
+                                                                            0,
+                                                                            4,
+                                                                            0,
+                                                                            0),
+                                                                child: Text(
+                                                                  DateFormat(
+                                                                          'dd-MM-yyyy')
+                                                                      .format(DateTime.parse(
+                                                                          _listdata[index]
+                                                                              [
+                                                                              'batas_tanggal'])),
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontFamily:
+                                                                        'Inter',
+                                                                    color: Color(
+                                                                        0xFFFFFFFE),
+                                                                    fontSize:
+                                                                        screenWidth *
+                                                                            0.03,
+                                                                    // Ukuran teks pada tombol
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w300,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          SizedBox(
+                                                            height: bodyHeight *
+                                                                0.01,
                                                           ),
                                                         ],
                                                       ),
-                                                    ],
-                                                  ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                            ],
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 4, 0, 0),
-                                                child: Text(
-                                                  '1 Minggu Yang Lalu',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Color(0xFFFFFFFE),
-                                                    fontSize: screenWidth *
-                                                        0.03, // Ukuran teks pada tombol
-                                                    fontWeight: FontWeight.w300,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(
-                                            height: bodyHeight * 0.01,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                            );
+                                          },
+                                        ),
                             ],
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Container(
-                  padding: EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15.0),
-                    color: Color(0xFF094067),
-                  ),
-                  child: TableCalendar<Event>(
-                    headerStyle: HeaderStyle(
-                      titleTextStyle: TextStyle(
-                          color: Colors
-                              .white), // Mengubah warna teks judul kalender menjadi putih
-                      formatButtonDecoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white, // Warna garis tepi
-                          width: 0.5, // Lebar garis tepi
-                        ),
-                        color: Colors
-                            .transparent, // Mengubah warna latar belakang tombol ganti format (minggu, bulan, tahun, dll.) jika diperlukan
-                      ),
-                      formatButtonTextStyle: TextStyle(
-                        color: Colors
-                            .white, // Mengubah warna teks tombol ganti format (minggu, bulan, tahun, dll.)
-                      ),
-                      leftChevronIcon: Icon(
-                        Icons.chevron_left,
-                        color: Colors
-                            .white, // Mengubah warna ikon panah kiri jika diperlukan
-                      ),
-                      rightChevronIcon: Icon(
-                        Icons.chevron_right,
-                        color: Colors
-                            .white, // Mengubah warna ikon panah kanan jika diperlukan
-                      ),
-                    ),
-                    daysOfWeekStyle: DaysOfWeekStyle(
-                      weekdayStyle: TextStyle(
-                          color: Colors
-                              .white), // Mengubah warna teks hari kerja menjadi putih
-                      weekendStyle: TextStyle(
-                          color: Colors
-                              .white), // Mengubah warna teks akhir pekan menjadi putih
-                    ),
-                    firstDay: kFirstDay,
-                    lastDay: kLastDay,
-                    focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    rangeStartDay: _rangeStart,
-                    rangeEndDay: _rangeEnd,
-                    calendarFormat: _calendarFormat,
-                    rangeSelectionMode: _rangeSelectionMode,
-                    eventLoader: _getEventsForDay,
-                    startingDayOfWeek: StartingDayOfWeek.monday,
-                    calendarStyle: CalendarStyle(
-                      outsideDaysVisible: false,
-                      weekendTextStyle: TextStyle(
-                          color: Colors
-                              .white), // Mengubah warna teks hari Sabtu dan Minggu menjadi putih
-                      defaultTextStyle: TextStyle(
-                          color: Colors.white), // Ubah warna teks menjadi putih
-                      todayTextStyle: TextStyle(
-                          color: Colors
-                              .white), // Ubah warna teks hari ini menjadi putih
-                      selectedTextStyle: TextStyle(
-                          color: Colors
-                              .white), // Ubah warna teks saat dipilih menjadi putih
-                      todayDecoration: BoxDecoration(
-                        color: Color(
-                            0xFF71C4EF), // Ganti warna latar belakang hari ini jika diperlukan
-                        shape: BoxShape
-                            .circle, // Ganti bentuk latar belakang hari ini jika diperlukan
-                      ),
-                      selectedDecoration: BoxDecoration(
-                        color: Colors
-                            .blue, // Ganti warna latar belakang saat dipilih jika diperlukan
-                        shape: BoxShape
-                            .circle, // Ganti bentuk latar belakang saat dipilih jika diperlukan
-                      ),
-                    ),
-                    onDaySelected: _onDaySelected,
-                    onRangeSelected: _onRangeSelected,
-                    onFormatChanged: (format) {
-                      if (_calendarFormat != format) {
-                        setState(() {
-                          _calendarFormat = format;
-                        });
-                      }
-                    },
-                    onPageChanged: (focusedDay) {
-                      _focusedDay = focusedDay;
-                    },
                   ),
                 ),
               ),
@@ -566,270 +880,31 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                           ),
                         ),
                         SizedBox(height: bodyHeight * 0.01),
-                        GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        8),
-                                  ),
-                                  title: Center(child: Text(getTranslatedText('Change Status'))),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        child: DropdownSearch<String>(
-                                          popupProps: PopupProps.menu(
-                                            fit: FlexFit.loose,
-                                            menuProps: MenuProps(
-                                              backgroundColor: isDarkTheme ? Colors.black : Colors.white,
-                                              elevation: 0,
-                                            ),
-                                            showSelectedItems: true,
-                                            disabledItemFn: (String s) =>
-                                                s.startsWith(getTranslatedText('Waiting')),
-                                          ),
-                                          items: [
-                                            getTranslatedText("Cancelled"),
-                                            getTranslatedText("Finished"),
-                                            getTranslatedText('Waiting'),
-                                          ],
-                                          dropdownDecoratorProps:
-                                          DropDownDecoratorProps(
-                                            dropdownSearchDecoration:
-                                            InputDecoration(
-                                              contentPadding:
-                                              EdgeInsets.symmetric(
-                                                horizontal: 7,
-                                                vertical: 3,
-                                              ),
-                                              labelText: "Status",
-                                              // hintText: "Ubah Status",
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                BorderRadius.circular(12),
-                                                borderSide: BorderSide(
-                                                    color:
-                                                    Colors.transparent),
-                                              ),
-                                            ),
-                                          ),
-                                          onChanged: print,
-                                          selectedItem: "",
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    Center(
-                                      child: TextButton(
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Color(
-                                              0xFF3DA9FC), // Ganti warna sesuai keinginan Anda
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                8), // Ganti nilai sesuai keinginan Anda
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          // Mengambil harga baru dari controller
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: Text(
-                                          getTranslatedText('Save'),
-                                          style: TextStyle(
-                                              color: Colors
-                                                  .white), // Warna teks tombol
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
+                        produksiData.isEmpty
+                            ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                            : ListView.builder(
+                          shrinkWrap: true,
+                          physics:
+                          NeverScrollableScrollPhysics(),
+                          itemCount: produksiData.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final item = produksiData[index];
+                            return GestureDetector(
+                              onTap: () {
+                                if (!isItemClicked[index]) {
+                                  print('Tapped index: $index');
+                                  _showConfirmationDialog2(context,
+                                      item['id_produksi'], 'Sudah Sesuai', index);
+                                } else {
+                                  print(
+                                      'Item sudah diklik dan status sudah sesuai');
+                                }
                               },
+                              child: buildProductionItem(item, screenWidth, index),
                             );
                           },
-                          child: Card(
-                            clipBehavior: Clip.antiAliasWithSaveLayer,
-                            color: Color(0xFF094067), // warna latar Card
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsetsDirectional.fromSTEB(
-                                      16, 10, 16, 5),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Text(
-                                              'Laptop',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Color(0xFFFFFFFE),
-                                                fontSize: screenWidth *
-                                                    0.05, // Ukuran teks pada tombol
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Text(
-                                              '14 Juni',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Color(0xFFFFFFFE),
-                                                fontSize: screenWidth *
-                                                    0.04, // Ukuran teks pada tombol
-                                                fontWeight: FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Text(
-                                              'Kode Produksi',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Color(0xFFFFFFFE),
-                                                fontSize: screenWidth *
-                                                    0.04, // Ukuran teks pada tombol
-                                                fontWeight: FontWeight.w300,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(
-                                        height: bodyHeight * 0.02,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Icon(
-                                              Icons.pin_drop,
-                                              color: Color(0xFFFFFFFE),
-                                              size: 18,
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: mediaQueryWidth * 0.02,
-                                          ),
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Text(
-                                              'Ruang Produksi Lane-001',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Color(0xFFFFFFFE),
-                                                fontSize: screenWidth *
-                                                    0.03, // Ukuran teks pada tombol
-                                                fontWeight: FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Container(
-                                              width: mediaQueryWidth * 0.04,
-                                              height: bodyHeight * 0.04,
-                                              child: Image(
-                                                image: AssetImage(
-                                                    'lib/assets/user.png'),
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: mediaQueryWidth * 0.02,
-                                          ),
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Text(
-                                              'Damar',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Color(0xFFFFFFFE),
-                                                fontSize: screenWidth *
-                                                    0.03, // Ukuran teks pada tombol
-                                                fontWeight: FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0, 4, 0, 0),
-                                            child: Text(
-                                              '10 pcs',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Color(0xFFFFFFFE),
-                                                fontSize: screenWidth *
-                                                    0.03, // Ukuran teks pada tombol
-                                                fontWeight: FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(
-                                        height: bodyHeight * 0.01,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       ],
                     ),
@@ -842,4 +917,189 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
       ),
     );
   }
+  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth, int index) {
+    final mediaQueryHeight = MediaQuery.of(context).size.height;
+    final mediaQueryWidth = MediaQuery.of(context).size.width;
+
+    if (item == null) {
+      print('Error: Item is null');
+      return Container();
+    }
+
+    print('Item: $item');
+
+    return GestureDetector(
+      onTap: () {
+        if (!isItemClicked[index]) {
+          if (item['status_produksi'].toLowerCase() == 'sudah dibuat') {
+            print('Tapped index: $index');
+            _showConfirmationDialog2(
+                context, item['id_produksi'], 'Sudah Sesuai', index);
+          } else {
+            print('Item sudah diklik dan status sudah sesuai');
+          }
+        } else {
+          print('Item sudah diklik dan status sudah sesuai');
+        }
+      },
+      child: Card(
+        clipBehavior: Clip.antiAliasWithSaveLayer,
+        color: Color(0xFF094067),
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(16, 10, 16, 5),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['nama_produk'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.05,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['tanggal_produksi'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['kode_produksi'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.03,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: mediaQueryHeight * 0.02),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Icon(
+                          Icons.pin_drop,
+                          color: Color(0xFFFFFFFE),
+                          size: 16,
+                        ),
+                      ),
+                      SizedBox(
+                        width: mediaQueryWidth * 0.02,
+                      ),
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['nama_ruangan'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.025,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Container(
+                          width: mediaQueryWidth * 0.04,
+                          height: mediaQueryHeight * 0.04,
+                          child: Image(
+                            image: AssetImage('lib/assets/user.png'),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: mediaQueryWidth * 0.02,
+                      ),
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['nama_user'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.03,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['status_produksi'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                        child: Text(
+                          item['jumlah_produksi'].toString(),
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFFFFFFFE),
+                            fontSize: screenWidth * 0.04,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: mediaQueryHeight * 0.01),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }

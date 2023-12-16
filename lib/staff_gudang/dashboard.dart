@@ -1,94 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:suco/staff_gudang/sidebar.dart';
 import 'package:suco/api_config.dart';
+import 'package:suco/staff_gudang/sidebar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:suco/kepala_gudang/status_pesanan.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../utils.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math';
+import 'package:intl/intl.dart';
+import 'package:giffy_dialog/giffy_dialog.dart';
+
 
 class DashboardPageStaff extends StatefulWidget {
   const DashboardPageStaff({Key? key}) : super(key: key);
 
   @override
-  _DashboardPageStaffState createState() => _DashboardPageStaffState();
+  DashboardPageStaffState createState() => DashboardPageStaffState();
 }
 
-class _DashboardPageStaffState extends State<DashboardPageStaff> {
-  bool isDarkTheme = false;
-  String selectedLanguage = 'IDN';
-  late final ValueNotifier<List<Event>> _selectedEvents;
-  CalendarFormat _calendarFormat = CalendarFormat.twoWeeks;
-  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-  DateTime? _rangeStart;
-  DateTime? _rangeEnd;
+class DashboardPageStaffState extends State<DashboardPageStaff> {
+  bool isDarkTheme = false; // Variabel untuk tema gelap
+  String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
+  List _listdatastock = [];
   List _listdata = [];
   bool _isloading = true;
-  List _filteredData = [];
-  List<Map<String, dynamic>> produksiData = [];
 
   @override
   void initState() {
     super.initState();
-    loadThemePreference();
-    loadSelectedLanguage();
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-    loadProduksi();
+    loadThemePreference(); // Muat preferensi tema gelap saat halaman dimulai
+    loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
+    _listdatastock = [];
+    _listdata = [];
+    _getdatastok();
     _getdata();
   }
 
   @override
   void dispose() {
-    _selectedEvents.dispose();
     super.dispose();
-  }
-
-  List<Event> _getEventsForDay(DateTime day) {
-    return kEvents[day] ?? [];
-  }
-
-  List<Event> _getEventsForRange(DateTime start, DateTime end) {
-    final days = daysInRange(start, end);
-
-    return [
-      for (final d in days) ..._getEventsForDay(d),
-    ];
-  }
-
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-        _rangeStart = null;
-        _rangeEnd = null;
-        _rangeSelectionMode = RangeSelectionMode.toggledOff;
-      });
-
-      _selectedEvents.value = _getEventsForDay(selectedDay);
-    }
-  }
-
-  void _onRangeSelected(DateTime? start, DateTime? end, DateTime focusedDay) {
-    setState(() {
-      _selectedDay = null;
-      _focusedDay = focusedDay;
-      _rangeStart = start;
-      _rangeEnd = end;
-      _rangeSelectionMode = RangeSelectionMode.toggledOn;
-    });
-
-    if (start != null && end != null) {
-      _selectedEvents.value = _getEventsForRange(start, end);
-    } else if (start != null) {
-      _selectedEvents.value = _getEventsForDay(start);
-    } else if (end != null) {
-      _selectedEvents.value = _getEventsForDay(end);
-    }
   }
 
   void loadSelectedLanguage() async {
@@ -105,16 +57,135 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
     });
   }
 
+  Future<void> _updateProductAvailability(int index, int productId, int jumlahProduksi) async {
+    final response = await http.post(
+      Uri.parse(ApiConfig.produksi_selesai),
+      body: {
+        'id_produk': productId.toString(),
+        'jumlah_produksi': jumlahProduksi.toString(),
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Berhasil mengurangkan jumlah_pesanan
+      print('Jumlah pesanan berhasil diperbarui');
+      await _updateStatus(index, _listdata[index]['id_produksi'], 'selesai');
+    } else {
+      // Gagal mengurangkan jumlah_pesanan
+      print('Gagal menambahkan jumlah produk');
+
+    }
+  }
+
+  Future<void> _updateStatus(int index, int idProduksi, String statusProduksi) async {
+    final response = await http.post(
+      Uri.parse(ApiConfig.update_status_produksi_selesai),
+      body: {
+        'id_produksi': idProduksi.toString(),
+        'status_produksi': statusProduksi.toString(),
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Perbarui status langsung dalam _filteredData
+      setState(() {
+        _listdata[index]['status_produksi'] = statusProduksi;
+      });
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+      await _getdata();
+      await _getdatastok();
+    } else {
+      // Gagal memperbarui status
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+
   Future _getdata() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.stock));
+      final response =
+      await http.get(Uri.parse(ApiConfig.get_production_staff_dashboard));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _listdata = data['stock'];
-          _filteredData =
-              _listdata; // Initially, filtered data is the same as the complete data
+          _listdata = data['produksi'];
           _isloading = false;
         });
       }
@@ -123,27 +194,27 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
     }
   }
 
-  Future<void> loadProduksi() async {
+  Future _getdatastok() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.produksi));
+      final response =
+      await http.get(Uri.parse(ApiConfig.stock_kepala_gudang),);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data); // Tambahkan ini untuk melihat respons data di konsol
         setState(() {
-          produksiData = List.from(data['produksi']);
+          _listdatastock = data['stock'];
+          _isloading = false;
         });
-      } else {
-        print('Error: ${response.statusCode}');
-        print('Response: ${response.body}');
       }
     } catch (e) {
-      print('Error: $e');
+      print(e);
     }
   }
 
+  // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
+      // Teks dalam bahasa Indonesia
       switch (text) {
         case 'Main Page':
           return 'Halaman Utama';
@@ -173,30 +244,74 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
           return 'Tanggal';
         case 'Activity':
           return 'Aktivitas';
+        case 'Order Status':
+          return 'Status Pemesanan';
+        case 'Client Name :':
+          return 'Nama klien :';
+        case 'Product Code :':
+          return 'Kode Produk :';
+        case 'Product Name :':
+          return 'Nama Produk :';
+        case 'Total Product :':
+          return 'Jumlah Produk:';
+        case 'Type Of Payment :':
+          return 'Jenis Pembayaran :';
+        case 'Price :':
+          return 'Harga :';
+        case '':
+          return '';
+        case '':
+          return '';
+
         default:
           return text;
       }
     } else {
+      // Teks dalam bahasa Inggris (default)
       return text;
     }
   }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+        case 'Menunggu':
+          return 'Waiting';
+        case 'Siap Diantar':
+          return 'Ready Delivered';
+        case '':
+          return '';
+        case '':
+          return '';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final screenWidth = MediaQuery.of(context).size.width;
-    final ThemeData themeData =
-        isDarkTheme ? ThemeData.dark() : ThemeData.light();
+    final ThemeData themeData = isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final myAppBar = AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      iconTheme:
-          IconThemeData(color: isDarkTheme ? Colors.white : Colors.black),
+      backgroundColor: Colors.transparent, // Mengubah warna AppBar
+      elevation: 0, // Menghilangkan efek bayangan di bawah AppBar
+      iconTheme: IconThemeData(color: isDarkTheme ? Colors.white : Colors.black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
-          getTranslatedText('Main Page'),
+          getTranslatedText(
+              'Main Page'),
           style: TextStyle(
             fontSize: 25.0,
             color: isDarkTheme ? Colors.white : Colors.black,
@@ -204,17 +319,13 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
         ),
       ),
       actions: <Widget>[
-        SizedBox(
-          width: 45.0,
-        ),
+        SizedBox(width: 45.0,),
       ],
     );
-    final bodyHeight = mediaQueryHeight -
-        myAppBar.preferredSize.height -
-        MediaQuery.of(context).padding.top;
+    final bodyHeight = mediaQueryHeight - myAppBar.preferredSize.height - MediaQuery.of(context).padding.top;
     return MaterialApp(
       color: isDarkTheme ? Colors.black : Colors.white,
-      theme: themeData,
+      theme: themeData, // Terapkan tema sesuai dengan preferensi tema gelap
       home: Scaffold(
         backgroundColor: isDarkTheme ? Colors.black : Colors.white,
         drawer: SidebarDrawer(),
@@ -223,14 +334,7 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
           scrollDirection: Axis.vertical,
           child: Column(
             children: [
-              // Display Product Availability
-              ProductAvailabilityWidget(
-                mediaQueryHeight: mediaQueryHeight,
-                screenWidth: screenWidth,
-                availabilityData: _listdata.cast<Map<String, dynamic>>(),
-              ),
-
-              // SizedBox(height: bodyHeight * 0.03),
+              SizedBox(height: bodyHeight * 0.03),
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Container(
@@ -239,357 +343,448 @@ class _DashboardPageStaffState extends State<DashboardPageStaff> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 12, 16, 16),
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                        16, 12, 16, 16),
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
                       children: [
-                        // Text for Activity
                         Text(
-                          getTranslatedText('Activity'),
+                          getTranslatedText(
+                              'Available Items'),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.black,
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.w600,
+                            fontSize: screenWidth *
+                                0.05, // Ukuran teks pada tombol
+                            fontWeight:
+                            FontWeight.w600,
                           ),
                         ),
-                        SizedBox(height: bodyHeight * 0.01),
-
-                        // Added ListView.builder to display production data
-                        ListView.builder(
+                        SizedBox(height: bodyHeight * 0.01,),
+                        _isloading
+                            ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                            : _listdatastock.isEmpty
+                            ? Center(
+                          child: Text(getTranslatedText('No Stock')),
+                        )
+                            : ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: _listdatastock.length,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                color: Color(0xFF094067), // warna latar Card
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          16, 12, 16, 16),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.max,
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  getTranslatedText(
+                                                      'Product Name'),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdatastock[index]
+                                                  ['nama_produk'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: bodyHeight * 0.02),
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  getTranslatedText('Stock'),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdatastock[index]
+                                                  ['jumlah_produk']
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: bodyHeight * 0.02),
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  getTranslatedText('Price'),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdatastock[index]['harga_produk'] != null
+                                                      ? 'Rp ${_listdatastock[index]['harga_produk']}'
+                                                      : getTranslatedText('Not yet added'),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFFC3DCED),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                        16, 12, 16, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          getTranslatedText(
+                              'Production'),
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Colors.black,
+                            fontSize: screenWidth *
+                                0.05, // Ukuran teks pada tombol
+                            fontWeight:
+                            FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: bodyHeight * 0.01,),
+                        _isloading
+                            ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                            : _listdata.isEmpty
+                            ? Center(
+                          child: Text(getTranslatedText('No Production')),
+                        )
+                            : ListView.builder(
                           shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: produksiData.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final item = produksiData[index];
-                            return buildProductionItem(item, screenWidth);
-                          },
+                          physics:
+                          NeverScrollableScrollPhysics(),
+                          itemCount: _listdata.length,
+                          itemBuilder: ((context, index) {
+                            return GestureDetector(
+                              onTap: () async {
+                                if (_listdata[index]['status_produksi'] == 'sudah sesuai') {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        title: Center(
+                                          child: Text('Produksi sudah sesuai'),
+                                        ),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text('Kirim Ke Stock ?'),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () async {
+                                              int productId = _listdata[index]['id_produk'];
+                                              int jumlahProduksi = _listdata[index]['jumlah_produksi'];
+                                              Navigator.of(context).pop();
+                                              // Panggil fungsi untuk mengurangi jumlah_produk di tabel ketersediaan_barang
+                                              await _updateProductAvailability(index, productId, jumlahProduksi);
+                                            },
+                                            child: Text(
+                                              'Ya',
+                                              style: TextStyle(
+                                                color: Colors.green,
+                                              ),
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              // Menutup dialog tanpa melakukan perubahan
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Text(
+                                              'Tidak',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                              },
+                              child: Card(
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                color: Color(0xFF094067),
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(16, 10, 16, 5),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.max,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdata[index]['nama_produk'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth * 0.05,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  DateFormat('dd-MM-yyyy').format(DateTime.parse(
+                                                      _listdata[index]['tanggal_produksi'])),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth * 0.04,
+                                                    fontWeight: FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdata[index]['kode_produksi'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth * 0.03,
+                                                    fontWeight: FontWeight.w300,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: mediaQueryHeight * 0.02),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Icon(
+                                                  Icons.pin_drop,
+                                                  color: Color(0xFFFFFFFE),
+                                                  size: 16,
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdata[index]['nama_ruangan'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth * 0.025,
+                                                    fontWeight: FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Container(
+                                                  width: mediaQueryWidth * 0.04,
+                                                  height: mediaQueryHeight * 0.04,
+                                                  child: Image(
+                                                    image: AssetImage('lib/assets/user.png'),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: mediaQueryWidth * 0.02,
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdata[index]['nama_user'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth * 0.03,
+                                                    fontWeight: FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdata[index]['status_produksi'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth * 0.04,
+                                                    fontWeight: FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _listdata[index]['jumlah_produksi'].toString(),
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth * 0.04,
+                                                    fontWeight: FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: mediaQueryHeight * 0.01),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
+
             ],
           ),
         ),
       ),
     );
   }
-
-  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth) {
-    final mediaQueryHeight = MediaQuery.of(context).size.height;
-    final mediaQueryWidth = MediaQuery.of(context).size.width;
-
-    if (item == null) {
-      print('Error: Item is null');
-      return Container();
-    }
-
-    print('Item: $item');
-    return Card(
-      clipBehavior: Clip.antiAliasWithSaveLayer,
-      color: Color(0xFF094067),
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(16, 10, 16, 5),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['nama_produk'] ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['tanggal_produksi'] ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['kode_produksi'] ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.03,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: mediaQueryHeight * 0.02),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Icon(
-                        Icons.pin_drop,
-                        color: Color(0xFFFFFFFE),
-                        size: 16,
-                      ),
-                    ),
-                    SizedBox(
-                      width: mediaQueryWidth * 0.02,
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['nama_ruangan'] ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.025,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Container(
-                        width: mediaQueryWidth * 0.04,
-                        height: mediaQueryHeight * 0.04,
-                        child: Image(
-                          image: AssetImage('lib/assets/user.png'),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: mediaQueryWidth * 0.02,
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['nama_user'] ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.03,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['status_produksi'] ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['jumlah_produksi'].toString(),
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: mediaQueryHeight * 0.01),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ProductAvailabilityWidget extends StatelessWidget {
-  final double mediaQueryHeight;
-  final double screenWidth;
-  final List<Map<String, dynamic>> availabilityData;
-
-  ProductAvailabilityWidget({
-    required this.mediaQueryHeight,
-    required this.screenWidth,
-    required this.availabilityData,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFFC3DCED),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(16, 12, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Available Items',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  color: Colors.black,
-                  fontSize: screenWidth * 0.05,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: availabilityData.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final item = availabilityData[index];
-                  return buildAvailabilityItem(item, screenWidth);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildAvailabilityItem(Map<String, dynamic> item, double screenWidth) {
-    return Card(
-      clipBehavior: Clip.antiAliasWithSaveLayer,
-      color: Color(0xFF094067),
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(16, 10, 16, 5),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['jenis_produk'] ?? 'Default Category',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: mediaQueryHeight * 0.02),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['nama_produk'] ?? 'Default Product',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        item['jumlah_produk'].toString() ?? '0',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                      child: Text(
-                        'Rp. ${item['harga_produk'] ?? '0'}',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFFFFFFE),
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: mediaQueryHeight * 0.01),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(DashboardPageStaff());
 }

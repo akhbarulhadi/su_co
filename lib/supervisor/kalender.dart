@@ -285,7 +285,7 @@ class CalenderState extends State<Calendar> {
       backgroundColor: Color(0xFF094067),
       elevation: 0,
       iconTheme: IconThemeData(
-        color: isDarkTheme ? Colors.white : Colors.black,
+        color: Colors.white,
       ),
       title: Align(
         alignment: Alignment.center,
@@ -326,6 +326,7 @@ class CalenderState extends State<Calendar> {
                     visible:
                         shouldShowProductName(), // Replace with your condition
                     child: TextFormField(
+                      readOnly: true, // Menggantikan enabled: false
                       obscureText: false,
                       controller: productNameprodukController,
                       decoration: InputDecoration(
@@ -386,15 +387,18 @@ class CalenderState extends State<Calendar> {
                           ),
                         ),
                       ),
+                      dropdownColor: Color(0xFF094067), // Warna latar belakang dropdown saat dibuka
                       value: selectedLeader,
                       items: listuser.map((leader) {
                         return DropdownMenuItem(
                           value: leader['id_user'].toString(),
                           child: Row(
                             children: [
-                              Text('ID: ${leader['id_user']}'),
+                              Text('ID: ${leader['id_user']}',
+                              style: TextStyle(color: Colors.white),),
                               SizedBox(width: 8),
-                              Text('${leader['nama']}'),
+                              Text('${leader['nama']}',
+                                style: TextStyle(color: Colors.white),),
                             ],
                           ),
                         );

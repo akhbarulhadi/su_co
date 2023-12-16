@@ -33,6 +33,8 @@ Route::middleware('auth:sanctum')->post('/edit-profile', [AuthController::class,
 
 // untuk halaman pesanan
 Route::get('/pesanan', [PesananController::class, 'showPesanan']);
+Route::get('/pesanan/dashboard-marketing', [PesananController::class, 'showPesananDashboardMarketing']);
+Route::get('/pesanan/dashboard-supervisor', [PesananController::class, 'showPesananDashboardSupervisor']);
 Route::get('/pesanan/pemasukan', [PesananController::class, 'showPemasukan']);
 Route::get('/pesanan/show-history', [PesananController::class, 'showHistory']);
 Route::post('pesanan/update-status', [PesananController::class, 'updateStatus']);
@@ -43,6 +45,8 @@ Route::post('pesanan/updateProductAvailability', [PesananController::class, 'upd
 
 // untuk halaman stock
 Route::get('/stock', [StockController::class, 'show']);
+Route::get('/stock/kepala-gudang', [StockController::class, 'showKepalaGudang']);
+Route::get('/stock/dashboard-marketing', [StockController::class, 'showDashbordMarketing']);
 Route::post('stock/update-harga', [StockController::class, 'updateHarga']);
 Route::post('/stock/add-stock', [StockController::class, 'store']);
 
@@ -61,6 +65,9 @@ Route::post('/produksi/update-status-selesai', [ProduksiController::class, 'upda
 Route::post('/produksi/update-product', [ProduksiController::class, 'updateProductAvailability']);
 Route::get('/produksi/production-staffgudang', [ProduksiController::class, 'getProduksiStaffGudang']);
 Route::get('/produksi/production-supervisor', [ProduksiController::class, 'getProduksiSupervisor']);
+Route::get('/produksi/production-supervisor-dashboard', [ProduksiController::class, 'getProduksiSupervisorDashboard']);
 Route::get('/produksi/production-leader', [ProduksiController::class, 'getProduksiLeader']);
+Route::get('/produksi/production-leader-dashboard', [ProduksiController::class, 'getProduksiLeaderDashboard']);
+Route::get('/produksi/production-staff-dashboard', [ProduksiController::class, 'getProduksiStaffDashboard']);
 Route::get('/produksi/production-history', [ProduksiController::class, 'getProduksiHistory']);
 // Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);

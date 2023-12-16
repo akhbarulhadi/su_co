@@ -19,6 +19,28 @@ class PesananController extends Controller
         return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
     }
 
+    public function showPesananDashboardMarketing()
+    {
+        $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
+            ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
+            ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
+            ->whereNotIn('pesanan.status_pesanan', ['Selesai', 'Batal', 'Menunggu'])
+            ->take(5)
+            ->get();
+        return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
+    }
+
+    public function showPesananDashboardSupervisor()
+    {
+        $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
+            ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
+            ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
+            ->whereNotIn('pesanan.status_pesanan', ['Selesai', 'Batal', 'Siap Diantar'])
+            ->take(5)
+            ->get();
+        return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
+    }
+
     public function updateStatus(Request $request)
     {
         // Validasi request sesuai kebutuhan Anda
