@@ -27,6 +27,7 @@ class UserManagementPageState extends State<UserManagementPage> {
   List _listdata = [];
   List _filteredData = [];
   bool _isloading = true;
+  String previousStatus = '';
 
   @override
   void initState() {
@@ -61,6 +62,86 @@ class UserManagementPageState extends State<UserManagementPage> {
     _unfocusNode.dispose();
     super.dispose();
   }
+
+Future<void> _updateUserStatus(BuildContext context, String userId, String newStatus) async {
+  try {
+    final response = await http.post(
+      Uri.parse(ApiConfig.status_user),
+      body: {
+        'id_user': userId,
+        'status': newStatus,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print('Status update successful');
+      // Handle success, if needed
+    } else {
+      print('Failed to update status. Status code: ${response.statusCode}');
+      // Handle failure, if needed
+    }
+  } catch (e) {
+    print('Error: $e');
+    // Handle error
+  }
+}
+
+
+ Future<void> _showStatusChangeDialog(BuildContext context, int index, String userId) async {
+    String selectedStatus = _filteredData[index]['status'];
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Change User Status'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Select new status:'),
+              DropdownButton<String>(
+                value: selectedStatus,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedStatus = newValue!;
+                  });
+                },
+                items: ['aktif', 'tidak-aktif'].map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Memeriksa apakah status berubah sebelum pembaruan
+                if (selectedStatus != _filteredData[index]['status']) {
+                  // Print status yang baru di terminal
+                  // print('User ID: $userId - New Status: $selectedStatus');
+                }
+
+                _updateUserStatus(context, userId, selectedStatus);
+
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _resetPassword(
       BuildContext context, int index, String newStatus) async {
     final response = await http.post(
@@ -233,7 +314,7 @@ class UserManagementPageState extends State<UserManagementPage> {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final ThemeData themeData =
-    isDarkTheme ? ThemeData.dark() : ThemeData.light();
+        isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final screenWidth = MediaQuery.of(context).size.width;
     final myAppBar = AppBar(
       backgroundColor: Colors.transparent, // Mengubah warna AppBar
@@ -242,7 +323,7 @@ class UserManagementPageState extends State<UserManagementPage> {
           color: isDarkTheme
               ? Colors.white
               : Colors
-              .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+                  .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
@@ -301,7 +382,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                            isDarkTheme ? Colors.black : Colors.white,
+                                isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -354,7 +435,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                                 color: isDarkTheme
                                     ? Colors.white
                                     : Color(
-                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
                                 size: 15,
                               ),
                             ),
@@ -367,21 +448,21 @@ class UserManagementPageState extends State<UserManagementPage> {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
                                         String lowerCaseQuery =
-                                        query.toLowerCase();
+                                            query.toLowerCase();
 
                                         // Mencocokkan berdasarkan
                                         bool matchesname =
-                                        item['nama_perusahaan']
-                                            .toLowerCase()
-                                            .contains(lowerCaseQuery);
+                                            item['nama_perusahaan']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
                                         bool matchescreated_at =
-                                        item['created_at']
-                                            .toLowerCase()
-                                            .contains(lowerCaseQuery);
+                                            item['created_at']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
                                         bool matchesstatus =
-                                        item['status_pesanan']
-                                            .toLowerCase()
-                                            .contains(lowerCaseQuery);
+                                            item['status_pesanan']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
 
                                         // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
                                         return matchesname ||
@@ -461,205 +542,235 @@ class UserManagementPageState extends State<UserManagementPage> {
               Expanded(
                 child: _isloading
                     ? Center(
-                  child: CircularProgressIndicator(),
-                )
+                        child: CircularProgressIndicator(),
+                      )
                     : _filteredData.isEmpty
-                    ? Center(
-                  child: Text(getTranslatedText('No Order')),
-                )
-                    : ListView.builder(
-                  itemCount: _filteredData.length,
-                  itemBuilder: ((context, index) {
-                    TextEditingController namaController = TextEditingController(
-                        text: _filteredData[index]['nama'].toString());
-                    TextEditingController idStaffController = TextEditingController(
-                        text: _filteredData[index]['id_staff'].toString());
-                    return GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    8), // Ganti nilai sesuai keinginan Anda
-                              ),
-                              title: Center(
-                                  child: Text(getTranslatedText(
-                                      'User Detail'))),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Visibility(
-                                        visible: false, // Set this to false to hide the TextField
-                                        child: TextField(
-                                          controller: idStaffController,
-                                          keyboardType: TextInputType.text,
-                                          decoration: InputDecoration(
-                                            labelText: getTranslatedText('Client Name'),
-                                          ),
-                                          enabled: false,
+                        ? Center(
+                            child: Text(getTranslatedText('No Order')),
+                          )
+                        : ListView.builder(
+                            itemCount: _filteredData.length,
+                            itemBuilder: ((context, index) {
+                              TextEditingController namaController =
+                                  TextEditingController(
+                                      text: _filteredData[index]['nama']
+                                          .toString());
+                              TextEditingController idStaffController =
+                                  TextEditingController(
+                                      text: _filteredData[index]['id_staff']
+                                          .toString());
+                              return GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
-                                      ),
-                                      IconButton(
-                                        onPressed: () async {
-                                          await _resetPassword(context, index, idStaffController.text);
-                                        },
-                                        icon: Icon(Icons.lock_reset_rounded),
+                                        title: Center(
+                                          child: Text(
+                                              getTranslatedText('User Detail')),
+                                        ),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Visibility(
+                                                  visible: false,
+                                                  child: TextField(
+                                                    controller:
+                                                        idStaffController,
+                                                    keyboardType:
+                                                        TextInputType.text,
+                                                    decoration: InputDecoration(
+                                                      labelText:
+                                                          getTranslatedText(
+                                                              'Client Name'),
+                                                    ),
+                                                    enabled: false,
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  onPressed: () async {
+                                                    await _resetPassword(
+                                                        context,
+                                                        index,
+                                                        idStaffController.text);
+                                                  },
+                                                  icon: Icon(
+                                                      Icons.lock_reset_rounded),
+                                                ),
+                                              ],
+                                            ),
+                                            TextField(
+                                              controller: namaController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Client Name'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  _filteredData[index]['roles'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Colors.white,
+                                                    fontSize:
+                                                        screenWidth * 0.028,
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  _filteredData[index]
+                                                      ['status'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Colors.white,
+                                                    fontSize:
+                                                        screenWidth * 0.028,
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                _showStatusChangeDialog(
+                                                    context,
+                                                    index,
+                                                    _filteredData[index]
+                                                        ['id_staff']);
+                                              },
+                                              child: Text('Change Status'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Card(
+                                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                                  color: Color(0xFF094067),
+                                  elevation: 4,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            16, 5, 16, 5),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            CircleAvatar(
+                                              radius: mediaQueryWidth * 0.045,
+                                              backgroundColor:
+                                                  Color(0xFF7839CD),
+                                              child: _filteredData[index]
+                                                          ['foto'] !=
+                                                      null
+                                                  ? CircleAvatar(
+                                                      radius: mediaQueryWidth *
+                                                          0.042,
+                                                      backgroundImage:
+                                                          NetworkImage(
+                                                        '${ApiConfig.baseURL}/storage/foto/${_filteredData[index]['foto']}',
+                                                      ),
+                                                    )
+                                                  : CircleAvatar(
+                                                      radius: mediaQueryWidth *
+                                                          0.042,
+                                                      backgroundColor:
+                                                          Colors.grey,
+                                                    ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(12, 0, 0, 0),
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      _filteredData[index]
+                                                          ['nama'],
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color: Colors.white,
+                                                        fontSize:
+                                                            screenWidth * 0.04,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 4, 0, 0),
+                                                      child: Text(
+                                                        _filteredData[index]
+                                                            ['email'],
+                                                        style: TextStyle(
+                                                          fontFamily: 'Inter',
+                                                          color: Colors.white,
+                                                          fontSize:
+                                                              screenWidth *
+                                                                  0.028,
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 4, 0, 0),
+                                                      child: Text(
+                                                        _filteredData[index]
+                                                            ['no_tlp'],
+                                                        style: TextStyle(
+                                                          fontFamily: 'Inter',
+                                                          color: Colors.white,
+                                                          fontSize:
+                                                              screenWidth *
+                                                                  0.028,
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
-                                  TextField(
-                                    controller: namaController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: getTranslatedText(
-                                            'Client Name')),
-                                    enabled: false,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      child: Card(
-                        clipBehavior: Clip.antiAliasWithSaveLayer,
-                        color: Color(0xFF094067),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                  16, 5, 16, 5),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  CircleAvatar(
-                                    radius: mediaQueryWidth * 0.045,
-                                    backgroundColor: Color(0xFF7839CD),
-                                    child: _filteredData[index]['foto'] !=
-                                        null
-                                        ? CircleAvatar(
-                                      radius:
-                                      mediaQueryWidth * 0.042,
-                                      backgroundImage: NetworkImage(
-                                          'http://192.168.100.8:8000/storage/foto/${_filteredData[index]['foto']}'),
-                                    )
-                                        : CircleAvatar(
-                                      radius:
-                                      mediaQueryWidth * 0.042,
-                                      backgroundColor:
-                                      Colors.grey,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: EdgeInsetsDirectional
-                                          .fromSTEB(12, 0, 0, 0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            _filteredData[index]['nama'],
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
-                                              color: Colors.white,
-                                              fontSize:
-                                              screenWidth * 0.04,
-                                              fontWeight:
-                                              FontWeight.normal,
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding:
-                                            EdgeInsetsDirectional
-                                                .fromSTEB(
-                                                0, 4, 0, 0),
-                                            child: Text(
-                                              _filteredData[index]['email'],
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Colors.white,
-                                                fontSize:
-                                                screenWidth * 0.028,
-                                                fontWeight:
-                                                FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding:
-                                            EdgeInsetsDirectional
-                                                .fromSTEB(
-                                                0, 4, 0, 0),
-                                            child: Text(
-                                              _filteredData[index]
-                                              ['no_tlp'],
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                color: Colors.white,
-                                                fontSize:
-                                                screenWidth * 0.028,
-                                                fontWeight:
-                                                FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                            MainAxisAlignment
-                                                .spaceBetween,
-                                            children: [
-                                              Text(
-                                                _filteredData[index]
-                                                ['roles'],
-                                                style: TextStyle(
-                                                  fontFamily: 'Inter',
-                                                  color: Colors.white,
-                                                  fontSize:
-                                                  screenWidth *
-                                                      0.028,
-                                                  fontWeight:
-                                                  FontWeight.normal,
-                                                ),
-                                              ),
-                                              Text(
-                                                _filteredData[index]
-                                                ['status'],
-                                                style: TextStyle(
-                                                  fontFamily: 'Inter',
-                                                  color: Colors.white,
-                                                  fontSize:
-                                                  screenWidth *
-                                                      0.028,
-                                                  fontWeight:
-                                                  FontWeight.normal,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ),
+                                ),
+                              );
+                            }),
+                          ),
               ),
             ],
           ),

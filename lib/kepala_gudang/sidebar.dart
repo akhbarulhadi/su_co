@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:suco/kepala_gudang/history_order.dart';
 import 'package:suco/kepala_gudang/status_pesanan.dart';
 import 'package:suco/login.dart';
@@ -6,26 +7,38 @@ import 'package:suco/kepala_gudang/jadwal.dart';
 import 'package:suco/kepala_gudang/dashboard.dart';
 import 'package:suco/edit_profile.dart';
 import 'package:suco/kepala_gudang/setting.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/kepala_gudang/stock.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+
+final StreamController<void> _streamController =
+    StreamController<void>.broadcast();
 
 class SidebarDrawer extends StatefulWidget {
-  const SidebarDrawer({super.key});
+  const SidebarDrawer({Key? key});
 
   @override
   State<SidebarDrawer> createState() => SidebarDrawerState();
 }
 
 class SidebarDrawerState extends State<SidebarDrawer> {
-  String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
+  String selectedLanguage = 'IDN';
   String userName = '';
   String userRoles = '';
+  List _listData = [];
+  List _filteredData = [];
 
   @override
   void initState() {
     super.initState();
-    loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
-    loadUserInfo(); // Memuat informasi pengguna saat halaman dimulai
+    loadSelectedLanguage();
+    loadUserInfo();
+    _getData();
+    _streamController.stream.listen((_) {
+      _getData();
+    });
   }
 
   void loadSelectedLanguage() async {
@@ -43,10 +56,38 @@ class SidebarDrawerState extends State<SidebarDrawer> {
     });
   }
 
-  // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
+  Future<void> _getData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String authToken = prefs.getString('access_token') ?? '';
+
+      final response = await http.get(
+        Uri.parse(ApiConfig.getfoto),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data);
+        setState(() {
+          _listData = [data['user']];
+          _filteredData = _listData;
+        });
+
+        print(_filteredData);
+        print(_filteredData.isNotEmpty
+            ? _filteredData[0]['foto']
+            : 'No photo available');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
-      // Teks dalam bahasa Indonesia
       switch (text) {
         case 'Main Page':
           return 'Halaman Utama';
@@ -75,12 +116,10 @@ class SidebarDrawerState extends State<SidebarDrawer> {
           return text;
       }
     } else {
-      // Teks dalam bahasa Inggris (default)
       return text;
     }
   }
 
-  // Fungsi untuk membersihkan data di SharedPreferences
   Future<void> _clearUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -96,11 +135,24 @@ class SidebarDrawerState extends State<SidebarDrawer> {
             height: 40.0,
           ),
           ListTile(
-            leading: Image(
-              image: AssetImage('lib/assets/user.png'),
+            leading: CircleAvatar(
+              radius: 30.0,
+              backgroundColor: Color(0xFF7839CD),
+              child:
+                  _filteredData.isNotEmpty && _filteredData[0]['foto'] != null
+                      ? CircleAvatar(
+                          radius: 28.0,
+                          backgroundImage: NetworkImage(
+                            '${ApiConfig.baseURL}/storage/foto/${_filteredData[0]['foto']}',
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 28.0,
+                          backgroundColor: Colors.grey,
+                        ),
             ),
-            title: Text(userName), // Menampilkan nama pengguna
-            subtitle: Text(userRoles), // Menampilkan peran pengguna
+            title: Text(userName),
+            subtitle: Text(userRoles),
             onTap: () {
               Navigator.push(
                 context,

@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class EditProfile extends StatefulWidget {
-  const EditProfile({super.key});
+  const EditProfile({Key? key}) : super(key: key);
 
   @override
   State<EditProfile> createState() => EditProfilePage();
@@ -17,45 +17,16 @@ class EditProfile extends StatefulWidget {
 
 class EditProfilePage extends State<EditProfile> {
   File? _imageFile;
-  bool isDarkTheme = false; // Variabel untuk tema gelap
-  String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _alamatController = TextEditingController();
-  TextEditingController _noTlpController = TextEditingController();
-
-  Future<void> _getImageFromGallery() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.getImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      final image = File(pickedFile.path);
-      final savedImage = await saveImageToDeviceDirectory(image);
-      setState(() {
-        _imageFile = savedImage;
-      });
-    }
-  }
-
-  Future<File> saveImageToDeviceDirectory(File image) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final imagePath = directory.path + '/image.png';
-
-    await image.copy(imagePath);
-
-    return File(imagePath);
-  }
-
-  Future<void> openCamera() async {
-    final pickedImage =
-        await ImagePicker().getImage(source: ImageSource.camera);
-    setState(() {
-      _imageFile = File(pickedImage!.path);
-    });
-  }
+  bool isDarkTheme = false;
+  String selectedLanguage = 'IDN';
+  late TextEditingController _alamatController;
+  late TextEditingController _noTlpController;
 
   @override
   void initState() {
     super.initState();
+    _alamatController = TextEditingController();
+    _noTlpController = TextEditingController();
     loadDataProfile();
     loadThemePreference();
     loadSelectedLanguage();
@@ -63,11 +34,13 @@ class EditProfilePage extends State<EditProfile> {
 
   void loadDataProfile() async {
     try {
-      var token = 'access_token';
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String storedToken = prefs.getString('access_token') ?? '';
 
       var headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization':
+            'Bearer $storedToken', // Menggunakan storedToken bukan token
       };
 
       var response = await http.get(
@@ -79,14 +52,15 @@ class EditProfilePage extends State<EditProfile> {
         var data = jsonDecode(response.body);
 
         setState(() {
-          _emailController.text = data['email'];
-          _alamatController.text = data['alamat'];
-          _noTlpController.text = data['no_tlp'];
+          _alamatController.text = data['data']['alamat'];
+          _noTlpController.text = data['data']['no_tlp'];
         });
       } else {
+        // Handle kesalahan atau cetak pesan kesalahan
         print('Failed to load profile data: ${response.reasonPhrase}');
       }
     } catch (e) {
+      // Handle kesalahan atau cetak pesan kesalahan
       print("Error: $e");
     }
   }
@@ -105,66 +79,96 @@ class EditProfilePage extends State<EditProfile> {
     });
   }
 
-  String getTranslatedText(String text) {
-    if (selectedLanguage == 'IDN') {
-      switch (text) {
-        case 'Edit Profile':
-          return 'Ubah Profil';
-        case 'Name':
-          return 'Nama';
-        case 'Address':
-          return 'Alamat';
-        case 'Edit Profile Photo':
-          return 'Ganti Foto Profil';
-        case 'Upload':
-          return 'Unggah';
-        case 'Select Photo':
-          return 'Pilih Foto';
-        case 'Take a Photo':
-          return 'Ambil Gambar';
-        case 'No Image':
-          return 'Tidak Ada Gambar';
-        case 'Save':
-          return 'Simpan';
+Future<void> _getImageFromGallery() async {
+  final picker = ImagePicker();
+  final pickedFile = await picker.getImage(source: ImageSource.gallery);
 
-        default:
-          return text;
-      }
-    } else {
-      return text;
-    }
+  if (pickedFile != null) {
+    final image = File(pickedFile.path);
+    final savedImage = await saveImageToDeviceDirectory(image);
+    setState(() {
+      _imageFile = savedImage;
+    });
+  }
+}
+
+
+ Future<File> saveImageToDeviceDirectory(File image) async {
+  final directory = await getApplicationDocumentsDirectory();
+  final imagePath = directory.path + '/image.png';
+
+  // Menghapus file yang mungkin sudah ada
+  if (await File(imagePath).exists()) {
+    await File(imagePath).delete();
   }
 
-  Future<void> saveProfileChanges() async {
-    try {
-      var token = 'access_token';
+  // Menyalin gambar baru
+  await image.copy(imagePath);
 
-      var headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+  return File(imagePath);
+}
 
-      var body = {
-        'email': _emailController.text,
-        'alamat': _alamatController.text,
-        'no_tlp': _noTlpController.text,
-      };
 
-      var response = await http.post(
-        Uri.parse(ApiConfig.editProfile),
-        headers: headers,
-        body: jsonEncode(body),
+Future<void> openCamera() async {
+  final pickedImage = await ImagePicker().getImage(source: ImageSource.camera);
+  setState(() {
+    _imageFile = File(pickedImage!.path);
+  });
+}
+
+Future<void> saveProfileChanges() async {
+  try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String storedToken = prefs.getString('access_token') ?? '';
+
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $storedToken',
+    };
+
+    var body = {
+      'alamat': _alamatController.text,
+      'no_tlp': _noTlpController.text,
+    };
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse(ApiConfig.editProfile),
+    );
+
+    // Menggunakan MultipartRequest untuk mengirim file (foto)
+    if (_imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'foto',
+          _imageFile!.path,
+        ),
       );
-
-      if (response.statusCode == 200) {
-        // Berhasil menyimpan perubahan, tambahkan logika atau pindah ke halaman lain jika perlu
-      } else {
-        // Gagal menyimpan perubahan, tampilkan pesan kesalahan atau lakukan sesuatu yang sesuai
-      }
-    } catch (e) {
-      print("Error: $e");
     }
+
+    // Menambahkan data teks ke body request
+    request.fields.addAll(body);
+
+    // Menambahkan header ke request
+    request.headers.addAll(headers);
+
+    // Melakukan request HTTP
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      // Berhasil menyimpan perubahan, tambahkan logika atau pindah ke halaman lain jika perlu
+      print('Profile changes saved successfully');
+    } else {
+      // Gagal menyimpan perubahan, tampilkan pesan kesalahan atau lakukan sesuatu yang sesuai
+      print('Failed to save profile changes: ${response.reasonPhrase}');
+    }
+  } catch (e) {
+    // Handle kesalahan atau cetak pesan kesalahan
+    print("Error: $e");
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +194,7 @@ class EditProfilePage extends State<EditProfile> {
           title: Align(
             alignment: Alignment.center,
             child: Text(
-              getTranslatedText('Edit Profile'),
+              'Edit Profile',
               style: TextStyle(
                 fontSize: 20.0,
                 color: isDarkTheme ? Colors.white : Colors.black,
@@ -241,8 +245,7 @@ class EditProfilePage extends State<EditProfile> {
                             child: MaterialButton(
                               textColor:
                                   isDarkTheme ? Colors.white : Colors.black,
-                              child:
-                                  Text(getTranslatedText('Edit Profile Photo')),
+                              child: Text('Edit Profile Photo'),
                               onPressed: () {
                                 showModalBottomSheet(
                                   context: context,
@@ -267,8 +270,7 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text(getTranslatedText(
-                                                    'Select Photo')),
+                                                Text('Select Photo'),
                                               ],
                                             ),
                                           ),
@@ -285,8 +287,7 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text(getTranslatedText(
-                                                    'Take a Photo')),
+                                                Text('Take a Photo'),
                                               ],
                                             ),
                                           ),
@@ -300,24 +301,15 @@ class EditProfilePage extends State<EditProfile> {
                           ),
                           Center(
                             child: _imageFile == null
-                                ? Text(getTranslatedText('No Image'))
+                                ? Text('No Image')
                                 : Text(
                                     "Suco_Photo: ${_imageFile!.path.split('/').last}"),
-                          ),
-                          TextFormField(
-                            controller: _emailController,
-                            obscureText: false,
-                            decoration: InputDecoration(
-                              labelText: getTranslatedText('Email'),
-                              contentPadding: EdgeInsets.all(13),
-                            ),
-                            style: TextStyle(fontSize: 16),
                           ),
                           TextFormField(
                             controller: _alamatController,
                             obscureText: false,
                             decoration: InputDecoration(
-                              labelText: getTranslatedText('Alamat'),
+                              labelText: 'Alamat',
                               contentPadding: EdgeInsets.all(13),
                             ),
                             style: TextStyle(fontSize: 16),
@@ -338,7 +330,7 @@ class EditProfilePage extends State<EditProfile> {
                                 await saveProfileChanges();
                               },
                               child: Text(
-                                getTranslatedText('Save'),
+                                'Save',
                                 style: TextStyle(
                                   fontSize: 16,
                                 ),

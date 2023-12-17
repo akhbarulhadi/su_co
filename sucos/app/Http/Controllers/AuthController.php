@@ -16,13 +16,58 @@ class AuthController extends Controller
         $users = User::where('roles', '!=', 'admin')->get();
         $users = $users->map(function ($user) {
             if (!$user['foto']) {
-                $user['foto'] = asset('storage/public/default-profile.jpg');
+                $user['foto'] = asset('storage/public');
             }
             return $user;
         });
 
         return response()->json(['users' => $users]);
     }
+
+    public function updateStatus(Request $request)
+    {
+        try {
+            // Validasi request sesuai kebutuhan Anda
+            $request->validate([
+                'id_user' => 'required', // Sesuaikan dengan nama field ID pada model User
+                'status' => 'required|in:aktif,tidak-aktif',
+            ]);
+
+            // Cari pengguna berdasarkan ID
+            $user = User::find($request->id_user);
+
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            // Perbarui status pengguna
+            $user->update([
+                'status' => $request->status,
+            ]);
+
+            return response()->json(['message' => 'Status pengguna berhasil diperbarui', 'user' => $user], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getLoggedInUser()
+    {
+        $loggedInUser = auth()->user();
+
+        if (!$loggedInUser) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+
+        // Mengubah foto ke default jika tidak ada
+        if (!$loggedInUser['foto']) {
+            $loggedInUser['foto'] = asset('storage/public/default-profile.jpg');
+        }
+
+        return response()->json(['user' => $loggedInUser]);
+    }
+
+
     public function register(Request $request)
     {
         $request->validate([
@@ -101,23 +146,21 @@ class AuthController extends Controller
         try {
             $user = auth()->user(); // Pastikan pengguna sudah diautentikasi
             if (!$user) {
-                return response()->json(['error' => 'User not authenticated'], 401);
+                return response()->json(['error' => 'User tidak diautentikasi'], 401);
             }
 
-            // Sesuaikan dengan struktur data profil Anda
+            // Sesuaikan struktur data profil sesuai dengan model pengguna Anda
             $profileData = [
-                'email' => $user->email,
                 'alamat' => $user->alamat,
                 'no_tlp' => $user->no_tlp,
                 // Tambahkan properti lain sesuai kebutuhan
             ];
 
-            return response()->json($profileData, 200);
+            return response()->json(['data' => $profileData], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
     public function editProfile(Request $request)
     {
         try {
@@ -127,27 +170,41 @@ class AuthController extends Controller
                 return response()->json(['message' => 'User not found'], 404);
             }
 
-            $request->validate([
-                'email' => 'required|string',
-                'alamat' => 'required|string',
-                'no_tlp' => 'required|string',
+            // Periksa apakah ada file gambar yang diunggah
+            if ($request->hasFile('foto')) {
+                // Validasi file gambar
+                $request->validate([
+                    'foto' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'alamat' => 'required|string',
+                    'no_tlp' => 'required|string',
+                ]);
 
-            ]);
+                // Simpan foto yang baru di storage
+                $fotoPath = $request->file('foto')->store('public/foto');
+                $fotoFileName = basename($fotoPath);
 
+                // Periksa apakah ada foto lama
+                if ($user->foto) {
+                    // Jika ada, tambahkan nama foto yang baru ke daftar foto pengguna
+                    $user->foto = $fotoFileName;
+                } else {
+                    // Jika tidak ada, update informasi pengguna dengan foto yang baru
+                    $user->foto = $fotoFileName;
+                }
+            }
+
+            // Update informasi pengguna dengan alamat dan nomor telepon baru
             $user->update([
-                'email' => $request->email,
                 'alamat' => $request->alamat,
                 'no_tlp' => $request->no_tlp,
-
             ]);
-
-            $user->save();
 
             return response()->json(['message' => 'Profil berhasil diperbarui', 'user' => $user], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
 
 
     public function changePassword(Request $request)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:suco/api_config.dart';
 import 'package:suco/login.dart';
 import 'package:suco/marketing/dashboard.dart';
 import 'package:suco/marketing/data_client.dart';
@@ -10,6 +11,8 @@ import 'package:suco/marketing/pesanan.dart';
 import 'package:suco/marketing/setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:suco/marketing/stock.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SidebarDrawer extends StatefulWidget {
   const SidebarDrawer({super.key});
@@ -22,12 +25,15 @@ class SidebarDrawerState extends State<SidebarDrawer> {
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   String userName = '';
   String userRoles = '';
+  List _listData = [];
+  List _filteredData = [];
 
   @override
   void initState() {
     super.initState();
     loadSelectedLanguage(); // Muat bahasa yang dipilih saat halaman dimulai
     loadUserInfo(); // Memuat informasi pengguna saat halaman dimulai
+    _getData();
   }
 
   void loadSelectedLanguage() async {
@@ -43,6 +49,39 @@ class SidebarDrawerState extends State<SidebarDrawer> {
       userName = prefs.getString('nama') ?? '';
       userRoles = prefs.getString('roles') ?? '';
     });
+  }
+
+  Future<void> _getData() async {
+    try {
+      // Mengambil token dari SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String authToken = prefs.getString('access_token') ??
+          ''; // Gantilah 'authToken' sesuai dengan kunci yang sesuai di SharedPreferences
+
+      final response = await http.get(
+        Uri.parse(ApiConfig.getfoto),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data); // Cetak data ke konsol
+        setState(() {
+          _listData = [data['user']]; // Tambahkan data pengguna ke _listData
+          _filteredData = _listData;
+        });
+
+        // Tambahkan print statement untuk memeriksa data dan URL gambar di sini
+        print(_filteredData);
+        print(_filteredData.isNotEmpty
+            ? _filteredData[0]['foto']
+            : 'No photo available');
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 
   // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
@@ -94,8 +133,21 @@ class SidebarDrawerState extends State<SidebarDrawer> {
             height: 40.0,
           ),
           ListTile(
-            leading: Image(
-              image: AssetImage('lib/assets/user.png'),
+            leading: CircleAvatar(
+              radius: 30.0,
+              backgroundColor: Color(0xFF7839CD),
+              child:
+                  _filteredData.isNotEmpty && _filteredData[0]['foto'] != null
+                      ? CircleAvatar(
+                          radius: 28.0,
+                          backgroundImage: NetworkImage(
+                            '${ApiConfig.baseURL}/storage/foto/${_filteredData[0]['foto']}',
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 28.0,
+                          backgroundColor: Colors.grey,
+                        ),
             ),
             title: Text(userName), // Menampilkan nama pengguna
             subtitle: Text(userRoles), // Menampilkan peran pengguna
