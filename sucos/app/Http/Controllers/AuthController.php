@@ -184,7 +184,7 @@ class AuthController extends Controller
             if ($request->hasFile('foto')) {
                 // Validasi file gambar
                 $request->validate([
-                    'foto' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'foto' => 'image|mimes:jpeg,png,jpg,gif',
                     'alamat' => 'required|string',
                     'no_tlp' => 'required|string',
                 ]);
