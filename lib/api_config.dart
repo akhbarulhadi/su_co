@@ -3,7 +3,7 @@
 // import 'package:suco/api_config.dart';
 // Uri.parse(ApiConfig.namaFile),
 class ApiConfig {
-  static const String baseURL = 'http://10.132.93.46:8000'; // Ganti dengan URL API Anda
+  static const String baseURL = 'http://192.168.138.171:8000'; // Ganti dengan URL API Anda
   static const String baseUrl = '$baseURL/api'; // Ganti dengan URL API Anda
   static const String login = '$baseUrl/login';
   static const String getProfile = '$baseUrl/get-profile';

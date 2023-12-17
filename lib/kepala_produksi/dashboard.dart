@@ -24,6 +24,7 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List<Map<String, dynamic>> produksiData = [];
   List<bool> isItemClicked = [];
+    bool _isloading = true;
 
   @override
   void initState() {
@@ -382,9 +383,10 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
                         ),
                         SizedBox(height: bodyHeight * 0.01),
                         produksiData.isEmpty
-                            ? Center(
-                          child: CircularProgressIndicator(),
-                        )
+                                ? Center(
+                                    child: Text(
+                                        getTranslatedText('No Production')),
+                                  )
                             : ListView.builder(
                           shrinkWrap: true,
                           physics:

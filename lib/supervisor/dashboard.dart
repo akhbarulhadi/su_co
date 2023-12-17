@@ -111,7 +111,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
 
   Future _getdatapesanan() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.pesanan_dashboard_supervisor));
+      final response =
+          await http.get(Uri.parse(ApiConfig.pesanan_dashboard_supervisor));
       print(response.body); // Cetak respons ke konsol
 
       if (response.statusCode == 200) {
@@ -148,7 +149,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
 
   Future<void> loadProduksi() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.get_production_supervisor_dashboard));
+      final response = await http
+          .get(Uri.parse(ApiConfig.get_production_supervisor_dashboard));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -197,7 +199,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/success-tick-dribbble.gif',
+              Image.asset(
+                'lib/assets/success-tick-dribbble.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -244,7 +247,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/failed.gif',
+              Image.asset(
+                'lib/assets/failed.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -512,7 +516,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) => LaporanWidget()));
+                                                    builder: (context) =>
+                                                        LaporanWidget()));
                                           },
                                           child: Text(
                                             getTranslatedText('See Detail'),
@@ -880,32 +885,41 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                           ),
                         ),
                         SizedBox(height: bodyHeight * 0.01),
-                        produksiData.isEmpty
+                        _isloading
                             ? Center(
-                          child: CircularProgressIndicator(),
-                        )
-                            : ListView.builder(
-                          shrinkWrap: true,
-                          physics:
-                          NeverScrollableScrollPhysics(),
-                          itemCount: produksiData.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final item = produksiData[index];
-                            return GestureDetector(
-                              onTap: () {
-                                if (!isItemClicked[index]) {
-                                  print('Tapped index: $index');
-                                  _showConfirmationDialog2(context,
-                                      item['id_produksi'], 'Sudah Sesuai', index);
-                                } else {
-                                  print(
-                                      'Item sudah diklik dan status sudah sesuai');
-                                }
-                              },
-                              child: buildProductionItem(item, screenWidth, index),
-                            );
-                          },
-                        ),
+                                child: CircularProgressIndicator(),
+                              )
+                            : produksiData.isEmpty
+                                ? Center(
+                                    child: Text(
+                                        getTranslatedText('No Production')),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: produksiData.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      final item = produksiData[index];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          if (!isItemClicked[index]) {
+                                            print('Tapped index: $index');
+                                            _showConfirmationDialog2(
+                                                context,
+                                                item['id_produksi'],
+                                                'Sudah Sesuai',
+                                                index);
+                                          } else {
+                                            print(
+                                                'Item sudah diklik dan status sudah sesuai');
+                                          }
+                                        },
+                                        child: buildProductionItem(
+                                            item, screenWidth, index),
+                                      );
+                                    },
+                                  ),
                       ],
                     ),
                   ),
@@ -917,7 +931,9 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
       ),
     );
   }
-  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth, int index) {
+
+  Widget buildProductionItem(
+      Map<String, dynamic> item, double screenWidth, int index) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
 
@@ -1101,5 +1117,4 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
       ),
     );
   }
-
 }
