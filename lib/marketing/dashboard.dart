@@ -389,10 +389,14 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Ubah Harga';
         case 'Save':
           return 'Simpan';
-        case '':
-          return '';
-        case '':
-          return '';
+        case 'No Order':
+          return 'Tidak ada pesanan';
+        case 'No Stock':
+          return 'Tidak ada stok';
+        case 'Change Price':
+          return 'Ubah Harga';
+        case 'Save':
+          return 'Simpan';
         case '':
           return '';
         case '':

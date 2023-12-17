@@ -294,6 +294,14 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderWarehouse> {
           return 'Jenis Pembayaran :';
         case 'Price :':
           return 'Harga :';
+        case 'Available Items':
+          return 'Ketersediaan Barang';
+        case 'Product Name':
+          return 'Nama Produk';
+        case 'Stock':
+          return 'Tersedia';
+        case 'Price':
+          return 'Harga';
         case '':
           return '';
         case '':

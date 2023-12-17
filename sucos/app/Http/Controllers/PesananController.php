@@ -13,7 +13,7 @@ class PesananController extends Controller
     {
         $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
             ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
-            ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
+            ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.kode_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
             ->whereNotIn('pesanan.status_pesanan', ['Selesai', 'Batal'])
             ->get();
         return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);

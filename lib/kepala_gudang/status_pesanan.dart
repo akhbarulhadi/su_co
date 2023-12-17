@@ -105,6 +105,45 @@ class _LaporanWidgetState extends State<StatusPesanan> {
       await _updateStatus(index, _listdata[index]['id_pemesanan'], 'Siap Diantar');
     } else {
       // Gagal mengurangkan jumlah_pesanan
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText('Order quantity exceeds stock'),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
       print('Gagal mengurangkan jumlah_pesanan');
     }
   }
@@ -306,8 +345,16 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           return 'Harga :';
         case 'Deadline :':
           return 'Batas Tanggal :';
-        case '':
-          return '';
+        case 'The order has been processed':
+          return 'Pesanan sudah selesai diproses';
+        case 'Ready To Be Delivered ?':
+          return 'Siap Diantar ?';
+        case 'Yes':
+          return 'Ya';
+        case 'No':
+          return 'Tidak';
+        case 'Order quantity exceeds stock':
+          return 'Jumlah pesanan melebihi stok';
         case '':
           return '';
 
@@ -317,6 +364,30 @@ class _LaporanWidgetState extends State<StatusPesanan> {
     } else {
       // Teks dalam bahasa Inggris (default)
       return text;
+    }
+  }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+        case 'Menunggu':
+          return 'Waiting';
+        case 'Siap Diantar':
+          return 'Ready Delivered';
+        case '':
+          return '';
+        case '':
+          return '';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
     }
   }
 
@@ -683,12 +754,12 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           title: Center(
-                                            child: Text('Pesanan sudah selesai diproses'),
+                                            child: Text(getTranslatedText('The order has been processed')),
                                           ),
                                           content: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Text('Siap Diantar ?'),
+                                              Text(getTranslatedText('Ready To Be Delivered ?')),
                                             ],
                                           ),
                                           actions: [
@@ -701,7 +772,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                                 await _updateProductAvailability(index, productId, jumlahPesanan);
                                                 },
                                               child: Text(
-                                                'Ya',
+                                                getTranslatedText('Yes'),
                                                 style: TextStyle(
                                                   color: Colors.green,
                                                 ),
@@ -713,7 +784,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                                 Navigator.of(context).pop();
                                               },
                                               child: Text(
-                                                'Tidak',
+                                                getTranslatedText('No'),
                                                 style: TextStyle(
                                                   color: Colors.red,
                                                 ),
@@ -807,8 +878,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                                           ),
                                                           child: Center(
                                                             child: Text(
-                                                              _filteredData[index][
-                                                                  'status_pesanan'],
+                                                              getTranslatedDatabase(_filteredData[index][
+                                                                  'status_pesanan']),
                                                               style: TextStyle(
                                                                 fontFamily:
                                                                     'Inter',

@@ -258,6 +258,24 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
           return 'Jenis Pembayaran :';
         case 'Price :':
           return 'Harga :';
+        case 'Product Name':
+          return 'Nama Produk';
+        case 'Stock':
+          return 'Tersedia';
+        case 'Price':
+          return 'Harga';
+        case 'Production':
+          return 'Produksi';
+        case 'Not yet added':
+          return 'Belum ditambahkan';
+        case 'Production is in order':
+          return 'Produksi sudah sesuai';
+        case 'Send to Stock?':
+          return 'Kirim Ke Stock ?';
+        case 'Yes':
+          return 'Ya';
+        case 'No':
+          return 'Tidak';
         case '':
           return '';
         case '':
@@ -282,8 +300,14 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
           return 'Waiting';
         case 'Siap Diantar':
           return 'Ready Delivered';
-        case '':
-          return '';
+        case 'sudah dibuat':
+          return 'already made';
+        case 'belum selesai':
+          return 'not finished yet';
+        case 'sudah sesuai':
+          return 'already appropriate';
+        case 'selesai':
+          return 'finished';
         case '':
           return '';
       // Tambahkan kases lain jika diperlukan
@@ -575,12 +599,12 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         title: Center(
-                                          child: Text('Produksi sudah sesuai'),
+                                          child: Text(getTranslatedText('Production is in order')),
                                         ),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Text('Kirim Ke Stock ?'),
+                                            Text(getTranslatedText('Send to Stock?')),
                                           ],
                                         ),
                                         actions: [
@@ -593,7 +617,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                               await _updateProductAvailability(index, productId, jumlahProduksi);
                                             },
                                             child: Text(
-                                              'Ya',
+                                              getTranslatedText('Yes'),
                                               style: TextStyle(
                                                 color: Colors.green,
                                               ),
@@ -605,7 +629,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                               Navigator.of(context).pop();
                                             },
                                             child: Text(
-                                              'Tidak',
+                                              getTranslatedText('No'),
                                               style: TextStyle(
                                                 color: Colors.red,
                                               ),
@@ -742,7 +766,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                               Padding(
                                                 padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                                                 child: Text(
-                                                  _listdata[index]['status_produksi'],
+                                                  getTranslatedDatabase(_listdata[index]['status_produksi']),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color(0xFFFFFFFE),

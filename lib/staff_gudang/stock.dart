@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -207,6 +208,23 @@ class StockState extends State<Stock> {
     }
   }
 
+  bool isDateInRange(String date, String dateRange) {
+    List<String> dateRangeArray = dateRange.split('/');
+    if (dateRangeArray.length == 2) {
+      String startDateString = dateRangeArray[0].trim();
+      String endDateString = dateRangeArray[1].trim();
+
+      DateTime startDate = DateTime.parse(startDateString);
+      DateTime endDate = DateTime.parse(endDateString).add(Duration(days: 1));
+
+      DateTime dateToCheck = DateTime.parse(date);
+
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
+    }
+    return false;
+  }
+
+
 // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
     if (selectedLanguage == 'IDN') {
@@ -242,6 +260,24 @@ class StockState extends State<Stock> {
           return 'Simpan';
         case 'Not yet added':
           return 'Belum ditambahkan';
+        case '+ Product':
+          return '+ Produksi';
+        case 'Add Product':
+          return 'Tambah Produk';
+        case 'Product Name':
+          return 'Nama Produk';
+        case 'Number Of Products':
+          return 'Jumlah Produk';
+        case 'Types Of Product':
+          return 'Jenis Produk';
+        case 'Create Product':
+          return 'Buat Produk';
+        case 'Cancel':
+          return 'Batal';
+        case '':
+          return '';
+        case '':
+          return '';
         case '':
           return '';
 
@@ -351,14 +387,23 @@ class StockState extends State<Stock> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        // Customize this condition based on your search criteria
-                                        return item['nama_produk']
-                                                .toLowerCase()
-                                                .contains(
-                                                    query.toLowerCase()) ||
-                                            item['jumlah_produk']
-                                                .toLowerCase()
-                                                .contains(query.toLowerCase());
+                                        String lowerCaseQuery = query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan nama_perusahaan
+                                        bool matchesname = item['nama_produk'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                            isDateInRange(
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                              lowerCaseQuery,
+                                            );
+                                        bool matchesBareng = matchesname && matchesupdated_at;
+                                        bool matchesBareng2 = matchesname && matchesupdated_at2;
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
                                       }).toList();
                                     });
                                   },
@@ -385,7 +430,6 @@ class StockState extends State<Stock> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
-                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
@@ -430,7 +474,7 @@ class StockState extends State<Stock> {
                                       keyboardType: TextInputType.text,
                                       decoration: InputDecoration(
                                           labelText:
-                                              getTranslatedText('Nama Produk')),
+                                              getTranslatedText('Product Name')),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Isi Datanya';
@@ -443,7 +487,7 @@ class StockState extends State<Stock> {
                                       keyboardType: TextInputType.number,
                                       decoration: InputDecoration(
                                           labelText: getTranslatedText(
-                                              'Jumlah Produk')),
+                                              'Number Of Products')),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Isi Datanya';
@@ -456,7 +500,7 @@ class StockState extends State<Stock> {
                                       keyboardType: TextInputType.text,
                                       decoration: InputDecoration(
                                           labelText: getTranslatedText(
-                                              'Jenis Produk')),
+                                              'Types Of Products')),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Isi Datanya';
@@ -478,7 +522,7 @@ class StockState extends State<Stock> {
                                             createProduk();
                                           }
                                         },
-                                        child: Text('Buat Produk'),
+                                        child: Text(getTranslatedText('Create Product')),
                                         style: ElevatedButton.styleFrom(
                                           minimumSize: Size(100, 40),
                                           padding: EdgeInsets.all(10),
@@ -495,7 +539,7 @@ class StockState extends State<Stock> {
                                         onPressed: () {
                                           Navigator.pop(context);
                                         },
-                                        child: Text('Batal'),
+                                        child: Text(getTranslatedText('Cancel')),
                                         style: TextButton.styleFrom(
                                           minimumSize: Size(100, 40),
                                           padding: EdgeInsets.all(10),
@@ -518,7 +562,7 @@ class StockState extends State<Stock> {
                         );
                       },
                       child: Text(
-                        getTranslatedText('+ Add Product'),
+                        getTranslatedText('+ Product'),
                         style: TextStyle(
                           fontSize: 15,
                         ),

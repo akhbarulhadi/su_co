@@ -16,15 +16,17 @@ class DashboardPageLeaderProduction extends StatefulWidget {
   const DashboardPageLeaderProduction({Key? key}) : super(key: key);
 
   @override
-  DashboardPageLeaderProductionState createState() => DashboardPageLeaderProductionState();
+  DashboardPageLeaderProductionState createState() =>
+      DashboardPageLeaderProductionState();
 }
 
-class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduction> {
+class DashboardPageLeaderProductionState
+    extends State<DashboardPageLeaderProduction> {
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List<Map<String, dynamic>> produksiData = [];
   List<bool> isItemClicked = [];
-    bool _isloading = true;
+  bool _isloading = true;
 
   @override
   void initState() {
@@ -60,7 +62,8 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
 
   Future<void> loadProduksi() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.get_production_leader_dashboard));
+      final response =
+          await http.get(Uri.parse(ApiConfig.get_production_leader_dashboard));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -68,10 +71,7 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
         setState(() {
           produksiData = List.from(data['produksi']);
           isItemClicked = List.generate(produksiData.length, (index) => false);
-
-          produksiData.forEach((item) {
-            item['tanggal_produksi'] = _formatDate(item['tanggal_produksi']);
-          });
+          _isloading = false;
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -113,7 +113,8 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/success-tick-dribbble.gif',
+              Image.asset(
+                'lib/assets/success-tick-dribbble.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -160,7 +161,8 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/failed.gif',
+              Image.asset(
+                'lib/assets/failed.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -212,7 +214,7 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
               child: ListBody(
                 children: <Widget>[
                   Text(getTranslatedText(
-                      'Are you sure you want to change the production status?')),
+                      'Are you sure you want to change this production status?')),
                 ],
               ),
             ),
@@ -226,7 +228,7 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
                 },
               ),
               TextButton(
-                child: Text(getTranslatedText('Cancle')),
+                child: Text(getTranslatedText('Cancel')),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -237,7 +239,6 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
       );
     }
   }
-
 
   // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
@@ -276,6 +277,12 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
           return 'Menunggu';
         case 'Edit':
           return 'Ubah';
+        case 'Are you sure you want to change this production status?':
+          return 'Apakah Anda yakin ingin mengubah status produksi ini?';
+        case 'Yes':
+          return 'Ya';
+        case 'Cancel':
+          return 'Batal';
         case '':
           return '';
 
@@ -298,8 +305,14 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
           return 'Waiting';
         case 'Siap Diantar':
           return 'Ready Delivered';
-        case '':
-          return '';
+        case 'sudah dibuat':
+          return 'already made';
+        case 'belum selesai':
+          return 'not finished yet';
+        case 'sudah sesuai':
+          return 'already appropriate';
+        case 'selesai':
+          return 'finished';
         case '':
           return '';
       // Tambahkan kases lain jika diperlukan
@@ -315,7 +328,7 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData =
-    isDarkTheme ? ThemeData.dark() : ThemeData.light();
+        isDarkTheme ? ThemeData.dark() : ThemeData.light();
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -326,7 +339,7 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
           color: isDarkTheme
               ? Colors.white
               : Colors
-              .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
+                  .black), // Mengatur ikon (misalnya, tombol back) menjadi hitam
       title: Align(
         alignment: Alignment.center,
         child: Text(
@@ -377,26 +390,31 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
                             fontFamily: 'Inter',
                             color: Colors.black,
                             fontSize:
-                            screenWidth * 0.05, // Ukuran teks pada tombol
+                                screenWidth * 0.05, // Ukuran teks pada tombol
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(height: bodyHeight * 0.01),
-                        produksiData.isEmpty
+                        _isloading
+                            ? Center(
+                                child: CircularProgressIndicator(),
+                              )
+                            : produksiData.isEmpty
                                 ? Center(
                                     child: Text(
                                         getTranslatedText('No Production')),
                                   )
-                            : ListView.builder(
-                          shrinkWrap: true,
-                          physics:
-                          NeverScrollableScrollPhysics(),
-                          itemCount: produksiData.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final item = produksiData[index];
-                            return buildProductionItem(item, screenWidth, index);
-                          },
-                        ),
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: produksiData.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      final item = produksiData[index];
+                                      return buildProductionItem(
+                                          item, screenWidth, index);
+                                    },
+                                  ),
                       ],
                     ),
                   ),
@@ -409,7 +427,8 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
     );
   }
 
-  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth, int index) {
+  Widget buildProductionItem(
+      Map<String, dynamic> item, double screenWidth, int index) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -557,7 +576,7 @@ class DashboardPageLeaderProductionState extends State<DashboardPageLeaderProduc
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          item['status_produksi'] ?? '',
+                          getTranslatedDatabase(item['status_produksi'] ?? ''),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),

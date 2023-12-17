@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -74,6 +75,23 @@ class StockState extends State<Stock> {
       print(e);
     }
   }
+
+  bool isDateInRange(String date, String dateRange) {
+    List<String> dateRangeArray = dateRange.split('/');
+    if (dateRangeArray.length == 2) {
+      String startDateString = dateRangeArray[0].trim();
+      String endDateString = dateRangeArray[1].trim();
+
+      DateTime startDate = DateTime.parse(startDateString);
+      DateTime endDate = DateTime.parse(endDateString).add(Duration(days: 1));
+
+      DateTime dateToCheck = DateTime.parse(date);
+
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
+    }
+    return false;
+  }
+
 
 // Fungsi untuk mendapatkan teks berdasarkan bahasa yang dipilih
   String getTranslatedText(String text) {
@@ -219,14 +237,23 @@ class StockState extends State<Stock> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        // Customize this condition based on your search criteria
-                                        return item['nama_produk']
-                                                .toLowerCase()
-                                                .contains(
-                                                    query.toLowerCase()) ||
-                                            item['harga_produk']
-                                                .toLowerCase()
-                                                .contains(query.toLowerCase());
+                                        String lowerCaseQuery = query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan nama_perusahaan
+                                        bool matchesname = item['nama_produk'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                            isDateInRange(
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                              lowerCaseQuery,
+                                            );
+                                        bool matchesBareng = matchesname && matchesupdated_at;
+                                        bool matchesBareng2 = matchesname && matchesupdated_at2;
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
                                       }).toList();
                                     });
                                   },
@@ -253,7 +280,6 @@ class StockState extends State<Stock> {
                                         topRight: Radius.circular(4.0),
                                       ),
                                     ),
-                                    suffixIcon: null,
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',

@@ -79,21 +79,21 @@ class _LaporanWidgetState extends State<LaporanWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Konfirmasi"),
-          content: Text("Apakah Anda yakin ingin membuat jadwal?"),
+          title: Text(getTranslatedText("Confirmation")),
+          content: Text("Are you sure you want to create a schedule?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup dialog konfirmasi
                 _navigateToSchedulePage(idproduct, productName, jumlahPesanan);
               },
-              child: Text("Ya"),
+              child: Text(getTranslatedText("Yes")),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup dialog konfirmasi
               },
-              child: Text("Tidak"),
+              child: Text(getTranslatedText("No")),
             ),
           ],
         );
@@ -235,6 +235,18 @@ class _LaporanWidgetState extends State<LaporanWidget> {
           return 'Harga :';
         case 'Deadline :':
           return 'Batas Tanggal :';
+        case 'Are you sure you want to create a schedule?':
+          return 'Apakah Anda yakin ingin membuat jadwal?';
+        case 'Yes':
+          return 'Ya';
+        case 'No':
+          return 'Tidak';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
         case '':
           return '';
         case '':
@@ -246,6 +258,36 @@ class _LaporanWidgetState extends State<LaporanWidget> {
     } else {
       // Teks dalam bahasa Inggris (default)
       return text;
+    }
+  }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+        case 'Menunggu':
+          return 'Waiting';
+        case 'Siap Diantar':
+          return 'Ready Delivered';
+        case 'sudah dibuat':
+          return 'already made';
+        case 'belum selesai':
+          return 'not finished yet';
+        case 'sudah sesuai':
+          return 'already appropriate';
+        case 'selesai':
+          return 'finished';
+        case '':
+          return '';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
     }
   }
 
@@ -741,8 +783,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                           ),
                                                           child: Center(
                                                             child: Text(
-                                                              _filteredData[index][
-                                                                  'status_pesanan'],
+                                                              getTranslatedDatabase(_filteredData[index][
+                                                                  'status_pesanan']),
                                                               style: TextStyle(
                                                                 fontFamily:
                                                                     'Inter',

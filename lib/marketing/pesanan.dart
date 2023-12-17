@@ -278,10 +278,26 @@ class PesananState extends State<Pesanan> {
           return 'Batas Tanggal';
         case 'No Data Client':
           return 'Tidak Ada Data Klien';
-        case '':
-          return '';
-        case '':
-          return '';
+        case '+ Client':
+          return '+ Klien';
+        case 'Click Here to add an order':
+          return 'Klik Disini untuk menambah pesanan';
+        case 'Make an Order':
+          return 'Buat Pesanan';
+        case 'Client Name':
+          return 'Nama Klien';
+        case 'Select Product':
+          return 'Pilih Produk';
+        case 'Order Quantity':
+          return 'Jumlah Pesanan';
+        case 'Total Price':
+          return 'Harga Total';
+        case 'Type of payment':
+          return 'Jenis Pembayaran';
+        case 'Deadline':
+          return 'Batas Tanggal';
+        case 'Cancel':
+          return 'Batal';
         case '':
           return '';
         case '':
@@ -434,7 +450,7 @@ class PesananState extends State<Pesanan> {
                               builder: (context) => DataClient()));
                     },
                     child: Text(
-                      getTranslatedText('+ Add Client'),
+                      getTranslatedText('+ Client'),
                       style: TextStyle(
                         fontSize: 15,
                       ),
@@ -687,7 +703,7 @@ class PesananState extends State<Pesanan> {
                                                             child:
                                                             AlertDialog(
                                                               title: Text(
-                                                                  'Buat Pesanan'),
+                                                                  getTranslatedText('Make an Order')),
                                                               content:
                                                               Column(
                                                                 mainAxisSize:
@@ -732,7 +748,7 @@ class PesananState extends State<Pesanan> {
                                                                     decoration:
                                                                     InputDecoration(
                                                                       labelText:
-                                                                      'Nama Klien',
+                                                                      getTranslatedText('CLient Name'),
                                                                       contentPadding:
                                                                       EdgeInsets.all(13),
                                                                     ),
@@ -767,7 +783,7 @@ class PesananState extends State<Pesanan> {
                                                                       });
                                                                     },
                                                                     decoration: InputDecoration(
-                                                                      labelText: 'Select Product',
+                                                                      labelText: getTranslatedText('Select Product'),
                                                                     ),
                                                                   ),
                                                                   TextFormField(
@@ -786,7 +802,7 @@ class PesananState extends State<Pesanan> {
                                                                     },
                                                                     obscureText: false,
                                                                     decoration: InputDecoration(
-                                                                      labelText: 'Jumlah Pesanan',
+                                                                      labelText: getTranslatedText('Order Quantity'),
                                                                       contentPadding: EdgeInsets.all(13),
                                                                     ),
                                                                     style: TextStyle(fontSize: 16),
@@ -807,7 +823,7 @@ class PesananState extends State<Pesanan> {
                                                                     InputDecoration(
                                                                       icon: Text('Rp'),
                                                                       labelText:
-                                                                      'Harga Total',
+                                                                      getTranslatedText('Total Price'),
                                                                       contentPadding:
                                                                       EdgeInsets.all(13),
                                                                     ),
@@ -831,7 +847,7 @@ class PesananState extends State<Pesanan> {
                                                                     decoration:
                                                                     InputDecoration(
                                                                       labelText:
-                                                                      'Jenis Pembayaran',
+                                                                      getTranslatedText('Type of payment'),
                                                                       contentPadding:
                                                                       EdgeInsets.all(13),
                                                                     ),
@@ -905,7 +921,7 @@ class PesananState extends State<Pesanan> {
                                                                         }
                                                                       },
                                                                       child:
-                                                                      Text('Buat Pesanan'),
+                                                                      Text(getTranslatedText('Make an Order')),
                                                                       style:
                                                                       ElevatedButton.styleFrom(
                                                                         minimumSize:
@@ -928,7 +944,7 @@ class PesananState extends State<Pesanan> {
                                                                         Navigator.pop(context);
                                                                       },
                                                                       child:
-                                                                      Text('Batal'),
+                                                                      Text(getTranslatedText('Cancel')),
                                                                       style:
                                                                       TextButton.styleFrom(
                                                                         minimumSize:
@@ -956,7 +972,7 @@ class PesananState extends State<Pesanan> {
                                                   );
                                                 },
                                                 child: Text(
-                                                    'Klik Disisni untuk menambah pesanan',
+                                                    getTranslatedText('Click Here to add an order'),
                                                 style: TextStyle(color: Colors.white),),
                                               ),
                                             ),

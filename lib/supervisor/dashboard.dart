@@ -69,21 +69,21 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Konfirmasi"),
-          content: Text("Apakah Anda yakin ingin membuat jadwal?"),
+          title: Text(getTranslatedText("Confirmation")),
+          content: Text(getTranslatedText("Are you sure you want to create a schedule?")),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup dialog konfirmasi
                 _navigateToSchedulePage(idproduct, productName, jumlahPesanan);
               },
-              child: Text("Ya"),
+              child: Text(getTranslatedText("Yes")),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup dialog konfirmasi
               },
-              child: Text("Tidak"),
+              child: Text(getTranslatedText("No")),
             ),
           ],
         );
@@ -297,18 +297,18 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
             // Perbarui logika untuk mencegah pembaruan status jika status sudah berubah
             bool canUpdateStatus = !isItemClicked[index];
             return AlertDialog(
-              title: Text('Konfirmasi'),
+              title: Text(getTranslatedText('Confirmation')),
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[
                     Text(
-                        'Apakah Anda yakin ingin mengubah status produksi ini?'),
+                        getTranslatedText('Are you sure you want to change this production status?')),
                   ],
                 ),
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Ya'),
+                  child: Text(getTranslatedText('Yes')),
                   onPressed: () async {
                     if (!_isDisposed && canUpdateStatus) {
                       await _updateStatus(
@@ -317,7 +317,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                   },
                 ),
                 TextButton(
-                  child: Text('Batal'),
+                  child: Text(getTranslatedText('Cancel')),
                   onPressed: () {
                     if (!_isDisposed) {
                       Navigator.of(context).pop();
@@ -371,6 +371,18 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           return 'Menunggu';
         case 'Edit':
           return 'Ubah';
+        case 'Are you sure you want to change this production status?':
+          return 'Apakah Anda yakin ingin mengubah status produksi ini?';
+        case 'Yes':
+          return 'Ya';
+        case 'Cancel':
+          return 'Batal';
+        case 'Are you sure you want to create a schedule?':
+          return 'Apakah Anda yakin ingin membuat jadwal?';
+        case 'No':
+          return 'Tidak';
+        case '':
+          return '';
         case '':
           return '';
 
@@ -393,11 +405,17 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           return 'Waiting';
         case 'Siap Diantar':
           return 'Ready Delivered';
+        case 'sudah dibuat':
+          return 'already made';
+        case 'belum selesai':
+          return 'not finished yet';
+        case 'sudah sesuai':
+          return 'already appropriate';
+        case 'selesai':
+          return 'finished';
         case '':
           return '';
-        case '':
-          return '';
-        // Tambahkan kases lain jika diperlukan
+      // Tambahkan kases lain jika diperlukan
         default:
           return status;
       }
@@ -1085,7 +1103,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          item['status_produksi'] ?? '',
+                          getTranslatedDatabase(item['status_produksi'] ?? ''),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),

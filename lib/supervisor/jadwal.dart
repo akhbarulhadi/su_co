@@ -224,13 +224,13 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 child: ListBody(
                   children: <Widget>[
                     Text(
-                        'Apakah Anda yakin ingin mengubah status produksi ini?'),
+                        getTranslatedText('Are you sure you want to change this production status?')),
                   ],
                 ),
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Ya'),
+                  child: Text(getTranslatedText('Yes')),
                   onPressed: () async {
                     if (!_isDisposed && canUpdateStatus) {
                       await _updateStatus(
@@ -239,7 +239,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                   },
                 ),
                 TextButton(
-                  child: Text('Batal'),
+                  child: Text(getTranslatedText('Cancel')),
                   onPressed: () {
                     if (!_isDisposed) {
                       Navigator.of(context).pop();
@@ -253,6 +253,85 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           }
         },
       );
+    }
+  }
+
+  String getTranslatedText(String text) {
+    if (selectedLanguage == 'IDN') {
+      switch (text) {
+        case 'Main Page':
+          return 'Halaman Utama';
+        case 'All':
+          return 'Semua';
+        case 'Daily':
+          return 'Harian';
+        case 'Weekly':
+          return 'Mingguan';
+        case 'Monthly':
+          return 'Bulanan';
+        case 'Yearly':
+          return 'Tahunan';
+        case 'Income':
+          return 'Pemasukan';
+        case 'Client Order List':
+          return 'Daftar Pesanan Klien';
+        case 'Activity':
+          return 'Kegiatan';
+        case 'Are you sure you want to change this production status?':
+          return 'Apakah Anda yakin ingin mengubah status produksi ini?';
+        case 'Yes':
+          return 'Ya';
+        case 'Cancel':
+          return 'Batal';
+        case 'Confirmation':
+          return 'Konfirmasi';
+        case 'Ready Delivered':
+          return 'Siap Diantar';
+        case 'already made':
+          return 'sudah dibuat';
+        case 'not finished yet':
+          return 'belum selesai';
+        case 'already appropriate':
+          return 'sudah sesuai';
+        case 'finished':
+          return 'selesai';
+        case '':
+          return '';
+        default:
+          return text;
+      }
+    } else {
+      return text;
+    }
+  }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+        case 'Menunggu':
+          return 'Waiting';
+        case 'Siap Diantar':
+          return 'Ready Delivered';
+        case 'sudah dibuat':
+          return 'already made';
+        case 'belum selesai':
+          return 'not finished yet';
+        case 'sudah sesuai':
+          return 'already appropriate';
+        case 'selesai':
+          return 'finished';
+        case '':
+          return '';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
     }
   }
 
@@ -570,10 +649,10 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       ),
                       items: [
                         getTranslatedText("All"),
-                        getTranslatedText("belum selesai"),
-                        getTranslatedText('sudah dibuat'),
-                        getTranslatedText('sudah sesuai'),
-                        getTranslatedText('selesai'),
+                        getTranslatedText("not finished yet"),
+                        getTranslatedText('already made'),
+                        getTranslatedText('already appropriate'),
+                        getTranslatedText('finished'),
                       ],
                       dropdownDecoratorProps: DropDownDecoratorProps(
                         dropdownSearchDecoration: InputDecoration(
@@ -597,16 +676,16 @@ class _TableEventsExampleState extends State<TableEventsExample> {
 
                           // Set nilai pada search bar sesuai dengan pilihan dropdown
                           if (selectedStatus ==
-                              getTranslatedText("belum selesai")) {
+                              getTranslatedText("not finished yet")) {
                             _textController.text = ("belum selesai");
                           } else if (selectedStatus ==
-                              getTranslatedText("sudah dibuat")) {
+                              getTranslatedText("already made")) {
                             _textController.text = ("sudah dibuat");
                           } else if (selectedStatus ==
-                              getTranslatedText("sudah sesuai")) {
+                              getTranslatedText("already appropriate")) {
                             _textController.text = ("sudah sesuai");
                           } else if (selectedStatus ==
-                              getTranslatedText("selesai")) {
+                              getTranslatedText("finished")) {
                             _textController.text = ("selesai");
                           } else {
                             _textController.text = "";
@@ -816,7 +895,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          item['status_produksi'] ?? '',
+                          getTranslatedDatabase(item['status_produksi'] ?? ''),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),
@@ -847,34 +926,5 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         ),
       ),
     );
-  }
-
-  String getTranslatedText(String text) {
-    if (selectedLanguage == 'IDN') {
-      switch (text) {
-        case 'Main Page':
-          return 'Halaman Utama';
-        case 'All':
-          return 'Semua';
-        case 'Daily':
-          return 'Harian';
-        case 'Weekly':
-          return 'Mingguan';
-        case 'Monthly':
-          return 'Bulanan';
-        case 'Yearly':
-          return 'Tahunan';
-        case 'Income':
-          return 'Pemasukan';
-        case 'Client Order List':
-          return 'Daftar Pesanan Klien';
-        case 'Activity':
-          return 'Kegiatan';
-        default:
-          return text;
-      }
-    } else {
-      return text;
-    }
   }
 }

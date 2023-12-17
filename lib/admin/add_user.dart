@@ -71,6 +71,18 @@ class AddUserState extends State<AddUser> {
           return 'Tambah';
         case 'Password':
           return 'Kata Sandi';
+        case 'User Name':
+          return 'Nama Pengguna';
+        case 'Address':
+          return 'Alamat';
+        case 'No Telephone':
+          return 'No Telepon';
+        case 'Man':
+          return 'Laki-laki';
+        case 'Women':
+          return 'Perempuan';
+        case 'Add':
+          return 'Tambah';
         case '':
           return '';
         case '':
@@ -315,7 +327,7 @@ class AddUserState extends State<AddUser> {
                               vertical: 6,
                             ),
                             filled: false,
-                            labelText: getTranslatedText('Nama Lengkap'),
+                            labelText: getTranslatedText('User Name'),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -334,7 +346,7 @@ class AddUserState extends State<AddUser> {
                               vertical: 6,
                             ),
                             filled: false,
-                            labelText: getTranslatedText('Alamat '),
+                            labelText: getTranslatedText('Address'),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -353,7 +365,7 @@ class AddUserState extends State<AddUser> {
                               vertical: 6,
                             ),
                             filled: false,
-                            labelText: getTranslatedText('No Telepon'),
+                            labelText: getTranslatedText('No Telephone'),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -395,7 +407,7 @@ class AddUserState extends State<AddUser> {
                                 });
                               },
                             ),
-                            Text(getTranslatedText('Laki-laki')),
+                            Text(getTranslatedText('Man')),
                             Radio(
                               value: 'Perempuan',
                               groupValue: jenis_kelaminController.text,
@@ -405,7 +417,7 @@ class AddUserState extends State<AddUser> {
                                 });
                               },
                             ),
-                            Text(getTranslatedText('Perempuan')),
+                            Text(getTranslatedText('Women')),
                           ],
                         ),
                         // Validasi Radio Buttons
@@ -476,7 +488,7 @@ class AddUserState extends State<AddUser> {
                               }
                             },
                             child: Text(
-                              getTranslatedText('Continue'),
+                              getTranslatedText('Add'),
                               style: TextStyle(
                                 fontSize: 18,
                               ),

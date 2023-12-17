@@ -24,6 +24,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
   bool _isloading = true;
   List _filteredData = [];
   String selectedPeriod = "";
+  String selectedStatus = "";
 
   @override
   void initState() {
@@ -259,6 +260,22 @@ class TableEventsExampleState extends State<TableEventsExample> {
           return 'Batas Tanggal :';
         case 'No Production':
           return 'Tidak ada produksi';
+        case 'already made':
+          return 'sudah dibuat';
+        case 'not finished yet':
+          return 'belum selesai';
+        case 'already appropriate':
+          return 'sudah sesuai';
+        case 'finished':
+          return 'selesai';
+        case 'Production is in order':
+          return 'Produksi sudah sesuai';
+        case 'Send to Stock?':
+          return 'Kirim Ke Stock ?';
+        case 'Yes':
+          return 'Ya';
+        case 'No':
+          return 'Tidak';
         case '':
           return '';
 
@@ -268,6 +285,36 @@ class TableEventsExampleState extends State<TableEventsExample> {
     } else {
       // Teks dalam bahasa Inggris (default)
       return text;
+    }
+  }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'Selesai':
+          return 'Finished';
+        case 'Menunggu':
+          return 'Waiting';
+        case 'Siap Diantar':
+          return 'Ready Delivered';
+        case 'sudah dibuat':
+          return 'already made';
+        case 'belum selesai':
+          return 'not finished yet';
+        case 'sudah sesuai':
+          return 'already appropriate';
+        case 'selesai':
+          return 'finished';
+        case '':
+          return '';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
     }
   }
 
@@ -334,6 +381,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    //ini dropdown jangka waktu
                     Container(
                       width: mediaQueryWidth * 0.25,
                       height: bodyHeight * 0.048,
@@ -384,8 +432,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
 
                             // Set nilai pada search bar sesuai dengan pilihan dropdown
                             if (selectedPeriod == getTranslatedText("Daily")) {
-                              _textController.text = DateFormat('yyyy-MM-dd')
-                                  .format(DateTime.now());
+                              _textController.text =
+                                  DateFormat('yyyy-MM-dd').format(DateTime.now());
                             } else if (selectedPeriod ==
                                 getTranslatedText("Weekly")) {
                               // Mendapatkan tanggal awal dan akhir minggu saat ini
@@ -428,38 +476,34 @@ class TableEventsExampleState extends State<TableEventsExample> {
                               _textController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan nama_perusahaan
-                              bool matchesname = item['nama_perusahaan']
+                              bool matchesname = item['nama_produk']
                                   .toLowerCase()
                                   .contains(lowerCaseQuery);
-                              bool matchesupdated_at = item['updated_at']
+                              bool matchescreated_at = item['tanggal_produksi']
                                   .toLowerCase()
                                   .contains(lowerCaseQuery);
 
                               // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                              bool matchesupdated_at2 =
-                                  (item['updated_at'] != null) &&
+                              bool matchescreated_at2 =
+                                  (item['tanggal_produksi'] != null) &&
                                       isDateInRange(
                                         DateFormat('yyyy-MM-dd').format(
-                                            DateTime.parse(item['updated_at'])),
+                                            DateTime.parse(
+                                                item['tanggal_produksi'])),
                                         lowerCaseQuery,
                                       );
-                              bool matchesBareng =
-                                  matchesname && matchesupdated_at;
-                              bool matchesBareng2 =
-                                  matchesname && matchesupdated_at2;
 
                               // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                              return matchesBareng ||
-                                  matchesBareng2 ||
-                                  matchesname ||
-                                  matchesupdated_at ||
-                                  matchesupdated_at2;
+                              return matchesname ||
+                                  matchescreated_at ||
+                                  matchescreated_at2;
                             }).toList();
                           });
                         },
                         selectedItem: getTranslatedText('All'),
                       ),
                     ),
+                    //ini searchbar
                     Container(
                       width: mediaQueryWidth * 0.4,
                       height: bodyHeight * 0.048,
@@ -482,7 +526,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                 Icons.search_rounded,
                                 color: isDarkTheme
                                     ? Colors.white
-                                    : Color(0xFF8B9BA8),
+                                    : Color(
+                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
                                 size: 15,
                               ),
                             ),
@@ -497,36 +542,34 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                         String lowerCaseQuery =
                                         query.toLowerCase();
 
-                                        // Mencocokkan berdasarkan nama_perusahaan
-                                        bool matchesname =
-                                        item['nama_user']
+                                        // Mencocokkan berdasarkan
+                                        bool matchesname = item['nama_produk']
                                             .toLowerCase()
                                             .contains(lowerCaseQuery);
-                                        bool matchesupdated_at =
+                                        bool matchescreated_at =
                                         item['tanggal_produksi']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+                                        bool matchesstatus =
+                                        item['status_produksi']
                                             .toLowerCase()
                                             .contains(lowerCaseQuery);
 
                                         // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                                        bool matchesupdated_at2 =
+                                        bool matchescreated_at2 =
                                             (item['tanggal_produksi'] != null) &&
                                                 isDateInRange(
-                                                  DateFormat('yyyy-MM-dd')
-                                                      .format(DateTime.parse(
-                                                      item['tanggal_produksi'])),
+                                                  DateFormat('yyyy-MM-dd').format(
+                                                      DateTime.parse(item[
+                                                      'tanggal_produksi'])),
                                                   lowerCaseQuery,
                                                 );
-                                        bool matchesBareng =
-                                            matchesname && matchesupdated_at;
-                                        bool matchesBareng2 =
-                                            matchesname && matchesupdated_at2;
 
                                         // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                                        return matchesBareng ||
-                                            matchesBareng2 ||
-                                            matchesname ||
-                                            matchesupdated_at ||
-                                            matchesupdated_at2;
+                                        return matchesname ||
+                                            matchescreated_at ||
+                                            matchescreated_at2 ||
+                                            matchesstatus;
                                       }).toList();
                                     });
                                   },
@@ -556,9 +599,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                   ),
                                   style: TextStyle(
                                     fontFamily: 'Clash Display',
-                                    color: isDarkTheme
-                                        ? Colors.white
-                                        : Colors.black,
+                                    color:
+                                    isDarkTheme ? Colors.white : Colors.black,
                                     fontSize: screenWidth *
                                         0.035, // Ukuran teks pada tombol
                                     fontWeight: FontWeight.normal,
@@ -574,6 +616,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                         ),
                       ),
                     ),
+                    //ini dropdown status
                     Container(
                       width: mediaQueryWidth * 0.25,
                       height: bodyHeight * 0.048,
@@ -597,8 +640,10 @@ class TableEventsExampleState extends State<TableEventsExample> {
                         ),
                         items: [
                           getTranslatedText("All"),
-                          getTranslatedText("Waiting"),
-                          getTranslatedText('Ready To Deliver'),
+                          getTranslatedText("not finished yet"),
+                          getTranslatedText('already made'),
+                          getTranslatedText('already appropriate'),
+                          getTranslatedText('finished'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -614,7 +659,44 @@ class TableEventsExampleState extends State<TableEventsExample> {
                             ),
                           ),
                         ),
-                        onChanged: print,
+                        onChanged: (selectedItem) {
+                          setState(() {
+                            // Set nilai pilihan dropdown
+                            selectedStatus =
+                                selectedItem ?? getTranslatedText("All");
+
+                            // Set nilai pada search bar sesuai dengan pilihan dropdown
+                            if (selectedStatus ==
+                                getTranslatedText("not finished yet")) {
+                              _textController.text = ("belum selesai");
+                            } else if (selectedStatus ==
+                                getTranslatedText("already made")) {
+                              _textController.text = ("sudah dibuat");
+                            } else if (selectedStatus ==
+                                getTranslatedText("already appropriate")) {
+                              _textController.text = ("sudah sesuai");
+                            } else if (selectedStatus ==
+                                getTranslatedText("finished")) {
+                              _textController.text = ("selesai");
+                            } else {
+                              _textController.text = "";
+                            }
+
+                            // Lakukan filter berdasarkan pilihan dropdown
+                            _filteredData = _listdata.where((item) {
+                              String lowerCaseQuery =
+                              _textController.text.toLowerCase();
+
+                              // Mencocokkan berdasarkan
+                              bool matchesstatus = item['status_produksi']
+                                  .toLowerCase()
+                                  .contains(lowerCaseQuery);
+
+                              // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                              return matchesstatus;
+                            }).toList();
+                          });
+                        },
                         selectedItem: getTranslatedText("All"),
                       ),
                     ),
@@ -644,12 +726,12 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 title: Center(
-                                  child: Text('Produksi sudah sesuai'),
+                                  child: Text(getTranslatedText('Production is in order')),
                                 ),
                                 content: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text('Kirim Ke Stock ?'),
+                                    Text(getTranslatedText('Send to Stock')),
                                   ],
                                 ),
                                 actions: [
@@ -662,7 +744,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                       await _updateProductAvailability(index, productId, jumlahProduksi);
                                     },
                                     child: Text(
-                                      'Ya',
+                                      getTranslatedText('Yes'),
                                       style: TextStyle(
                                         color: Colors.green,
                                       ),
@@ -674,7 +756,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                       Navigator.of(context).pop();
                                     },
                                     child: Text(
-                                      'Tidak',
+                                      getTranslatedText('No'),
                                       style: TextStyle(
                                         color: Colors.red,
                                       ),
@@ -811,7 +893,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                       Padding(
                                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          _filteredData[index]['status_produksi'],
+                                          getTranslatedDatabase(_filteredData[index]['status_produksi']),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),

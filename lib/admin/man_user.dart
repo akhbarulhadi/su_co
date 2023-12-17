@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,8 @@ class UserManagementPage extends StatefulWidget {
 class UserManagementPageState extends State<UserManagementPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _textController;
+  late TextEditingController _textstatusController;
+  late TextEditingController _textperiodController;
   TextEditingController passwordController = TextEditingController();
   late FocusNode _unfocusNode;
   bool isDarkTheme = false; // Variabel untuk tema gelap
@@ -28,6 +31,8 @@ class UserManagementPageState extends State<UserManagementPage> {
   List _filteredData = [];
   bool _isloading = true;
   String previousStatus = '';
+  String selectedPeriod = "";
+  String selectedStatus = "";
 
   @override
   void initState() {
@@ -39,6 +44,8 @@ class UserManagementPageState extends State<UserManagementPage> {
     _getdata();
     _listdata = [];
     _filteredData = [];
+    _textstatusController = TextEditingController();
+    _textperiodController = TextEditingController();
     super.initState();
   }
 
@@ -58,12 +65,30 @@ class UserManagementPageState extends State<UserManagementPage> {
 
   @override
   void dispose() {
+    _textstatusController.dispose();
+    _textperiodController.dispose();
     _textController.dispose();
     _unfocusNode.dispose();
     super.dispose();
   }
 
-Future<void> _updateUserStatus(BuildContext context, int userId, String newStatus) async {
+  bool isDateInRange(String date, String dateRange) {
+    List<String> dateRangeArray = dateRange.split('/');
+    if (dateRangeArray.length == 2) {
+      String startDateString = dateRangeArray[0].trim();
+      String endDateString = dateRangeArray[1].trim();
+
+      DateTime startDate = DateTime.parse(startDateString);
+      DateTime endDate = DateTime.parse(endDateString).add(Duration(days: 1));
+
+      DateTime dateToCheck = DateTime.parse(date);
+
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
+    }
+    return false;
+  }
+
+  Future<void> _updateUserStatus(BuildContext context, int userId, String newStatus) async {
   try {
     final response = await http.post(
       Uri.parse(ApiConfig.status_user),
@@ -168,54 +193,66 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
 }
 
 
- Future<void> _showStatusChangeDialog(BuildContext context, int index, int userId) async {
+  Future<void> _showStatusChangeDialog(BuildContext context, int index, int userId) async {
     String selectedStatus = _filteredData[index]['status'];
 
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Change User Status'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Select new status:'),
-              DropdownButton<String>(
-                value: selectedStatus,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedStatus = newValue!;
-                  });
-                },
-                items: ['aktif', 'tidak-aktif'].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+        return StatefulBuilder(
+          // StatefulBuilder digunakan untuk memperbarui UI dalam dialog
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text(getTranslatedText('Change User Status')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(getTranslatedText('Select new status:')),
+                  DropdownButton<String>(
+                    value: selectedStatus,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedStatus = newValue!;
+                      });
+                    },
+                    items: ['aktif', 'tidak-aktif'].map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Memeriksa apakah status berubah sebelum pembaruan
-                if (selectedStatus != _filteredData[index]['status']) {
-                  // Print status yang baru di terminal
-                  // print('User ID: $userId - New Status: $selectedStatus');
-                }
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Memeriksa apakah status berubah sebelum pembaruan
+                    if (selectedStatus != _filteredData[index]['status']) {
+                      // Print status yang baru di terminal
+                      // print('User ID: $userId - New Status: $selectedStatus');
+                    }
 
-                _updateUserStatus(context, userId, selectedStatus);
-                },
-              child: Text('Save'),
-            ),
-          ],
+                    _updateUserStatus(context, userId, selectedStatus);
+                  },
+                  child: Text(getTranslatedText('Save')),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Tutup dialog
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.red, // Warna latar belakang
+                  ),
+                  child: Text(
+                    getTranslatedText('Cancel'),
+                    style: TextStyle(color: Colors.white), // Warna teks
+                  ),
+                ),
+
+              ],
+            );
+          },
         );
       },
     );
@@ -374,10 +411,37 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
           return '40 Baris';
         case '+ User':
           return '+ Pengguna';
+        case 'Search...':
+          return 'Cari...';
+        case 'User Name':
+          return 'Nama Pengguna';
+        case 'Address':
+          return 'Alamat';
+        case 'Gender':
+          return 'Jenis Kelamin';
+        case 'Role':
+          return 'Peran';
+        case 'Account Status':
+          return 'Status Akun';
+        case 'User Detail':
+          return 'Detail Pengguna';
+        case 'Change Status':
+          return 'Ganti Status';
+        case 'Change User Status':
+          return 'Ganti Status User';
+        case 'Select new status:':
+          return 'Pilih status baru:';
+        case 'active':
+          return 'aktif';
+        case 'not-active':
+          return 'tidak_aktif';
+        case 'Save':
+          return 'Simpan';
+        case 'Cancel':
+          return 'Batal';
         case '':
           return '';
-        case '':
-          return '';
+
 
         default:
           return text;
@@ -385,6 +449,26 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
     } else {
       // Teks dalam bahasa Inggris (default)
       return text;
+    }
+  }
+
+  String getTranslatedDatabase(String status) {
+    if (selectedLanguage == 'ENG') {
+      // Teks dalam bahasa Indonesia
+      switch (status) {
+        case 'aktif':
+          return 'active';
+        case 'tidak-aktif':
+          return 'not-active';
+        case '':
+          return '';
+      // Tambahkan kases lain jika diperlukan
+        default:
+          return status;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return status;
     }
   }
 
@@ -445,8 +529,9 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    //ini dropdown status
                     Container(
-                      width: mediaQueryWidth * 0.28,
+                      width: mediaQueryWidth * 0.25,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
@@ -461,17 +546,15 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                                isDarkTheme ? Colors.black : Colors.white,
+                            isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
                         ),
                         items: [
                           getTranslatedText("All"),
-                          getTranslatedText("10 Line"),
-                          getTranslatedText("20 Line"),
-                          getTranslatedText('30 Line'),
-                          getTranslatedText('40 Line')
+                          getTranslatedText("active"),
+                          getTranslatedText('not-active'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -479,20 +562,45 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                               horizontal: 7,
                               vertical: 3,
                             ),
-                            labelText: getTranslatedText("Line"),
-                            // hintText: "waktu in menu mode",
+                            labelText: getTranslatedText("Select Status"),
+                            // hintText: "status in menu mode",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(color: Colors.transparent),
                             ),
                           ),
                         ),
-                        onChanged: print,
+                        onChanged: (selectedItem) {
+                          setState(() {
+                            // Set nilai pilihan dropdown
+                            selectedStatus = selectedItem ?? getTranslatedText("All");
+
+                            // Set nilai pada search bar sesuai dengan pilihan dropdown
+                            if (selectedStatus == getTranslatedText("active")) {
+                              _textController.text = ("aktif");
+                            } else if (selectedStatus == getTranslatedText("not-active")) {
+                              _textController.text = ("tidak-aktif");
+                            } else {
+                              _textController.text = "";
+                            }
+
+                            // Lakukan filter berdasarkan pilihan dropdown
+                            _filteredData = _listdata.where((item) {
+                              String lowerCaseQuery = _textController.text.toLowerCase();
+
+                              // Mencocokkan berdasarkan
+                              bool matchesstatus = item['status'].toLowerCase().contains(lowerCaseQuery);
+
+                              // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                              return matchesstatus;
+                            }).toList();
+                          });
+                        },
                         selectedItem: getTranslatedText("All"),
                       ),
                     ),
                     Container(
-                      width: mediaQueryWidth * 0.35,
+                      width: mediaQueryWidth * 0.4,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
@@ -514,7 +622,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                 color: isDarkTheme
                                     ? Colors.white
                                     : Color(
-                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
                                 size: 15,
                               ),
                             ),
@@ -526,27 +634,23 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        String lowerCaseQuery =
-                                            query.toLowerCase();
+                                        String lowerCaseQuery = query.toLowerCase();
 
                                         // Mencocokkan berdasarkan
-                                        bool matchesname =
-                                            item['nama_perusahaan']
-                                                .toLowerCase()
-                                                .contains(lowerCaseQuery);
-                                        bool matchescreated_at =
-                                            item['created_at']
-                                                .toLowerCase()
-                                                .contains(lowerCaseQuery);
-                                        bool matchesstatus =
-                                            item['status_pesanan']
-                                                .toLowerCase()
-                                                .contains(lowerCaseQuery);
+                                        bool matchesname = item['nama'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesroles = item['roles'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchescreated_at = item['created_at'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesstatus = item['status'].toLowerCase().contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchescreated_at2 = (item['created_at'] != null) &&
+                                            isDateInRange(
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['created_at'])),
+                                              lowerCaseQuery,
+                                            );
 
                                         // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                                        return matchesname ||
-                                            matchescreated_at ||
-                                            matchesstatus;
+                                        return matchesname || matchescreated_at || matchescreated_at2 || matchesstatus || matchesroles;
                                       }).toList();
                                     });
                                   },
@@ -630,14 +734,38 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                         : ListView.builder(
                             itemCount: _filteredData.length,
                             itemBuilder: ((context, index) {
-                              TextEditingController namaController =
-                                  TextEditingController(
-                                      text: _filteredData[index]['nama']
-                                          .toString());
                               TextEditingController idStaffController =
                                   TextEditingController(
                                       text: _filteredData[index]['id_staff']
                                           .toString());
+                              TextEditingController namaController =
+                              TextEditingController(
+                                  text: _filteredData[index]['nama']
+                                      .toString());
+                              TextEditingController notelpController =
+                              TextEditingController(
+                                  text: _filteredData[index]['no_tlp']
+                                      .toString());
+                              TextEditingController alamatController =
+                              TextEditingController(
+                                  text: _filteredData[index]['alamat']
+                                      .toString());
+                              TextEditingController emailController =
+                              TextEditingController(
+                                  text: _filteredData[index]['email']
+                                      .toString());
+                              TextEditingController rolesController =
+                              TextEditingController(
+                                  text: _filteredData[index]['roles']
+                                      .toString());
+                              TextEditingController jkController =
+                              TextEditingController(
+                                  text: _filteredData[index]['jenis_kelamin']
+                                      .toString());
+                              TextEditingController statusController =
+                              TextEditingController(
+                                  text: _filteredData[index]['status']
+                                      .toString());
                               return GestureDetector(
                                 onTap: () {
                                   showDialog(
@@ -655,7 +783,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Row(
+                                            Column(
                                               children: [
                                                 Visibility(
                                                   visible: false,
@@ -667,7 +795,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                                     decoration: InputDecoration(
                                                       labelText:
                                                           getTranslatedText(
-                                                              'Client Name'),
+                                                              'idStaff'),
                                                     ),
                                                     enabled: false,
                                                   ),
@@ -685,11 +813,74 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                               ],
                                             ),
                                             TextField(
+                                              controller: idStaffController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Id Staff'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            TextField(
                                               controller: namaController,
                                               keyboardType: TextInputType.text,
                                               decoration: InputDecoration(
                                                 labelText: getTranslatedText(
-                                                    'Client Name'),
+                                                    'User Name'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            TextField(
+                                              controller: notelpController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'No Telp'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            TextField(
+                                              controller: alamatController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Address'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            TextField(
+                                              controller: emailController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Email'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            TextField(
+                                              controller: jkController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Gender'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            TextField(
+                                              controller: rolesController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Role'),
+                                              ),
+                                              enabled: false,
+                                            ),
+                                            TextField(
+                                              controller: statusController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Account Status'),
                                               ),
                                               enabled: false,
                                             ),
@@ -732,7 +923,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                                     _filteredData[index]
                                                         ['id_user']);
                                               },
-                                              child: Text('Change Status'),
+                                              child: Text(getTranslatedText('Change Status')),
                                             ),
                                           ],
                                         ),
@@ -841,8 +1032,8 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                                             ),
                                                           ),
                                                           Text(
-                                                            _filteredData[index]
-                                                            ['status'],
+                                                            getTranslatedDatabase(_filteredData[index]
+                                                            ['status']),
                                                             style: TextStyle(
                                                               fontFamily: 'Inter',
                                                               color: Colors.white,
