@@ -63,12 +63,12 @@ class UserManagementPageState extends State<UserManagementPage> {
     super.dispose();
   }
 
-Future<void> _updateUserStatus(BuildContext context, String userId, String newStatus) async {
+Future<void> _updateUserStatus(BuildContext context, int userId, String newStatus) async {
   try {
     final response = await http.post(
       Uri.parse(ApiConfig.status_user),
       body: {
-        'id_user': userId,
+        'id_user': userId.toString(),
         'status': newStatus,
       },
     );
@@ -87,7 +87,7 @@ Future<void> _updateUserStatus(BuildContext context, String userId, String newSt
 }
 
 
- Future<void> _showStatusChangeDialog(BuildContext context, int index, String userId) async {
+ Future<void> _showStatusChangeDialog(BuildContext context, int index, int userId) async {
     String selectedStatus = _filteredData[index]['status'];
 
     await showDialog(
@@ -650,7 +650,7 @@ Future<void> _updateUserStatus(BuildContext context, String userId, String newSt
                                                     context,
                                                     index,
                                                     _filteredData[index]
-                                                        ['id_staff']);
+                                                        ['id_user']);
                                               },
                                               child: Text('Change Status'),
                                             ),

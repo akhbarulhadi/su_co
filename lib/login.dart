@@ -40,33 +40,34 @@ class _LoginState extends State<Login> {
     super.dispose();
   }
 
-  Future<void> _signIn() async {
-    try {
-      final String email = _emailController.text.trim();
-      final String password = _passwordController.text.trim();
+ Future<void> _signIn() async {
+  try {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
 
-      if (email.isNotEmpty && password.isNotEmpty) {
-        // API call for login using email
-        final response = await http.post(
-          Uri.parse(ApiConfig.login),
-          body: {
-            'email': email,
-            'password': password,
-          },
-        );
+    if (email.isNotEmpty && password.isNotEmpty) {
+      final response = await http.post(
+        Uri.parse(ApiConfig.login),
+        body: {
+          'email': email,
+          'password': password,
+        },
+      );
 
-        if (response.statusCode == 200) {
-          final Map<String, dynamic>? data = json.decode(response.body);
-          setState(() {
-            isDataBenar = false; // Set data ke false
-            _emailController.clear();
-            _passwordController.clear();
-          });
-          if (data != null) {
-            final String roles = data['roles'] ?? '';
-            final String token = data['access_token'] ?? '';
-            final String name = data['user']?['nama'] ?? '';
+      if (response.statusCode == 200) {
+        final Map<String, dynamic>? data = json.decode(response.body);
+        setState(() {
+          isDataBenar = false; // Set data ke false
+          _emailController.clear();
+          _passwordController.clear();
+        });
+        if (data != null) {
+          final String roles = data['roles'] ?? '';
+          final String token = data['access_token'] ?? '';
+          final String name = data['user']?['nama'] ?? '';
+          final String userStatus = data['user']?['status'] ?? '';
 
+          if (userStatus == 'aktif') {
             // Simpan informasi login ke shared_preferences
             SharedPreferences prefs = await SharedPreferences.getInstance();
             prefs.setString('access_token', token);
@@ -85,33 +86,39 @@ class _LoginState extends State<Login> {
             // Handle navigasi sesuai dengan roles
             navigateBasedOnRoles(roles);
           } else {
-            // Handle kasus ketika data null
-            print('Error: Response data is null');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Inactive account. Please contact support.'),
+              ),
+            );
           }
         } else {
-          // Handle kasus status code selain 200
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Login failed. Check your email and password.'),
-            ),
-          );
+          print('Error: Response data is null');
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Email and password must be filled.'),
+            content: Text('Invalid credentials or inactive account.'),
           ),
         );
       }
-    } catch (e) {
-      print("Login error: $e");
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login failed. Check your email and password.'),
+          content: Text('Email and password must be filled.'),
         ),
       );
     }
+  } catch (e) {
+    print("Login error: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Login failed. Check your email and password.'),
+      ),
+    );
   }
+}
+
 
     void navigateBasedOnRoles(String roles) {
         RoleMiddleware roleMiddleware = RoleMiddleware(allowedRoles: [

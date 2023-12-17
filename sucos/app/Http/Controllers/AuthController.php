@@ -121,25 +121,35 @@ class AuthController extends Controller
             'email' => 'required', // Mengubah validasi untuk email
             'password' => 'required|string',
         ]);
-
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+    
+        $credentials = $request->only('email', 'password');
+    
+        if (Auth::attempt($credentials)) {
             $user = Auth::user();
-
-            // Cek role
-            $allowedRoles = ['admin', 'marketing', 'supervisor', 'leader', 'staff_gudang', 'kepala_gudang'];
-            if (in_array($user->roles, $allowedRoles)) {
-                $token = $user->createToken('authToken')->plainTextToken;
-
-                // Menggunakan 'roles' sebagai informasi peran dalam respons
-                return response()->json(['user' => $user, 'roles' => $user->roles, 'access_token' => $token]);
+    
+            // Pengecekan status pengguna
+            if ($user->status === 'aktif') {
+                // Cek role
+                $allowedRoles = ['admin', 'marketing', 'supervisor', 'leader', 'staff_gudang', 'kepala_gudang'];
+                
+                if (in_array($user->roles, $allowedRoles)) {
+                    $token = $user->createToken('authToken')->plainTextToken;
+    
+                    // Menggunakan 'roles' sebagai informasi peran dalam respons
+                    return response()->json(['user' => $user, 'roles' => $user->roles, 'access_token' => $token]);
+                } else {
+                    Auth::logout(); // Logout jika role tidak diizinkan
+                    return response()->json(['message' => 'Unauthorized role'], 403);
+                }
             } else {
-                Auth::logout(); // Logout jika role tidak diizinkan
-                return response()->json(['message' => 'Unauthorized role'], 403);
+                Auth::logout(); // Logout jika status tidak aktif
+                return response()->json(['message' => 'Inactive account'], 403);
             }
         } else {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
     }
+    
 
     public function getProfile(Request $request)
     {
