@@ -7,7 +7,10 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
+final StreamController<void> _streamController =
+    StreamController<void>.broadcast();
 class EditProfile extends StatefulWidget {
   const EditProfile({Key? key}) : super(key: key);
 
@@ -21,6 +24,8 @@ class EditProfilePage extends State<EditProfile> {
   String selectedLanguage = 'IDN';
   late TextEditingController _alamatController;
   late TextEditingController _noTlpController;
+    List _listData = [];
+  List _filteredData = [];
 
   @override
   void initState() {
@@ -30,6 +35,10 @@ class EditProfilePage extends State<EditProfile> {
     loadDataProfile();
     loadThemePreference();
     loadSelectedLanguage();
+      _getData();
+    _streamController.stream.listen((_) {
+      _getData();
+    });
   }
 
   void loadDataProfile() async {
@@ -65,6 +74,36 @@ class EditProfilePage extends State<EditProfile> {
     }
   }
 
+  Future<void> _getData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String authToken = prefs.getString('access_token') ?? '';
+
+      final response = await http.get(
+        Uri.parse(ApiConfig.getfoto),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data);
+        setState(() {
+          _listData = [data['user']];
+          _filteredData = _listData;
+        });
+
+        print(_filteredData);
+        print(_filteredData.isNotEmpty
+            ? _filteredData[0]['foto']
+            : 'No photo available');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void loadSelectedLanguage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -79,96 +118,93 @@ class EditProfilePage extends State<EditProfile> {
     });
   }
 
-Future<void> _getImageFromGallery() async {
-  final picker = ImagePicker();
-  final pickedFile = await picker.getImage(source: ImageSource.gallery);
+  Future<void> _getImageFromGallery() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
 
-  if (pickedFile != null) {
-    final image = File(pickedFile.path);
-    final savedImage = await saveImageToDeviceDirectory(image);
+    if (pickedFile != null) {
+      final image = File(pickedFile.path);
+      final savedImage = await saveImageToDeviceDirectory(image);
+      setState(() {
+        _imageFile = savedImage;
+      });
+    }
+  }
+
+  Future<File> saveImageToDeviceDirectory(File image) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final imagePath = directory.path + '/image.png';
+
+    // Menghapus file yang mungkin sudah ada
+    if (await File(imagePath).exists()) {
+      await File(imagePath).delete();
+    }
+
+    // Menyalin gambar baru
+    await image.copy(imagePath);
+
+    return File(imagePath);
+  }
+
+  Future<void> openCamera() async {
+    final pickedImage =
+        await ImagePicker().getImage(source: ImageSource.camera);
     setState(() {
-      _imageFile = savedImage;
+      _imageFile = File(pickedImage!.path);
     });
   }
-}
 
+  Future<void> saveProfileChanges() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String storedToken = prefs.getString('access_token') ?? '';
 
- Future<File> saveImageToDeviceDirectory(File image) async {
-  final directory = await getApplicationDocumentsDirectory();
-  final imagePath = directory.path + '/image.png';
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $storedToken',
+      };
 
-  // Menghapus file yang mungkin sudah ada
-  if (await File(imagePath).exists()) {
-    await File(imagePath).delete();
-  }
+      var body = {
+        'alamat': _alamatController.text,
+        'no_tlp': _noTlpController.text,
+      };
 
-  // Menyalin gambar baru
-  await image.copy(imagePath);
-
-  return File(imagePath);
-}
-
-
-Future<void> openCamera() async {
-  final pickedImage = await ImagePicker().getImage(source: ImageSource.camera);
-  setState(() {
-    _imageFile = File(pickedImage!.path);
-  });
-}
-
-Future<void> saveProfileChanges() async {
-  try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String storedToken = prefs.getString('access_token') ?? '';
-
-    var headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $storedToken',
-    };
-
-    var body = {
-      'alamat': _alamatController.text,
-      'no_tlp': _noTlpController.text,
-    };
-
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse(ApiConfig.editProfile),
-    );
-
-    // Menggunakan MultipartRequest untuk mengirim file (foto)
-    if (_imageFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'foto',
-          _imageFile!.path,
-        ),
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiConfig.editProfile),
       );
+
+      // Menggunakan MultipartRequest untuk mengirim file (foto)
+      if (_imageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'foto',
+            _imageFile!.path,
+          ),
+        );
+      }
+
+      // Menambahkan data teks ke body request
+      request.fields.addAll(body);
+
+      // Menambahkan header ke request
+      request.headers.addAll(headers);
+
+      // Melakukan request HTTP
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        // Berhasil menyimpan perubahan, tambahkan logika atau pindah ke halaman lain jika perlu
+        print('Profile changes saved successfully');
+      } else {
+        // Gagal menyimpan perubahan, tampilkan pesan kesalahan atau lakukan sesuatu yang sesuai
+        print('Failed to save profile changes: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      // Handle kesalahan atau cetak pesan kesalahan
+      print("Error: $e");
     }
-
-    // Menambahkan data teks ke body request
-    request.fields.addAll(body);
-
-    // Menambahkan header ke request
-    request.headers.addAll(headers);
-
-    // Melakukan request HTTP
-    var response = await request.send();
-
-    if (response.statusCode == 200) {
-      // Berhasil menyimpan perubahan, tambahkan logika atau pindah ke halaman lain jika perlu
-      print('Profile changes saved successfully');
-    } else {
-      // Gagal menyimpan perubahan, tampilkan pesan kesalahan atau lakukan sesuatu yang sesuai
-      print('Failed to save profile changes: ${response.reasonPhrase}');
-    }
-  } catch (e) {
-    // Handle kesalahan atau cetak pesan kesalahan
-    print("Error: $e");
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
