@@ -75,9 +75,90 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
 
     if (response.statusCode == 200) {
       print('Status update successful');
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+      await _getdata();
       // Handle success, if needed
     } else {
       print('Failed to update status. Status code: ${response.statusCode}');
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Tutup')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
       // Handle failure, if needed
     }
   } catch (e) {
@@ -131,9 +212,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                 }
 
                 _updateUserStatus(context, userId, selectedStatus);
-
-                Navigator.of(context).pop(); // Close the dialog
-              },
+                },
               child: Text('Save'),
             ),
           ],
@@ -367,7 +446,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      width: mediaQueryWidth * 0.25,
+                      width: mediaQueryWidth * 0.28,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
@@ -413,7 +492,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                       ),
                     ),
                     Container(
-                      width: mediaQueryWidth * 0.4,
+                      width: mediaQueryWidth * 0.35,
                       height: bodyHeight * 0.048,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
@@ -527,7 +606,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        minimumSize: Size(120, 38),
+                        minimumSize: Size(110, 28),
                         padding: EdgeInsets.all(10),
                         elevation: 3,
                         shape: RoundedRectangleBorder(
@@ -646,6 +725,7 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                             ),
                                             ElevatedButton(
                                               onPressed: () {
+                                                Navigator.of(context).pop();
                                                 _showStatusChangeDialog(
                                                     context,
                                                     index,
@@ -744,18 +824,36 @@ Future<void> _updateUserStatus(BuildContext context, int userId, String newStatu
                                                           EdgeInsetsDirectional
                                                               .fromSTEB(
                                                                   0, 4, 0, 0),
-                                                      child: Text(
-                                                        _filteredData[index]
-                                                            ['no_tlp'],
-                                                        style: TextStyle(
-                                                          fontFamily: 'Inter',
-                                                          color: Colors.white,
-                                                          fontSize:
+                                                      child: Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Text(
+                                                            _filteredData[index]
+                                                                ['no_tlp'],
+                                                            style: TextStyle(
+                                                              fontFamily: 'Inter',
+                                                              color: Colors.white,
+                                                              fontSize:
+                                                                  screenWidth *
+                                                                      0.028,
+                                                              fontWeight:
+                                                                  FontWeight.normal,
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            _filteredData[index]
+                                                            ['status'],
+                                                            style: TextStyle(
+                                                              fontFamily: 'Inter',
+                                                              color: Colors.white,
+                                                              fontSize:
                                                               screenWidth *
                                                                   0.028,
-                                                          fontWeight:
+                                                              fontWeight:
                                                               FontWeight.normal,
-                                                        ),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ],
