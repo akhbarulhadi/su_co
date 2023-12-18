@@ -129,8 +129,8 @@ class HistoryOrderState extends State<HistoryOrder> {
           return 'Belum ada riwayat';
         case 'Finished':
           return 'Selesai';
-        case '':
-          return '';
+        case 'Total Price':
+          return 'Harga Total';
         case '':
           return '';
         case '':
@@ -227,8 +227,8 @@ class HistoryOrderState extends State<HistoryOrder> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -331,7 +331,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                     ),
                     Container(
                       width: mediaQueryWidth * 0.6,
-                      height: bodyHeight * 0.048,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -457,6 +457,8 @@ class HistoryOrderState extends State<HistoryOrder> {
                                           text: _filteredData[index]['alamat'].toString());
                                       TextEditingController namaprodukController = TextEditingController(
                                           text: _filteredData[index]['nama_produk'].toString());
+                                      TextEditingController hargatotalController = TextEditingController(
+                                          text: 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_filteredData[index]['harga_total']))}',);
 
                                       return AlertDialog(
                                         shape: RoundedRectangleBorder(
@@ -494,6 +496,15 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                       'Product Name')),
                                               enabled:
                                                   false, // Mengatur TextField menjadi disable
+                                            ),
+                                            TextField(
+                                              controller: hargatotalController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Total Price')),
+                                              enabled:
+                                              false, // Mengatur TextField menjadi disable
                                             ),
                                             TextField(
                                               controller: statusController,

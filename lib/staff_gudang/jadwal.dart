@@ -270,7 +270,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
           return 'selesai';
         case 'Production is in order':
           return 'Produksi sudah sesuai';
-        case 'Send to Stock?':
+        case 'Send to Stock ?':
           return 'Kirim Ke Stock ?';
         case 'Yes':
           return 'Ya';
@@ -278,6 +278,11 @@ class TableEventsExampleState extends State<TableEventsExample> {
           return 'Tidak';
         case '':
           return '';
+        case '':
+          return '';
+        case '':
+          return '';
+
 
         default:
           return text;
@@ -383,8 +388,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
                   children: [
                     //ini dropdown jangka waktu
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -505,8 +510,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
                     ),
                     //ini searchbar
                     Container(
-                      width: mediaQueryWidth * 0.4,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.38,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -618,8 +623,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
                     ),
                     //ini dropdown status
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -731,7 +736,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                 content: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(getTranslatedText('Send to Stock')),
+                                    Text(getTranslatedText('Send to Stock ?')),
                                   ],
                                 ),
                                 actions: [

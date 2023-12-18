@@ -381,6 +381,10 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           return 'Apakah Anda yakin ingin membuat jadwal?';
         case 'No':
           return 'Tidak';
+        case 'Activity':
+          return 'Aktivitas';
+        case 'Confirmation':
+          return 'Konfirmasi';
         case '':
           return '';
         case '':

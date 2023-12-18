@@ -270,7 +270,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
           return 'Belum ditambahkan';
         case 'Production is in order':
           return 'Produksi sudah sesuai';
-        case 'Send to Stock?':
+        case 'Send to Stock ?':
           return 'Kirim Ke Stock ?';
         case 'Yes':
           return 'Ya';
@@ -520,7 +520,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                                     .fromSTEB(0, 4, 0, 0),
                                                 child: Text(
                                                   _listdatastock[index]['harga_produk'] != null
-                                                      ? 'Rp ${_listdatastock[index]['harga_produk']}'
+                                                      ? 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_listdatastock[index]['harga_produk']))}'
                                                       : getTranslatedText('Not yet added'),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
@@ -604,7 +604,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Text(getTranslatedText('Send to Stock?')),
+                                            Text(getTranslatedText('Send to Stock ?')),
                                           ],
                                         ),
                                         actions: [

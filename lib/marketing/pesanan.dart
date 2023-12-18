@@ -22,6 +22,7 @@ class PesananState extends State<Pesanan> {
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
+  List _filteredData = [];
   bool _isloading = true;
   final _formKey = GlobalKey<FormState>();
   TextEditingController idklienController = TextEditingController();
@@ -45,7 +46,8 @@ class PesananState extends State<Pesanan> {
     _textController = TextEditingController();
     _unfocusNode = FocusNode();
     _getdata();
-    //print(_listdata);
+    _listdata = [];
+    _filteredData = [];
     _getStockData();
   }
 
@@ -233,6 +235,7 @@ class PesananState extends State<Pesanan> {
         print(data); // Cetak data ke konsol
         setState(() {
           _listdata = data['klien'];
+          _filteredData = _listdata;
           _isloading = false;
         });
       }
@@ -312,6 +315,24 @@ class PesananState extends State<Pesanan> {
     }
   }
 
+  bool isDateInRange(String date, String dateRange) {
+    List<String> dateRangeArray = dateRange.split('/');
+    if (dateRangeArray.length == 2) {
+      String startDateString = dateRangeArray[0].trim();
+      String endDateString = dateRangeArray[1].trim();
+
+      DateTime startDate = DateTime.parse(startDateString);
+      DateTime endDate = DateTime.parse(endDateString).add(Duration(days: 1));
+
+      DateTime dateToCheck = DateTime.parse(date);
+
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) &&
+          dateToCheck.isBefore(endDate);
+    }
+    return false;
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
@@ -369,7 +390,7 @@ class PesananState extends State<Pesanan> {
                 children: [
                   Container(
                     width: mediaQueryWidth * 0.6,
-                    height: bodyHeight * 0.048,
+                    height: bodyHeight * 0.060,
                     decoration: BoxDecoration(
                       color: isDarkTheme ? Colors.white24 : Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -398,6 +419,29 @@ class PesananState extends State<Pesanan> {
                               padding: EdgeInsets.only(left: 12),
                               child: TextFormField(
                                 controller: _textController,
+                                onChanged: (query) {
+                                  setState(() {
+                                    _filteredData = _listdata.where((item) {
+                                      String lowerCaseQuery = query.toLowerCase();
+
+                                      // Mencocokkan berdasarkan nama_perusahaan
+                                      bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                                      bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
+
+                                      // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                      bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                          isDateInRange(
+                                            DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                            lowerCaseQuery,
+                                          );
+                                      bool matchesBareng = matchesname && matchesupdated_at;
+                                      bool matchesBareng2 = matchesname && matchesupdated_at2;
+
+                                      // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                      return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
+                                    }).toList();
+                                  });
+                                },
                                 obscureText: false,
                                 decoration: InputDecoration(
                                   hintText: getTranslatedText('Search...'),
@@ -473,12 +517,12 @@ class PesananState extends State<Pesanan> {
                   ? Center(
                       child: CircularProgressIndicator(),
                     )
-                  : _listdata.isEmpty
+                  : _filteredData.isEmpty
                       ? Center(
                           child: Text(getTranslatedText('No Data Client')),
                         )
                       : ListView.builder(
-                          itemCount: _listdata.length,
+                          itemCount: _filteredData.length,
                           itemBuilder: ((context, index) {
                             return GestureDetector(
                               onTap: () {
@@ -588,7 +632,7 @@ class PesananState extends State<Pesanan> {
                                                 alignment: AlignmentDirectional(
                                                     0.00, 0.00),
                                                 child: Text(
-                                                  _listdata[index]['id_klien']
+                                                  _filteredData[index]['id_klien']
                                                       .toString(),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
@@ -612,7 +656,7 @@ class PesananState extends State<Pesanan> {
                                                         .start,
                                                     children: [
                                                       Text(
-                                                        _listdata[index]
+                                                        _filteredData[index]
                                                         ['nama_perusahaan'],
                                                         style: TextStyle(
                                                           fontFamily: 'Inter',
@@ -630,7 +674,7 @@ class PesananState extends State<Pesanan> {
                                                             .fromSTEB(
                                                             0, 4, 0, 0),
                                                         child: Text(
-                                                          _listdata[index]
+                                                          _filteredData[index]
                                                           ['alamat'],
                                                           style: TextStyle(
                                                             fontFamily: 'Inter',

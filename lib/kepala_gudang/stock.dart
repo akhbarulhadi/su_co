@@ -205,7 +205,7 @@ class StockState extends State<Stock> {
                   children: [
                     Container(
                       width: mediaQueryWidth * 0.9,
-                      height: bodyHeight * 0.048,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -436,7 +436,7 @@ class StockState extends State<Stock> {
                                                     .fromSTEB(0, 4, 0, 0),
                                                 child: Text(
                                                   _filteredData[index]['harga_produk'] != null
-                                                      ? 'Rp ${_filteredData[index]['harga_produk']}'
+                                                      ? 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_filteredData[index]['harga_produk']))}'
                                                       : getTranslatedText('Not yet added'),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',

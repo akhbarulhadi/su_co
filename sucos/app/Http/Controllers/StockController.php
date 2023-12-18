@@ -25,7 +25,7 @@ class StockController extends Controller
     public function showDashbordMarketing()
     {
         $stock = Stock::select('ketersediaan_barang.*')
-            ->take(2)
+            ->take(5)
             ->get();
         return response()->json(['message' => 'Success', 'stock' => $stock]);
     }

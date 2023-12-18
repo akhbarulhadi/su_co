@@ -9,7 +9,6 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:giffy_dialog/giffy_dialog.dart';
 
-
 class LaporanWidget extends StatefulWidget {
   const LaporanWidget({Key? key}) : super(key: key);
 
@@ -85,7 +84,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
         context: context,
         builder: (BuildContext context) {
           return GiffyDialog.image(
-            Image.asset('lib/assets/success-tick-dribbble.gif',
+            Image.asset(
+              'lib/assets/success-tick-dribbble.gif',
               height: 200,
               fit: BoxFit.cover,
             ),
@@ -133,7 +133,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
         context: context,
         builder: (BuildContext context) {
           return GiffyDialog.image(
-            Image.asset('lib/assets/failed.gif',
+            Image.asset(
+              'lib/assets/failed.gif',
               height: 200,
               fit: BoxFit.cover,
             ),
@@ -234,7 +235,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
 
       DateTime dateToCheck = DateTime.parse(date);
 
-      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) &&
+          dateToCheck.isBefore(endDate);
     }
     return false;
   }
@@ -397,8 +399,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                   children: [
                     //ini dropdown jangka waktu
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -412,7 +414,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                           fit: FlexFit.loose,
                           menuProps: MenuProps(
                             backgroundColor:
-                            isDarkTheme ? Colors.black : Colors.white,
+                                isDarkTheme ? Colors.black : Colors.white,
                             elevation: 0,
                           ),
                           showSelectedItems: true,
@@ -441,56 +443,76 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                         onChanged: (selectedItem) {
                           setState(() {
                             // Set nilai pilihan dropdown
-                            selectedPeriod = selectedItem ?? getTranslatedText("All");
+                            selectedPeriod =
+                                selectedItem ?? getTranslatedText("All");
 
                             // Set nilai pada search bar sesuai dengan pilihan dropdown
                             if (selectedPeriod == getTranslatedText("Daily")) {
-                              _textController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
-                            } else if (selectedPeriod == getTranslatedText("Weekly")) {
+                              _textController.text = DateFormat('yyyy-MM-dd')
+                                  .format(DateTime.now());
+                            } else if (selectedPeriod ==
+                                getTranslatedText("Weekly")) {
                               // Mendapatkan tanggal awal dan akhir minggu saat ini
                               DateTime now = DateTime.now();
-                              DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-                              DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
+                              DateTime startOfWeek =
+                                  now.subtract(Duration(days: now.weekday - 1));
+                              DateTime endOfWeek =
+                                  startOfWeek.add(Duration(days: 6));
 
                               _textController.text =
-                              '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
-                            } else if (selectedPeriod == getTranslatedText("Monthly")) {
+                                  '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
+                            } else if (selectedPeriod ==
+                                getTranslatedText("Monthly")) {
                               // Mendapatkan tanggal awal dan akhir bulan saat ini
                               DateTime now = DateTime.now();
-                              DateTime startOfMonth = DateTime(now.year, now.month, 1);
-                              DateTime endOfMonth = DateTime(now.year, now.month + 1, 1).subtract(Duration(days: 1));
+                              DateTime startOfMonth =
+                                  DateTime(now.year, now.month, 1);
+                              DateTime endOfMonth =
+                                  DateTime(now.year, now.month + 1, 1)
+                                      .subtract(Duration(days: 1));
 
                               _textController.text =
-                              '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
-                            } else if (selectedPeriod == getTranslatedText("Yearly")) {
+                                  '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
+                            } else if (selectedPeriod ==
+                                getTranslatedText("Yearly")) {
                               // Mendapatkan tanggal awal dan akhir tahun saat ini
                               DateTime now = DateTime.now();
                               DateTime startOfYear = DateTime(now.year, 1, 1);
                               DateTime endOfYear = DateTime(now.year, 12, 31);
 
                               _textController.text =
-                              '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
+                                  '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
                             } else {
                               _textController.text = "";
                             }
 
                             // Lakukan filter berdasarkan pilihan dropdown
                             _filteredData = _listdata.where((item) {
-                              String lowerCaseQuery = _textController.text.toLowerCase();
+                              String lowerCaseQuery =
+                                  _textController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan nama_perusahaan
-                              bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
-                              bool matchescreated_at = item['batas_tanggal'].toLowerCase().contains(lowerCaseQuery);
+                              bool matchesname = item['nama_perusahaan']
+                                  .toLowerCase()
+                                  .contains(lowerCaseQuery);
+                              bool matchescreated_at = item['batas_tanggal']
+                                  .toLowerCase()
+                                  .contains(lowerCaseQuery);
 
                               // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                              bool matchescreated_at2 = (item['batas_tanggal'] != null) &&
-                                  isDateInRange(
-                                    DateFormat('yyyy-MM-dd').format(DateTime.parse(item['batas_tanggal'])),
-                                    lowerCaseQuery,
-                                  );
+                              bool matchescreated_at2 =
+                                  (item['batas_tanggal'] != null) &&
+                                      isDateInRange(
+                                        DateFormat('yyyy-MM-dd').format(
+                                            DateTime.parse(
+                                                item['batas_tanggal'])),
+                                        lowerCaseQuery,
+                                      );
 
                               // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                              return matchesname || matchescreated_at || matchescreated_at2;
+                              return matchesname ||
+                                  matchescreated_at ||
+                                  matchescreated_at2;
                             }).toList();
                           });
                         },
@@ -499,8 +521,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                     ),
                     //ini searchbar
                     Container(
-                      width: mediaQueryWidth * 0.4,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.38,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -533,22 +555,39 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        String lowerCaseQuery = query.toLowerCase();
+                                        String lowerCaseQuery =
+                                            query.toLowerCase();
 
                                         // Mencocokkan berdasarkan
-                                        bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
-                                        bool matchescreated_at = item['batas_tanggal'].toLowerCase().contains(lowerCaseQuery);
-                                        bool matchesstatus = item['status_pesanan'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesname =
+                                            item['nama_perusahaan']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
+                                        bool matchescreated_at =
+                                            item['batas_tanggal']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
+                                        bool matchesstatus =
+                                            item['status_pesanan']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
 
                                         // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                                        bool matchescreated_at2 = (item['batas_tanggal'] != null) &&
-                                            isDateInRange(
-                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['batas_tanggal'])),
-                                              lowerCaseQuery,
-                                            );
+                                        bool matchescreated_at2 =
+                                            (item['batas_tanggal'] != null) &&
+                                                isDateInRange(
+                                                  DateFormat('yyyy-MM-dd')
+                                                      .format(DateTime.parse(
+                                                          item[
+                                                              'batas_tanggal'])),
+                                                  lowerCaseQuery,
+                                                );
 
                                         // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                                        return matchesname || matchescreated_at || matchescreated_at2 || matchesstatus;
+                                        return matchesname ||
+                                            matchescreated_at ||
+                                            matchescreated_at2 ||
+                                            matchesstatus;
                                       }).toList();
                                     });
                                   },
@@ -598,8 +637,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                     ),
                     //ini dropdown status
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -640,12 +679,15 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                         onChanged: (selectedItem) {
                           setState(() {
                             // Set nilai pilihan dropdown
-                            selectedStatus = selectedItem ?? getTranslatedText("All");
+                            selectedStatus =
+                                selectedItem ?? getTranslatedText("All");
 
                             // Set nilai pada search bar sesuai dengan pilihan dropdown
-                            if (selectedStatus == getTranslatedText("Waiting")) {
+                            if (selectedStatus ==
+                                getTranslatedText("Waiting")) {
                               _textController.text = ("Menunggu");
-                            } else if (selectedStatus == getTranslatedText("Ready Delivered")) {
+                            } else if (selectedStatus ==
+                                getTranslatedText("Ready Delivered")) {
                               _textController.text = ("Siap Diantar");
                             } else {
                               _textController.text = "";
@@ -653,10 +695,13 @@ class _LaporanWidgetState extends State<LaporanWidget> {
 
                             // Lakukan filter berdasarkan pilihan dropdown
                             _filteredData = _listdata.where((item) {
-                              String lowerCaseQuery = _textController.text.toLowerCase();
+                              String lowerCaseQuery =
+                                  _textController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan
-                              bool matchesstatus = item['status_pesanan'].toLowerCase().contains(lowerCaseQuery);
+                              bool matchesstatus = item['status_pesanan']
+                                  .toLowerCase()
+                                  .contains(lowerCaseQuery);
 
                               // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
                               return matchesstatus;
@@ -1142,8 +1187,11 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                             .fromSTEB(
                                                                 0, 4, 0, 0),
                                                     child: Text(
-                                                      DateFormat('dd-MM-yyyy').format(DateTime.parse(
-                                                          _filteredData[index]['batas_tanggal'])),
+                                                      DateFormat('dd-MM-yyyy')
+                                                          .format(DateTime.parse(
+                                                              _filteredData[
+                                                                      index][
+                                                                  'batas_tanggal'])),
                                                       style: TextStyle(
                                                         fontFamily: 'Inter',
                                                         color:
@@ -1234,8 +1282,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                             .fromSTEB(
                                                                 0, 4, 0, 0),
                                                     child: Text(
-                                                      _filteredData[index]
-                                                          ['harga_total'],
+                                                      'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_filteredData[index]['harga_total']))}',
                                                       style: TextStyle(
                                                         fontFamily: 'Inter',
                                                         color:

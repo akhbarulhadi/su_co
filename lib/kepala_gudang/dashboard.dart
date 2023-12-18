@@ -302,6 +302,10 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderWarehouse> {
           return 'Tersedia';
         case 'Price':
           return 'Harga';
+        case 'See Detail':
+          return 'Lihat Detail';
+        case 'Not yet added':
+          return 'Belum ditambahkan';
         case '':
           return '';
         case '':
@@ -980,7 +984,7 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderWarehouse> {
                                                     .fromSTEB(0, 4, 0, 0),
                                                 child: Text(
                                                   _listdatastock[index]['harga_produk'] != null
-                                                      ? 'Rp ${_listdatastock[index]['harga_produk']}'
+                                                      ? 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_listdatastock[index]['harga_produk']))}'
                                                       : getTranslatedText('Not yet added'),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',

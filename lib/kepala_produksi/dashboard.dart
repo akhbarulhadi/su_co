@@ -283,6 +283,12 @@ class DashboardPageLeaderProductionState
           return 'Ya';
         case 'Cancel':
           return 'Batal';
+        case 'Activity':
+          return 'Aktivitas';
+        case 'Confirmation':
+          return 'Konfirmasi';
+        case '':
+          return '';
         case '':
           return '';
 

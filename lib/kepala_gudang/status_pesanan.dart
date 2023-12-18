@@ -118,7 +118,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
               textAlign: TextAlign.center,
             ),
             content: Text(
-              getTranslatedText('Order quantity exceeds stock'),
+              getTranslatedText('Insufficient stock quantity'),
               textAlign: TextAlign.center,
             ),
             actions: [
@@ -353,8 +353,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           return 'Ya';
         case 'No':
           return 'Tidak';
-        case 'Order quantity exceeds stock':
-          return 'Jumlah pesanan melebihi stok';
+        case 'Insufficient stock quantity':
+          return 'Jumlah stok tidak mencukupi';
         case '':
           return '';
 
@@ -456,8 +456,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                   children: [
                     //ini dropdown jangka waktu
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -558,8 +558,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                     ),
                     //ini searchbar
                     Container(
-                      width: mediaQueryWidth * 0.4,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.38,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -657,8 +657,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                     ),
                     //ini dropdown status
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -1284,8 +1284,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                                             .fromSTEB(
                                                                 0, 4, 0, 0),
                                                     child: Text(
-                                                      _filteredData[index]
-                                                          ['harga_total'],
+                                                      'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_filteredData[index]['harga_total']))}',
                                                       style: TextStyle(
                                                         fontFamily: 'Inter',
                                                         color:
@@ -1314,63 +1313,6 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    // Tambahkan aksi yang ingin ditampilkan pada tampilan pencarian
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    // Ikon yang ditampilkan di sebelah kiri pada AppBar
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // Tampilkan hasil pencarian di sini (jika ada)
-    return Center(
-      child: Text('Hasil pencarian untuk: $query'),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // Tampilkan saran pencarian saat pengguna mengetik
-    return ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text('Saran 1'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 1');
-          },
-        ),
-        ListTile(
-          title: Text('Saran 2'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 2');
-          },
-        ),
-      ],
     );
   }
 }

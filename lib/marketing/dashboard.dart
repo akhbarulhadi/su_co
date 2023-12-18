@@ -26,7 +26,10 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
   List _listdatastok = [];
   bool _isloading = true;
   Map<int, Color> colorMap = {}; // Menyimpan warna berdasarkan id_klien
-
+  final _formKey = GlobalKey<FormState>();
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
 
   @override
   void initState() {
@@ -375,8 +378,8 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Selesai pada';
         case 'No income yet':
           return 'Belum ada';
-        case 'Search...':
-          return 'Cari...';
+        case 'Input Date':
+          return 'Masukkan Tanggal';
         case 'Product Name':
           return 'Nama Produk';
         case 'Stock':
@@ -516,7 +519,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                 ),
                                 Text(
                                   _totalHargaSelesai != ''
-                                      ? 'Rp ${_totalHargaSelesai}'
+                                      ? 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_totalHargaSelesai))}'
                                       : getTranslatedText('No income yet'),
                                   style: TextStyle(
                                     fontSize: 16,
@@ -532,7 +535,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                     ),
                     Container(
                       width: mediaQueryWidth * 0.4,
-                      height: bodyHeight * 0.048,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -564,7 +567,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                   controller: textController,
                                   obscureText: false,
                                   decoration: InputDecoration(
-                                    hintText: getTranslatedText('Search...'),
+                                    hintText: getTranslatedText('Input Date'),
                                     enabledBorder: UnderlineInputBorder(
                                       borderSide: BorderSide(
                                         color: Colors.transparent,
@@ -592,7 +595,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                         ? Colors.white
                                         : Colors.black,
                                     fontSize: screenWidth *
-                                        0.035, // Ukuran teks pada tombol
+                                        0.020, // Ukuran teks pada tombol
                                     fontWeight: FontWeight.normal,
                                   ),
                                   readOnly: true,
@@ -707,7 +710,8 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) => LaporanWidget()));
+                                                    builder: (context) =>
+                                                        LaporanWidget()));
                                           },
                                           child: Text(
                                             getTranslatedText('See Detail'),
@@ -766,7 +770,8 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                               NeverScrollableScrollPhysics(),
                                           itemCount: _listdata.length,
                                           itemBuilder: (context, index) {
-                                            int idKlien = _listdata[index]['id_klien'];
+                                            int idKlien =
+                                                _listdata[index]['id_klien'];
                                             return GestureDetector(
                                               onTap: () {
                                                 if (_listdata[index]
@@ -945,8 +950,9 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                                         0.07,
                                                                 decoration:
                                                                     BoxDecoration(
-                                                                      color: getColorForId(idKlien),
-                                                                      shape: BoxShape
+                                                                  color: getColorForId(
+                                                                      idKlien),
+                                                                  shape: BoxShape
                                                                       .circle,
                                                                 ),
                                                                 alignment:
@@ -1168,16 +1174,30 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                   mainAxisSize:
                                                       MainAxisSize.min,
                                                   children: [
-                                                    TextField(
-                                                      controller:
-                                                          priceController,
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                      decoration: InputDecoration(
-                                                          icon: Text('Rp'),
-                                                          labelText:
-                                                              getTranslatedText(
-                                                                  'Price')),
+                                                    Form(
+                                                      key: _formKey,
+                                                      child: TextFormField(
+                                                        controller:
+                                                            priceController,
+                                                        keyboardType:
+                                                            TextInputType
+                                                                .number,
+                                                        decoration: InputDecoration(
+                                                            icon: Text('Rp'),
+                                                            labelText:
+                                                                getTranslatedText(
+                                                                    'Price')),
+                                                        validator: (value) {
+                                                          if (value == null ||
+                                                              value.isEmpty) {
+                                                            return 'Isi Datanya';
+                                                          } else if (!isNumeric(
+                                                              value)) {
+                                                            return 'harus mengandung angka saja';
+                                                          }
+                                                          return null;
+                                                        },
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
@@ -1196,11 +1216,15 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                         ),
                                                       ),
                                                       onPressed: () async {
-                                                        await _updatePrice(
-                                                            context,
-                                                            index,
-                                                            priceController
-                                                                .text);
+                                                        if (_formKey
+                                                            .currentState!
+                                                            .validate()) {
+                                                          await _updatePrice(
+                                                              context,
+                                                              index,
+                                                              priceController
+                                                                  .text);
+                                                        }
                                                       },
                                                       child: Text(
                                                         getTranslatedText(
@@ -1385,7 +1409,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                                         [
                                                                         'harga_produk'] !=
                                                                     null
-                                                                ? 'Rp ${_listdatastok[index]['harga_produk']}'
+                                                                ? 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_listdatastok[index]['harga_produk']))}'
                                                                 : getTranslatedText(
                                                                     'Not yet added'),
                                                             style: TextStyle(
@@ -1395,7 +1419,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                                   0xFFFFFFFE),
                                                               fontSize:
                                                                   screenWidth *
-                                                                      0.04, // Ukuran teks pada tombol
+                                                                      0.04,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .normal,

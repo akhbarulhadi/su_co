@@ -26,10 +26,14 @@ class StockState extends State<Stock> {
   bool _isloading = true;
   List _filteredData = [];
   final _formKey = GlobalKey<FormState>();
+  bool isDataBenar = false;
   TextEditingController kodeprodukController = TextEditingController();
   TextEditingController namaprodukController = TextEditingController();
   TextEditingController jumlahprodukController = TextEditingController();
   TextEditingController jenisprodukController = TextEditingController();
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
 
   @override
   void initState() {
@@ -120,6 +124,12 @@ class StockState extends State<Stock> {
     );
 
     if (response.statusCode == 201) {
+      setState(() {
+        isDataBenar = false; // Set data ke false
+        namaprodukController.clear(); // Kosongkan form
+        jumlahprodukController.clear();
+        jenisprodukController.clear();
+      });
       await _getdata();
       showDialog(
         context: context,
@@ -274,6 +284,18 @@ class StockState extends State<Stock> {
           return 'Buat Produk';
         case 'Cancel':
           return 'Batal';
+        case 'Add Product':
+          return 'Tambah Produk';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
         case '':
           return '';
         case '':
@@ -355,7 +377,7 @@ class StockState extends State<Stock> {
                   children: [
                     Container(
                       width: mediaQueryWidth * 0.6,
-                      height: bodyHeight * 0.048,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -465,7 +487,7 @@ class StockState extends State<Stock> {
                                 ),
                                 title: Center(
                                     child: Text(
-                                        getTranslatedText('Add Produk'))),
+                                        getTranslatedText('Add Product'))),
                                 content: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -489,8 +511,12 @@ class StockState extends State<Stock> {
                                           labelText: getTranslatedText(
                                               'Number Of Products')),
                                       validator: (value) {
-                                        if (value == null || value.isEmpty) {
+                                        if (value == null ||
+                                            value.isEmpty) {
                                           return 'Isi Datanya';
+                                        } else if (!isNumeric(
+                                            value)) {
+                                          return 'harus mengandung angka saja';
                                         }
                                         return null;
                                       },
@@ -500,7 +526,7 @@ class StockState extends State<Stock> {
                                       keyboardType: TextInputType.text,
                                       decoration: InputDecoration(
                                           labelText: getTranslatedText(
-                                              'Types Of Products')),
+                                              'Types Of Product')),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Isi Datanya';
@@ -715,7 +741,7 @@ class StockState extends State<Stock> {
                                                     .fromSTEB(0, 4, 0, 0),
                                                 child: Text(
                                                   _filteredData[index]['harga_produk'] != null
-                                                      ? 'Rp ${_filteredData[index]['harga_produk']}'
+                                                      ? 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_filteredData[index]['harga_produk']))}'
                                                       : getTranslatedText('Not yet added'),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',

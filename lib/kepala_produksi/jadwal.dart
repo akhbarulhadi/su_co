@@ -285,6 +285,14 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'sudah sesuai';
         case 'finished':
           return 'selesai';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
         default:
           return text;
       }
@@ -377,8 +385,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 children: [
                   //ini dropdown jangka waktu
                   Container(
-                    width: mediaQueryWidth * 0.25,
-                    height: bodyHeight * 0.048,
+                    width: mediaQueryWidth * 0.28,
+                    height: bodyHeight * 0.060,
                     decoration: BoxDecoration(
                       color: isDarkTheme ? Colors.white24 : Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -499,8 +507,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                   ),
                   //ini searchbar
                   Container(
-                    width: mediaQueryWidth * 0.4,
-                    height: bodyHeight * 0.048,
+                    width: mediaQueryWidth * 0.38,
+                    height: bodyHeight * 0.060,
                     decoration: BoxDecoration(
                       color: isDarkTheme ? Colors.white24 : Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -612,8 +620,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                   ),
                   //ini dropdown status
                   Container(
-                    width: mediaQueryWidth * 0.25,
-                    height: bodyHeight * 0.048,
+                    width: mediaQueryWidth * 0.28,
+                    height: bodyHeight * 0.060,
                     decoration: BoxDecoration(
                       color: isDarkTheme ? Colors.white24 : Colors.white,
                       borderRadius: BorderRadius.circular(12),

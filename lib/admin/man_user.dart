@@ -531,8 +531,8 @@ class UserManagementPageState extends State<UserManagementPage> {
                   children: [
                     //ini dropdown status
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -600,8 +600,8 @@ class UserManagementPageState extends State<UserManagementPage> {
                       ),
                     ),
                     Container(
-                      width: mediaQueryWidth * 0.4,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.38,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -710,7 +710,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        minimumSize: Size(110, 28),
+                        minimumSize: Size(100, 18),
                         padding: EdgeInsets.all(10),
                         elevation: 3,
                         shape: RoundedRectangleBorder(

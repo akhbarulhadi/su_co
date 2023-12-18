@@ -80,7 +80,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(getTranslatedText("Confirmation")),
-          content: Text("Are you sure you want to create a schedule?"),
+          content: Text(getTranslatedText("Are you sure you want to create a schedule?")),
           actions: [
             TextButton(
               onPressed: () {
@@ -241,8 +241,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
           return 'Ya';
         case 'No':
           return 'Tidak';
-        case '':
-          return '';
+        case 'Confirmation':
+          return 'Konfirmasi';
         case '':
           return '';
         case '':
@@ -356,8 +356,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                   children: [
                     //ini dropdown jangka waktu
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -478,8 +478,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                     ),
                     //ini searchbar
                     Container(
-                      width: mediaQueryWidth * 0.4,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.38,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -594,8 +594,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                     ),
                     //ini dropdown status
                     Container(
-                      width: mediaQueryWidth * 0.25,
-                      height: bodyHeight * 0.048,
+                      width: mediaQueryWidth * 0.28,
+                      height: bodyHeight * 0.060,
                       decoration: BoxDecoration(
                         color: isDarkTheme ? Colors.white24 : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -1193,8 +1193,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                             .fromSTEB(
                                                                 0, 4, 0, 0),
                                                     child: Text(
-                                                      _filteredData[index]
-                                                          ['harga_total'],
+                                                      'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_filteredData[index]['harga_total']))}',
                                                       style: TextStyle(
                                                         fontFamily: 'Inter',
                                                         color:
