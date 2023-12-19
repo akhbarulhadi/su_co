@@ -667,7 +667,6 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                             0.020, // Ukuran teks pada tombol
                                           fontWeight: FontWeight.normal,),
                                         // Menghilangkan ikon segitiga ke bawah
-                                        icon: const SizedBox.shrink(), // Menghilangkan ikon segitiga ke bawah
                                       ),
                                     ),
                                   ),
