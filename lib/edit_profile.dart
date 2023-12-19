@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:giffy_dialog/giffy_dialog.dart';
 
 final StreamController<void> _streamController =
     StreamController<void>.broadcast();
@@ -194,10 +195,86 @@ class EditProfilePage extends State<EditProfile> {
       var response = await request.send();
 
       if (response.statusCode == 200) {
-        // Berhasil menyimpan perubahan, tambahkan logika atau pindah ke halaman lain jika perlu
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/success-tick-dribbble.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Successfully'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Close')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
         print('Profile changes saved successfully');
       } else {
-        // Gagal menyimpan perubahan, tampilkan pesan kesalahan atau lakukan sesuatu yang sesuai
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return GiffyDialog.image(
+              Image.asset('lib/assets/failed.gif',
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              title: Text(
+                getTranslatedText('Failed'),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                getTranslatedText(''),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Close')),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
         print('Failed to save profile changes: ${response.reasonPhrase}');
       }
     } catch (e) {
@@ -205,6 +282,51 @@ class EditProfilePage extends State<EditProfile> {
       print("Error: $e");
     }
   }
+
+  String getTranslatedText(String text) {
+    if (selectedLanguage == 'IDN') {
+      // Teks dalam bahasa Indonesia
+      switch (text) {
+        case 'Profile':
+          return 'Profil';
+        case 'Address':
+          return 'Alamat';
+        case 'Save':
+          return 'Simpan';
+        case 'Cancel':
+          return 'Batal';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Close':
+          return 'Tutup';
+        case 'Failed':
+          return 'Gagal';
+        case 'No Image':
+          return 'Tidak ada gambar';
+        case 'Edit Profile Photo':
+          return 'Edit Foto Profil';
+        case 'Select Photo':
+          return 'Pilih Gambar';
+        case 'Take a Photo':
+          return 'Ambil Gambar';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+
+        default:
+          return text;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return text;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +352,7 @@ class EditProfilePage extends State<EditProfile> {
           title: Align(
             alignment: Alignment.center,
             child: Text(
-              'Edit Profile',
+              getTranslatedText('Profile'),
               style: TextStyle(
                 fontSize: 20.0,
                 color: isDarkTheme ? Colors.white : Colors.black,
@@ -281,7 +403,7 @@ class EditProfilePage extends State<EditProfile> {
                             child: MaterialButton(
                               textColor:
                                   isDarkTheme ? Colors.white : Colors.black,
-                              child: Text('Edit Profile Photo'),
+                              child: Text(getTranslatedText('Edit Profile Photo')),
                               onPressed: () {
                                 showModalBottomSheet(
                                   context: context,
@@ -306,7 +428,7 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text('Select Photo'),
+                                                Text(getTranslatedText('Select Photo')),
                                               ],
                                             ),
                                           ),
@@ -323,7 +445,7 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text('Take a Photo'),
+                                                Text(getTranslatedText('Take a Photo')),
                                               ],
                                             ),
                                           ),
@@ -337,7 +459,7 @@ class EditProfilePage extends State<EditProfile> {
                           ),
                           Center(
                             child: _imageFile == null
-                                ? Text('No Image')
+                                ? Text(getTranslatedText('No Image'))
                                 : Text(
                                     "Suco_Photo: ${_imageFile!.path.split('/').last}"),
                           ),
@@ -345,7 +467,7 @@ class EditProfilePage extends State<EditProfile> {
                             controller: _alamatController,
                             obscureText: false,
                             decoration: InputDecoration(
-                              labelText: 'Alamat',
+                              labelText: getTranslatedText('Address'),
                               contentPadding: EdgeInsets.all(13),
                             ),
                             style: TextStyle(fontSize: 16),
@@ -366,7 +488,7 @@ class EditProfilePage extends State<EditProfile> {
                                 await saveProfileChanges();
                               },
                               child: Text(
-                                'Save',
+                                getTranslatedText('Save'),
                                 style: TextStyle(
                                   fontSize: 16,
                                 ),

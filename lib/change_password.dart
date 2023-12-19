@@ -60,6 +60,14 @@ class ChangePassState extends State<ChangePassWidget> {
           return 'Konfirmasi Kata Sandi Baru';
         case 'Save Changes':
           return 'Simpan Perubahan';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Close':
+          return 'Tutup';
+        case 'Failed':
+          return 'Gagal';
+        case 'Wrong password':
+          return 'Kata sandi salah';
 
         default:
           return text;
@@ -118,7 +126,7 @@ class ChangePassState extends State<ChangePassWidget> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -149,7 +157,7 @@ class ChangePassState extends State<ChangePassWidget> {
               textAlign: TextAlign.center,
             ),
             content: Text(
-              getTranslatedText(''),
+              getTranslatedText('Wrong password'),
               textAlign: TextAlign.center,
             ),
             actions: [
@@ -160,7 +168,7 @@ class ChangePassState extends State<ChangePassWidget> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -337,14 +345,22 @@ class ChangePassState extends State<ChangePassWidget> {
                                   },
                                 ),
                               ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Isi Datanya';
+                                } else if (value != newPasswordController.text) {
+                                  return 'Konfirmasi password tidak cocok dengan password baru';
+                                }
+                                return null;
+                              },
                               style: TextStyle(fontSize: 16),
                             ),
                             Padding(
                               padding: EdgeInsets.fromLTRB(50, 50, 50, 10),
                               child: ElevatedButton(
                                 onPressed: () {
-                                  if (currentPasswordController.text.isNotEmpty &&
-                                      newPasswordController.text.isNotEmpty && _formKey.currentState!.validate()) {
+                                  if (_formKey.currentState!.validate() && currentPasswordController.text.isNotEmpty &&
+                                      newPasswordController.text.isNotEmpty) {
                                     changePassword(currentPasswordController.text,
                                         newPasswordController.text);
                                   } else {

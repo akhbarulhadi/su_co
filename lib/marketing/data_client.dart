@@ -93,7 +93,7 @@ class KlientPage extends State<DataClient> {
               textAlign: TextAlign.center,
             ),
             content: Text(
-              getTranslatedText('Do you want to fill in the data again ?'),
+              getTranslatedText('Fill in the data again ?'),
               textAlign: TextAlign.center,
             ),
             actions: [
@@ -107,7 +107,7 @@ class KlientPage extends State<DataClient> {
                           MaterialPageRoute(
                               builder: (context) => Pesanan()));
                     },
-                    child: Text(getTranslatedText('No, Thank You')),
+                    child: Text(getTranslatedText('No')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -123,7 +123,7 @@ class KlientPage extends State<DataClient> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Fill in the Data Again')),
+                    child: Text(getTranslatedText('Yes')),
                     style: TextButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -159,7 +159,7 @@ class KlientPage extends State<DataClient> {
               textAlign: TextAlign.center,
             ),
             content: Text(
-              getTranslatedText(''),
+              getTranslatedText('The data already exists'),
               textAlign: TextAlign.center,
             ),
             actions: [
@@ -170,7 +170,7 @@ class KlientPage extends State<DataClient> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -204,6 +204,20 @@ class KlientPage extends State<DataClient> {
           return 'Alamat';
         case 'Add':
           return 'Tambahkan';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Close':
+          return 'Tutup';
+        case 'Failed':
+          return 'Gagal';
+        case 'Fill in the data again ?':
+          return 'Isi data lagi ?';
+        case 'No':
+          return 'Tidak';
+        case 'The data already exists':
+          return 'Data sudah ada';
+        case 'Yes':
+          return 'Ya';
         case '':
           return '';
 

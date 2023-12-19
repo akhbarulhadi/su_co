@@ -125,8 +125,8 @@ class HistoryOrderState extends State<HistoryOrder> {
           return 'Alamat';
         case 'Product Name':
           return 'Nama Produk';
-        case 'No history yet':
-          return 'Belum ada riwayat';
+        case 'No history':
+          return 'Tidak ada riwayat';
         case 'Finished':
           return 'Selesai';
         case 'Total Price':

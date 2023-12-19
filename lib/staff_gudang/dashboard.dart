@@ -69,8 +69,47 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
     if (response.statusCode == 200) {
       // Berhasil mengurangkan jumlah_pesanan
       print('Jumlah pesanan berhasil diperbarui');
-      await _updateStatus(index, _listdata[index]['id_produksi'], 'selesai');
+      await _updateStatus(index, _listdata[index]['id_produksi'], 'selesai.');
     } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset('lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Close')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
       // Gagal mengurangkan jumlah_pesanan
       print('Gagal menambahkan jumlah produk');
 
@@ -115,7 +154,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -158,7 +197,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -276,6 +315,16 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
           return 'Ya';
         case 'No':
           return 'Tidak';
+        case 'No Production':
+          return 'Tidak ada produksi';
+        case 'No Stock':
+          return 'Tidak ada stok';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Close':
+          return 'Tutup';
+        case 'Failed':
+          return 'Gagal';
         case '':
           return '';
         case '':
@@ -310,6 +359,16 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
           return 'finished';
         case '':
           return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+
+
       // Tambahkan kases lain jika diperlukan
         default:
           return status;

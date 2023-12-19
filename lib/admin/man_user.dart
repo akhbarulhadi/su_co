@@ -125,7 +125,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -169,7 +169,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -208,46 +208,73 @@ class UserManagementPageState extends State<UserManagementPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(getTranslatedText('Select new status:')),
-                  DropdownButton<String>(
-                    value: selectedStatus,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedStatus = newValue!;
-                      });
-                    },
-                    items: ['aktif', 'tidak-aktif'].map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
+                  Row(
+                    children: [
+                      Radio(
+                        value: 'aktif.',
+                        groupValue: selectedStatus,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedStatus = newValue!;
+                          });
+                        },
+                      ),
+                      Text(getTranslatedText('active')),
+                      Radio(
+                        value: 'tidak-aktif',
+                        groupValue: selectedStatus,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedStatus = newValue!;
+                          });
+                        },
+                      ),
+                      Text(getTranslatedText('not active')),
+                    ],
                   ),
                 ],
               ),
               actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    // Memeriksa apakah status berubah sebelum pembaruan
-                    if (selectedStatus != _filteredData[index]['status']) {
-                      // Print status yang baru di terminal
-                      // print('User ID: $userId - New Status: $selectedStatus');
-                    }
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        // Memeriksa apakah status berubah sebelum pembaruan
+                        if (selectedStatus != _filteredData[index]['status']) {
+                          // Print status yang baru di terminal
+                          // print('User ID: $userId - New Status: $selectedStatus');
+                        }
 
-                    _updateUserStatus(context, userId, selectedStatus);
-                  },
-                  child: Text(getTranslatedText('Save')),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Tutup dialog
-                  },
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.red, // Warna latar belakang
-                  ),
-                  child: Text(
-                    getTranslatedText('Cancel'),
-                    style: TextStyle(color: Colors.white), // Warna teks
-                  ),
+                        _updateUserStatus(context, userId, selectedStatus);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                        ),
+                      ),
+                      child: Text(getTranslatedText('Save')),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(getTranslatedText('Cancel')),
+                      style: TextButton.styleFrom(
+                        minimumSize: Size(100, 40),
+                        padding: EdgeInsets.all(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(19),
+                          side: BorderSide(
+                            color: Color(0xFF3DA9FC), // Warna border
+                            width: 1.0, // Lebar border
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
               ],
@@ -296,7 +323,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -340,7 +367,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -433,15 +460,42 @@ class UserManagementPageState extends State<UserManagementPage> {
           return 'Pilih status baru:';
         case 'active':
           return 'aktif';
-        case 'not-active':
-          return 'tidak_aktif';
+        case 'not active':
+          return 'tidak aktif';
         case 'Save':
           return 'Simpan';
         case 'Cancel':
           return 'Batal';
+        case 'Select Status':
+          return 'Pilih Status';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Close':
+          return 'Tutup';
+        case 'Failed':
+          return 'Gagal';
+        case 'No User':
+          return 'Tidak ada pengguna';
+        case 'Reset Password':
+          return 'Reset Kata Sandi';
+        case 'The password will be reset to default':
+          return 'Password akan di reset ke awal';
+        case 'Yes':
+          return 'Ya';
+        case 'No':
+          return 'Tidak';
         case '':
           return '';
-
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
 
         default:
           return text;
@@ -458,8 +512,8 @@ class UserManagementPageState extends State<UserManagementPage> {
       switch (status) {
         case 'aktif':
           return 'active';
-        case 'tidak-aktif':
-          return 'not-active';
+        case 'tidak aktif':
+          return 'not active';
         case '':
           return '';
       // Tambahkan kases lain jika diperlukan
@@ -554,7 +608,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                         items: [
                           getTranslatedText("All"),
                           getTranslatedText("active"),
-                          getTranslatedText('not-active'),
+                          getTranslatedText('not active'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -577,16 +631,16 @@ class UserManagementPageState extends State<UserManagementPage> {
 
                             // Set nilai pada search bar sesuai dengan pilihan dropdown
                             if (selectedStatus == getTranslatedText("active")) {
-                              _textController.text = ("aktif");
-                            } else if (selectedStatus == getTranslatedText("not-active")) {
-                              _textController.text = ("tidak-aktif");
+                              _textstatusController.text = ("aktif.");
+                            } else if (selectedStatus == getTranslatedText("not active")) {
+                              _textstatusController.text = ("tidak-aktif");
                             } else {
-                              _textController.text = "";
+                              _textstatusController.text = "";
                             }
 
                             // Lakukan filter berdasarkan pilihan dropdown
                             _filteredData = _listdata.where((item) {
-                              String lowerCaseQuery = _textController.text.toLowerCase();
+                              String lowerCaseQuery = _textstatusController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan
                               bool matchesstatus = item['status'].toLowerCase().contains(lowerCaseQuery);
@@ -599,6 +653,110 @@ class UserManagementPageState extends State<UserManagementPage> {
                         selectedItem: getTranslatedText("All"),
                       ),
                     ),
+                    //ini searchbar untuk status
+                    Visibility(
+                      visible: false,
+                      child: Container(
+                        width: mediaQueryWidth * 0.38,
+                        height: bodyHeight * 0.060,
+                        decoration: BoxDecoration(
+                          color: isDarkTheme ? Colors.white24 : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDarkTheme ? Colors.white38 : Colors.black38,
+                            width: 1, // Lebar garis tepi
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.search_rounded,
+                                  color: isDarkTheme
+                                      ? Colors.white
+                                      : Color(
+                                      0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                  size: 15,
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 12),
+                                  child: TextFormField(
+                                    controller: _textstatusController,
+                                    onChanged: (query) {
+                                      setState(() {
+                                        _filteredData = _listdata.where((item) {
+                                          String lowerCaseQuery = query.toLowerCase();
+
+                                          // Mencocokkan berdasarkan
+                                          bool matchesname = item['nama'].toLowerCase().contains(lowerCaseQuery);
+                                          bool matchesroles = item['roles'].toLowerCase().contains(lowerCaseQuery);
+                                          bool matchescreated_at = item['created_at'].toLowerCase().contains(lowerCaseQuery);
+                                          bool matchesstatus = item['status'].toLowerCase().contains(lowerCaseQuery);
+
+                                          // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                          bool matchescreated_at2 = (item['created_at'] != null) &&
+                                              isDateInRange(
+                                                DateFormat('yyyy-MM-dd').format(DateTime.parse(item['created_at'])),
+                                                lowerCaseQuery,
+                                              );
+
+                                          // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                          return matchesname || matchescreated_at || matchescreated_at2 || matchesstatus || matchesroles;
+                                        }).toList();
+                                      });
+                                    },
+                                    obscureText: false,
+                                    decoration: InputDecoration(
+                                      hintText: getTranslatedText('Search...'),
+                                      enabledBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.transparent,
+                                          width: 1,
+                                        ),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(4.0),
+                                          topRight: Radius.circular(4.0),
+                                        ),
+                                      ),
+                                      focusedBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.transparent,
+                                          width: 1,
+                                        ),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(4.0),
+                                          topRight: Radius.circular(4.0),
+                                        ),
+                                      ),
+                                    ),
+                                    style: TextStyle(
+                                      fontFamily: 'Clash Display',
+                                      color: isDarkTheme
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontSize: screenWidth *
+                                          0.035, // Ukuran teks pada tombol
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                    validator: (value) {
+                                      // Validasi teks input
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    //ini searchbar
                     Container(
                       width: mediaQueryWidth * 0.38,
                       height: bodyHeight * 0.060,
@@ -729,7 +887,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                       )
                     : _filteredData.isEmpty
                         ? Center(
-                            child: Text(getTranslatedText('No Order')),
+                            child: Text(getTranslatedText('No User')),
                           )
                         : ListView.builder(
                             itemCount: _filteredData.length,
@@ -765,7 +923,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                               TextEditingController statusController =
                               TextEditingController(
                                   text: _filteredData[index]['status']
-                                      .toString());
+                                      .toString().replaceAll('.', ''));
                               return GestureDetector(
                                 onTap: () {
                                   showDialog(
@@ -783,35 +941,6 @@ class UserManagementPageState extends State<UserManagementPage> {
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Column(
-                                              children: [
-                                                Visibility(
-                                                  visible: false,
-                                                  child: TextField(
-                                                    controller:
-                                                        idStaffController,
-                                                    keyboardType:
-                                                        TextInputType.text,
-                                                    decoration: InputDecoration(
-                                                      labelText:
-                                                          getTranslatedText(
-                                                              'idStaff'),
-                                                    ),
-                                                    enabled: false,
-                                                  ),
-                                                ),
-                                                IconButton(
-                                                  onPressed: () async {
-                                                    await _resetPassword(
-                                                        context,
-                                                        index,
-                                                        idStaffController.text);
-                                                  },
-                                                  icon: Icon(
-                                                      Icons.lock_reset_rounded),
-                                                ),
-                                              ],
-                                            ),
                                             TextField(
                                               controller: idStaffController,
                                               keyboardType: TextInputType.text,
@@ -902,7 +1031,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                                                 ),
                                                 Text(
                                                   _filteredData[index]
-                                                      ['status'],
+                                                      ['status'].toString().replaceAll('.', '').replaceAll('-', ''),
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Colors.white,
@@ -914,16 +1043,99 @@ class UserManagementPageState extends State<UserManagementPage> {
                                                 ),
                                               ],
                                             ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                                _showStatusChangeDialog(
-                                                    context,
-                                                    index,
-                                                    _filteredData[index]
-                                                        ['id_user']);
-                                              },
-                                              child: Text(getTranslatedText('Change Status')),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext context) {
+                                                        return AlertDialog(
+                                                          title: Text(
+                                                            getTranslatedText('Reset Password'),
+                                                            textAlign: TextAlign.center,
+                                                          ),
+                                                          content: Column(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              Text(getTranslatedText('The password will be reset to default'))
+                                                            ],
+                                                          ),
+
+                                                          actions: [
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                              children: [
+                                                                ElevatedButton(
+                                                                  onPressed: () async {
+                                                                    await _resetPassword(
+                                                                        context,
+                                                                        index,
+                                                                        idStaffController.text);
+                                                                  },
+                                                                  child: Text(getTranslatedText('Yes')),
+                                                                  style: ElevatedButton.styleFrom(
+                                                                    minimumSize: Size(100, 40),
+                                                                    padding: EdgeInsets.all(10),
+                                                                    shape: RoundedRectangleBorder(
+                                                                      borderRadius: BorderRadius.circular(19),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                TextButton(
+                                                                  onPressed: () {
+                                                                    Navigator.pop(context);
+                                                                  },
+                                                                  child: Text(getTranslatedText('No')),
+                                                                  style: TextButton.styleFrom(
+                                                                    minimumSize: Size(100, 40),
+                                                                    padding: EdgeInsets.all(10),
+                                                                    shape: RoundedRectangleBorder(
+                                                                      borderRadius: BorderRadius.circular(19),
+                                                                      side: BorderSide(
+                                                                        color: Color(0xFF3DA9FC), // Warna border
+                                                                        width: 1.0, // Lebar border
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    minimumSize: Size(100, 40),
+                                                    padding: EdgeInsets.all(10),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(19),
+                                                    ),
+                                                  ),
+                                                  child: Text(getTranslatedText('Reset Password')),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    _showStatusChangeDialog(
+                                                        context,
+                                                        index,
+                                                        _filteredData[index]
+                                                            ['id_user']);
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    minimumSize: Size(100, 40),
+                                                    padding: EdgeInsets.all(10),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(19),
+                                                    ),
+                                                  ),
+                                                  child: Text(getTranslatedText('Change Status')),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
@@ -1033,7 +1245,7 @@ class UserManagementPageState extends State<UserManagementPage> {
                                                           ),
                                                           Text(
                                                             getTranslatedDatabase(_filteredData[index]
-                                                            ['status']),
+                                                            ['status'].toString().replaceAll('.', '').replaceAll('-', ' '),),
                                                             style: TextStyle(
                                                               fontFamily: 'Inter',
                                                               color: Colors.white,

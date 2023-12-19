@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('jumlah_produksi');
             $table->unsignedBigInteger('id_user');
             $table->foreign('id_user')->references('id_user')->on('users');
-            $table->enum('status_produksi', ['belum selesai', 'sudah dibuat', 'sudah sesuai', 'selesai'])->default('belum selesai');
+            $table->enum('status_produksi', ['belum selesai', 'sudah dibuat', 'sudah sesuai', 'selesai.'])->default('belum selesai');
             $table->date('tanggal_produksi');
             $table->timestamps();
         });

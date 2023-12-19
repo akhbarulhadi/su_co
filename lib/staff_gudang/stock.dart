@@ -286,8 +286,8 @@ class StockState extends State<Stock> {
           return 'Batal';
         case 'Add Product':
           return 'Tambah Produk';
-        case '':
-          return '';
+        case 'No Stock':
+          return 'Tidak ada stok';
         case '':
           return '';
         case '':

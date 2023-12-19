@@ -128,6 +128,10 @@ class StockState extends State<Stock> {
           return 'Simpan';
         case 'Not yet added':
           return 'Belum ditambahkan';
+        case 'No Stock':
+          return 'Tidak ada stok';
+        case '':
+          return '';
         case '':
           return '';
 

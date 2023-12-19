@@ -105,7 +105,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -154,7 +154,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -294,6 +294,12 @@ class _LaporanWidgetState extends State<LaporanWidget> {
           return 'Ya';
         case 'No':
           return 'Tidak';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
         case '':
           return '';
         case '':
@@ -685,18 +691,18 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                             // Set nilai pada search bar sesuai dengan pilihan dropdown
                             if (selectedStatus ==
                                 getTranslatedText("Waiting")) {
-                              _textController.text = ("Menunggu");
+                              _textstatusController.text = ("Menunggu");
                             } else if (selectedStatus ==
                                 getTranslatedText("Ready Delivered")) {
-                              _textController.text = ("Siap Diantar");
+                              _textstatusController.text = ("Siap Diantar");
                             } else {
-                              _textController.text = "";
+                              _textstatusController.text = "";
                             }
 
                             // Lakukan filter berdasarkan pilihan dropdown
                             _filteredData = _listdata.where((item) {
                               String lowerCaseQuery =
-                                  _textController.text.toLowerCase();
+                              _textstatusController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan
                               bool matchesstatus = item['status_pesanan']
@@ -709,6 +715,125 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                           });
                         },
                         selectedItem: getTranslatedText("All"),
+                      ),
+                    ),
+                    //ini searchbar untuk dropdown status
+                    Visibility(
+                      visible: false,
+                      child: Container(
+                        width: mediaQueryWidth * 0.38,
+                        height: bodyHeight * 0.060,
+                        decoration: BoxDecoration(
+                          color: isDarkTheme ? Colors.white24 : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDarkTheme ? Colors.white38 : Colors.black38,
+                            width: 1, // Lebar garis tepi
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.search_rounded,
+                                  color: isDarkTheme
+                                      ? Colors.white
+                                      : Color(
+                                      0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                  size: 15,
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 12),
+                                  child: TextFormField(
+                                    controller: _textstatusController,
+                                    onChanged: (query) {
+                                      setState(() {
+                                        _filteredData = _listdata.where((item) {
+                                          String lowerCaseQuery =
+                                          query.toLowerCase();
+
+                                          // Mencocokkan berdasarkan
+                                          bool matchesname =
+                                          item['nama_perusahaan']
+                                              .toLowerCase()
+                                              .contains(lowerCaseQuery);
+                                          bool matchescreated_at =
+                                          item['batas_tanggal']
+                                              .toLowerCase()
+                                              .contains(lowerCaseQuery);
+                                          bool matchesstatus =
+                                          item['status_pesanan']
+                                              .toLowerCase()
+                                              .contains(lowerCaseQuery);
+
+                                          // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                          bool matchescreated_at2 =
+                                              (item['batas_tanggal'] != null) &&
+                                                  isDateInRange(
+                                                    DateFormat('yyyy-MM-dd')
+                                                        .format(DateTime.parse(
+                                                        item[
+                                                        'batas_tanggal'])),
+                                                    lowerCaseQuery,
+                                                  );
+
+                                          // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                          return matchesname ||
+                                              matchescreated_at ||
+                                              matchescreated_at2 ||
+                                              matchesstatus;
+                                        }).toList();
+                                      });
+                                    },
+                                    obscureText: false,
+                                    decoration: InputDecoration(
+                                      hintText: getTranslatedText('Search...'),
+                                      enabledBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.transparent,
+                                          width: 1,
+                                        ),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(4.0),
+                                          topRight: Radius.circular(4.0),
+                                        ),
+                                      ),
+                                      focusedBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.transparent,
+                                          width: 1,
+                                        ),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(4.0),
+                                          topRight: Radius.circular(4.0),
+                                        ),
+                                      ),
+                                    ),
+                                    style: TextStyle(
+                                      fontFamily: 'Clash Display',
+                                      color: isDarkTheme
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontSize: screenWidth *
+                                          0.035, // Ukuran teks pada tombol
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                    validator: (value) {
+                                      // Validasi teks input
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ],

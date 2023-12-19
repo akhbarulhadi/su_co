@@ -134,7 +134,7 @@ class DashboardPageLeaderProductionState
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -182,7 +182,7 @@ class DashboardPageLeaderProductionState
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -287,8 +287,14 @@ class DashboardPageLeaderProductionState
           return 'Aktivitas';
         case 'Confirmation':
           return 'Konfirmasi';
-        case '':
-          return '';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
+        case 'No Schedule':
+          return 'Tidak ada jadwal';
         case '':
           return '';
 
@@ -408,7 +414,7 @@ class DashboardPageLeaderProductionState
                             : produksiData.isEmpty
                                 ? Center(
                                     child: Text(
-                                        getTranslatedText('No Production')),
+                                        getTranslatedText('No Schedule')),
                                   )
                                 : ListView.builder(
                                     shrinkWrap: true,

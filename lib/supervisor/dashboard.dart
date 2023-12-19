@@ -29,6 +29,15 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
   bool _isDisposed = false;
   List<Map<String, dynamic>> produksiData = [];
   List<bool> isItemClicked = [];
+  TextEditingController textController = TextEditingController();
+  List _stockData = [];
+  String _selectedProductId = '';
+  late TextEditingController _textController;
+  TextEditingController jumlahpesananController = TextEditingController();
+  TextEditingController hargatotalController = TextEditingController();
+  String _totalHasilProduksi = '';
+  String _formattedStartDate = ''; // Tambahkan ini
+  String _formattedEndDate = ''; // Tambahkan ini
 
   @override
   void initState() {
@@ -38,11 +47,15 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
     _listdata = [];
     _getdatapesanan();
     loadProduksi();
+    textController = TextEditingController();
+    _getStockData();
+    _getdatapemasukan('', '', ''); // Isi tanggal sesuai kebutuhan
   }
 
   @override
   void dispose() {
     super.dispose();
+    _textController.dispose();
   }
 
   void loadSelectedLanguage() async {
@@ -70,7 +83,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(getTranslatedText("Confirmation")),
-          content: Text(getTranslatedText("Are you sure you want to create a schedule?")),
+          content: Text(
+              getTranslatedText("Are you sure you want to create a schedule?")),
           actions: [
             TextButton(
               onPressed: () {
@@ -220,7 +234,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -268,7 +282,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -287,6 +301,26 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
     }
   }
 
+  Future<void> _getStockData() async {
+    try {
+      final response = await http.get(Uri.parse(ApiConfig.stock));
+      print(response.body);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _stockData = data['stock'];
+          // Tambahkan penanganan nilai default di sini jika diperlukan
+          if (_stockData.isNotEmpty) {
+            _selectedProductId = _stockData[0]['id_produk'].toString();
+          }
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Future<void> _showConfirmationDialog2(
       BuildContext context, int idProduksi, String newStatus, int index) async {
     if (mounted) {
@@ -301,8 +335,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[
-                    Text(
-                        getTranslatedText('Are you sure you want to change this production status?')),
+                    Text(getTranslatedText(
+                        'Are you sure you want to change this production status?')),
                   ],
                 ),
               ),
@@ -385,6 +419,32 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           return 'Aktivitas';
         case 'Confirmation':
           return 'Konfirmasi';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
+        case 'No Production':
+          return 'Tidak ada produksi';
+        case 'No Order':
+          return 'Tidak ada pesanan';
+        case 'There isnt any yet':
+          return 'Belum Ada';
+        case 'Total Production':
+          return 'Jumlah Produksi';
+        case 'Select Product':
+          return 'Pilih Produk';
+        case 'Input Date':
+          return 'Masukkan Tanggal';
+        case 'Items':
+          return 'Barang';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
         case '':
           return '';
         case '':
@@ -419,13 +479,32 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           return 'finished';
         case '':
           return '';
-      // Tambahkan kases lain jika diperlukan
+        // Tambahkan kases lain jika diperlukan
         default:
           return status;
       }
     } else {
       // Teks dalam bahasa Inggris (default)
       return status;
+    }
+  }
+
+  Future<void> _getdatapemasukan(
+      String startDate, String endDate, String selectedProductId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            '${ApiConfig.pemasukan_produksi}?startDate=$startDate&endDate=$endDate&idProduk=$selectedProductId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _totalHasilProduksi = data['total_hasil_produksi'].toString();
+        });
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -474,6 +553,243 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           scrollDirection: Axis.vertical,
           child: Column(
             children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Container(
+                      width: mediaQueryWidth * 0.5,
+                      height: bodyHeight * 0.08,
+                      decoration: BoxDecoration(
+                        color:
+                            Color(0xFF094067), // Ganti warna sesuai kebutuhan
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.precision_manufacturing_outlined,
+                            color: Color(
+                                0XFF53D258), // Ganti warna sesuai kebutuhan
+                            size: 35,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(10, 11, 0, 0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  getTranslatedText('Total Production'),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                                Text(
+                                  _totalHasilProduksi != ''
+                                      ? '${_totalHasilProduksi} ${getTranslatedText('Items')}'
+                                      : getTranslatedText('There isnt any yet'),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        // Dropdown Produk
+                        Container(
+                          width: mediaQueryWidth * 0.4,
+                          height: bodyHeight * 0.050,
+                          decoration: BoxDecoration(
+                            color: isDarkTheme ? Colors.white24 : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDarkTheme ? Colors.white38 : Colors.black38,
+                              width: 1, // Lebar garis tepi
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 6),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: Icon(
+                                    Icons.pageview,
+                                    color: isDarkTheme
+                                        ? Colors.white
+                                        : Color(
+                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                    size: 20,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: 12),
+                                    child: DropdownButtonFormField<String>(
+                                      value: null,
+                                      items: _stockData
+                                          .where((product) =>
+                                      product['harga_produk'] != null) // Filter produk dengan harga_produk yang tidak null
+                                          .map((product) {
+                                        return DropdownMenuItem<String>(
+                                          value: product['id_produk'].toString(),
+                                          child: Text(
+                                            '${product['nama_produk']}',
+                                            style: TextStyle(fontSize: screenWidth *
+                                                0.020, // Ukuran teks pada tombol
+                                              fontWeight: FontWeight.normal,),
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          _selectedProductId = newValue!;
+                                          // Reset the jumlah_pesanan and hargatotalController when product changes
+                                          jumlahpesananController.text = '';
+                                          hargatotalController.text = '';
+                                        });
+                                      },
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none, // Ini akan menghilangkan garis bawah
+                                        hintText: getTranslatedText('Select Product'), // Teks hint untuk dropdown
+                                        hintStyle: TextStyle(fontSize: screenWidth *
+                                            0.020, // Ukuran teks pada tombol
+                                          fontWeight: FontWeight.normal,),
+                                        // Menghilangkan ikon segitiga ke bawah
+                                        icon: const SizedBox.shrink(), // Menghilangkan ikon segitiga ke bawah
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: bodyHeight * 0.01,),
+                        // Dropdown Tanggal
+                        Container(
+                          width: mediaQueryWidth * 0.4,
+                          height: bodyHeight * 0.050,
+                          decoration: BoxDecoration(
+                            color: isDarkTheme ? Colors.white24 : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDarkTheme ? Colors.white38 : Colors.black38,
+                              width: 1, // Lebar garis tepi
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: Icon(
+                                    Icons.calendar_today,
+                                    color: isDarkTheme
+                                        ? Colors.white
+                                        : Color(
+                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                    size: 15,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: 12),
+                                    child: TextFormField(
+                                      controller: textController,
+                                      obscureText: false,
+                                      decoration: InputDecoration(
+                                        hintText: getTranslatedText('Input Date'),
+                                        enabledBorder: UnderlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Colors.transparent,
+                                            width: 1,
+                                          ),
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(4.0),
+                                            topRight: Radius.circular(4.0),
+                                          ),
+                                        ),
+                                        focusedBorder: UnderlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Colors.transparent,
+                                            width: 1,
+                                          ),
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(4.0),
+                                            topRight: Radius.circular(4.0),
+                                          ),
+                                        ),
+                                      ),
+                                      style: TextStyle(
+                                        fontFamily: 'Clash Display',
+                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                        fontSize: screenWidth *
+                                            0.020, // Ukuran teks pada tombol
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                      readOnly: true,
+                                      //set it true, so that user will not able to edit text
+                                      onTap: () async {
+                                        DateTimeRange? pickedDateRange =
+                                        await showDateRangePicker(
+                                          context: context,
+                                          firstDate: DateTime(2000),
+                                          lastDate: DateTime(2100),
+                                        );
+
+                                        if (pickedDateRange != null) {
+                                          print(pickedDateRange.start); // Tanggal awal
+                                          print(pickedDateRange.end); // Tanggal akhir
+
+                                          _formattedStartDate =
+                                              DateFormat('yyyy-MM-dd')
+                                                  .format(pickedDateRange.start!);
+                                          _formattedEndDate =
+                                              DateFormat('yyyy-MM-dd')
+                                                  .format(pickedDateRange.end!);
+                                          print(
+                                              'startDate: $_formattedStartDate, endDate: $_formattedEndDate');
+
+                                          setState(() {
+                                            textController.text =
+                                            '$_formattedStartDate/$_formattedEndDate';
+                                            _getdatapemasukan(
+                                                _formattedStartDate,
+                                                _formattedEndDate,
+                                                _selectedProductId);
+                                          });
+                                        }
+                                      },
+                                      validator: (value) {
+                                        // Validasi teks input
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               SizedBox(height: bodyHeight * 0.01),
               Padding(
                 padding: const EdgeInsets.all(10.0),

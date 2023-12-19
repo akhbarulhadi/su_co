@@ -172,7 +172,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -222,7 +222,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -280,7 +280,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -328,7 +328,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -376,8 +376,8 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Riwayat Pesanan';
         case 'Completed on':
           return 'Selesai pada';
-        case 'No income yet':
-          return 'Belum ada';
+        case 'There isnt any yet':
+          return 'Belum Ada';
         case 'Input Date':
           return 'Masukkan Tanggal';
         case 'Product Name':
@@ -400,10 +400,25 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Ubah Harga';
         case 'Save':
           return 'Simpan';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
         case '':
           return '';
         case '':
           return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+
 
         default:
           return text;
@@ -502,7 +517,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                             Icons.arrow_downward,
                             color: Color(
                                 0XFF53D258), // Ganti warna sesuai kebutuhan
-                            size: 40,
+                            size: 38,
                           ),
                           Padding(
                             padding: EdgeInsets.fromLTRB(10, 11, 0, 0),
@@ -512,7 +527,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                 Text(
                                   getTranslatedText('Income'),
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     color: Colors.white,
                                     fontWeight: FontWeight.w300,
                                   ),
@@ -520,9 +535,9 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                 Text(
                                   _totalHargaSelesai != ''
                                       ? 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_totalHargaSelesai))}'
-                                      : getTranslatedText('No income yet'),
+                                      : getTranslatedText('There isnt any yet'),
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 12,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),

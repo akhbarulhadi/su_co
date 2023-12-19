@@ -80,7 +80,6 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   Future<void> _updateStatus(
       BuildContext context, int idProduksi, String newStatus, int index) async {
     if (mounted) {
-      // Check the previous status, must be "Sudah Dibuat" to change to "Sudah Sesuai"
       if (newStatus.toLowerCase() == 'sudah dibuat') {
         if (produksiData[index]['status_produksi'] != 'belum selesai') {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +128,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -145,8 +144,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           },
         );
         // Update production data after successfully updating the status
-        await loadProduksi();
         setState(() {
+          _filteredData[index]['status_produksi'] = newStatus;
           isItemClicked[index] = true; // Set the item as clicked
           // Add necessary state updates after updating data
         });
@@ -177,7 +176,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -261,6 +260,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'Aktivitas';
         case 'Confirmation':
           return 'Konfirmasi';
+        case 'Time Period':
+          return 'Jangka Waktu';
         case 'All':
           return 'Semua';
         case 'Daily':
@@ -285,10 +286,16 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'sudah sesuai';
         case 'finished':
           return 'selesai';
-        case '':
-          return '';
-        case '':
-          return '';
+        case 'Select Status':
+          return 'Piih Status';
+        case 'Search...':
+          return 'Cari...';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
         case '':
           return '';
         case '':
@@ -670,24 +677,24 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                           // Set nilai pada search bar sesuai dengan pilihan dropdown
                           if (selectedStatus ==
                               getTranslatedText("not finished yet")) {
-                            _textController.text = ("belum selesai");
+                            _textstatusController.text = ("belum selesai");
                           } else if (selectedStatus ==
                               getTranslatedText("already made")) {
-                            _textController.text = ("sudah dibuat");
+                            _textstatusController.text = ("sudah dibuat");
                           } else if (selectedStatus ==
                               getTranslatedText("already appropriate")) {
-                            _textController.text = ("sudah sesuai");
+                            _textstatusController.text = ("sudah sesuai");
                           } else if (selectedStatus ==
                               getTranslatedText("finished")) {
-                            _textController.text = ("selesai");
+                            _textstatusController.text = ("selesai.");
                           } else {
-                            _textController.text = "";
+                            _textstatusController.text = "";
                           }
 
                           // Lakukan filter berdasarkan pilihan dropdown
                           _filteredData = produksiData.where((item) {
                             String lowerCaseQuery =
-                                _textController.text.toLowerCase();
+                            _textstatusController.text.toLowerCase();
 
                             // Mencocokkan berdasarkan
                             bool matchesstatus = item['status_produksi']
@@ -700,6 +707,122 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                         });
                       },
                       selectedItem: getTranslatedText("All"),
+                    ),
+                  ),
+                  //ini searchbar untuk dropdown status
+                  Visibility(
+                    visible: false,
+                    child: Container(
+                      width: mediaQueryWidth * 0.38,
+                      height: bodyHeight * 0.060,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? Colors.white24 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDarkTheme ? Colors.white38 : Colors.black38,
+                          width: 1, // Lebar garis tepi
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.search_rounded,
+                                color: isDarkTheme
+                                    ? Colors.white
+                                    : Color(
+                                    0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                size: 15,
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 12),
+                                child: TextFormField(
+                                  controller: _textstatusController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData = produksiData.where((item) {
+                                        String lowerCaseQuery =
+                                        query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan
+                                        bool matchesname = item['nama_produk']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+                                        bool matchescreated_at =
+                                        item['tanggal_produksi']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+                                        bool matchesstatus =
+                                        item['status_produksi']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchescreated_at2 =
+                                            (item['tanggal_produksi'] != null) &&
+                                                isDateInRange(
+                                                  DateFormat('yyyy-MM-dd').format(
+                                                      DateTime.parse(item[
+                                                      'tanggal_produksi'])),
+                                                  lowerCaseQuery,
+                                                );
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesname ||
+                                            matchescreated_at ||
+                                            matchescreated_at2 ||
+                                            matchesstatus;
+                                      }).toList();
+                                    });
+                                  },
+                                  obscureText: false,
+                                  decoration: InputDecoration(
+                                    hintText: getTranslatedText('Search...'),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontFamily: 'Clash Display',
+                                    color:
+                                    isDarkTheme ? Colors.white : Colors.black,
+                                    fontSize: screenWidth *
+                                        0.035, // Ukuran teks pada tombol
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  validator: (value) {
+                                    // Validasi teks input
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -746,7 +869,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           if (item['status_produksi'].toLowerCase() == 'belum selesai') {
             print('Tapped index: $index');
             _showConfirmationDialog(
-                context, item['id_produksi'], 'Sudah Dibuat', index);
+                context, item['id_produksi'], getTranslatedText('sudah dibuat'), index);
           } else {
             print('Item sudah diklik dan status sudah sesuai');
           }
@@ -788,7 +911,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          item['tanggal_produksi'] ?? '',
+                          DateFormat('dd-MM-yyyy').format(DateTime.parse(item['tanggal_produksi'])) ?? '',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),
@@ -878,7 +1001,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          getTranslatedDatabase(item['status_produksi'] ?? ''),
+                          getTranslatedDatabase(item['status_produksi'].toString().replaceAll('.', '') ?? ''),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),

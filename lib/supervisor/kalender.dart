@@ -128,7 +128,7 @@ class CalenderState extends State<Calendar> {
                   textAlign: TextAlign.center,
                 ),
                 content: Text(
-                  getTranslatedText('Do you want to fill in the data again ?'),
+                  getTranslatedText('Fill in the data again ?'),
                   textAlign: TextAlign.center,
                 ),
                 actions: [
@@ -144,7 +144,7 @@ class CalenderState extends State<Calendar> {
                             ),
                           );
                         },
-                        child: Text(getTranslatedText('No, Thank You')),
+                        child: Text(getTranslatedText('No')),
                         style: ElevatedButton.styleFrom(
                           minimumSize: Size(100, 40),
                           padding: EdgeInsets.all(10),
@@ -160,7 +160,7 @@ class CalenderState extends State<Calendar> {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        child: Text(getTranslatedText('Fill in the Data Again')),
+                        child: Text(getTranslatedText('Yes')),
                         style: TextButton.styleFrom(
                           minimumSize: Size(100, 40),
                           padding: EdgeInsets.all(10),
@@ -197,7 +197,7 @@ class CalenderState extends State<Calendar> {
                   textAlign: TextAlign.center,
                 ),
                 content: Text(
-                  getTranslatedText(''),
+                  getTranslatedText('Data cannot be empty'),
                   textAlign: TextAlign.center,
                 ),
                 actions: [
@@ -208,7 +208,7 @@ class CalenderState extends State<Calendar> {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        child: Text(getTranslatedText('Tutup')),
+                        child: Text(getTranslatedText('Close')),
                         style: ElevatedButton.styleFrom(
                           minimumSize: Size(100, 40),
                           padding: EdgeInsets.all(10),
@@ -257,6 +257,26 @@ class CalenderState extends State<Calendar> {
           return 'Jumlah Produksi';
         case 'Add Task':
           return 'Tambah Tugas';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Close':
+          return 'Tutup';
+        case 'Failed':
+          return 'Gagal';
+        case 'Fill in the data again ?':
+          return 'Isi data lagi ?';
+        case 'No':
+          return 'Tidak';
+        case 'Yes':
+          return 'Ya';
+        case 'Data cannot be empty':
+          return 'Data tidak boleh kosong';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
         default:
           return text;
       }

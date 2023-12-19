@@ -73,4 +73,5 @@ Route::get('/produksi/production-leader', [ProduksiController::class, 'getProduk
 Route::get('/produksi/production-leader-dashboard', [ProduksiController::class, 'getProduksiLeaderDashboard']);
 Route::get('/produksi/production-staff-dashboard', [ProduksiController::class, 'getProduksiStaffDashboard']);
 Route::get('/produksi/production-history', [ProduksiController::class, 'getProduksiHistory']);
+Route::get('/produksi/pemasukan-produksi', [ProduksiController::class, 'showPemasukanProduksi']);
 // Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);

@@ -25,6 +25,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   List _filteredData = [];
   String selectedPeriod = "";
   String selectedStatus = "";
+  bool _isloading = true;
+  late FocusNode _unfocusNode;
 
   @override
   void initState() {
@@ -37,7 +39,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     _textperiodController = TextEditingController();
     produksiData = [];
     _filteredData = [];
-
+    _unfocusNode = FocusNode();
   }
 
   void loadSelectedLanguage() async {
@@ -54,9 +56,19 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     });
   }
 
+  @override
+  void dispose() {
+    _textstatusController.dispose();
+    _textperiodController.dispose();
+    _textController.dispose();
+    _unfocusNode.dispose();
+    super.dispose();
+  }
+
   Future<void> loadProduksi() async {
     try {
-      final response = await http.get(Uri.parse(ApiConfig.get_production_supervisor));
+      final response =
+          await http.get(Uri.parse(ApiConfig.get_production_supervisor));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -65,6 +77,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           produksiData = List.from(data['produksi']);
           _filteredData = produksiData;
           isItemClicked = List.generate(produksiData.length, (index) => false);
+          _isloading = false;
         });
       } else {
         print('Error: ${response.statusCode}');
@@ -123,7 +136,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/success-tick-dribbble.gif',
+              Image.asset(
+                'lib/assets/success-tick-dribbble.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -143,7 +157,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -159,8 +173,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           },
         );
         // Perbarui data produksi setelah berhasil memperbarui status
-        await loadProduksi();
         setState(() {
+          _filteredData[index]['status_produksi'] = newStatus;
           isItemClicked[index] = true; // Setel item sudah diklik
           // Tambahkan pembaruan state yang diperlukan setelah memperbarui data
         });
@@ -170,7 +184,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/failed.gif',
+              Image.asset(
+                'lib/assets/failed.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -190,7 +205,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text(getTranslatedText('Tutup')),
+                      child: Text(getTranslatedText('Close')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(100, 40),
                         padding: EdgeInsets.all(10),
@@ -223,8 +238,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[
-                    Text(
-                        getTranslatedText('Are you sure you want to change this production status?')),
+                    Text(getTranslatedText(
+                        'Are you sure you want to change this production status?')),
                   ],
                 ),
               ),
@@ -261,6 +276,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
       switch (text) {
         case 'Schedule':
           return 'Jadwal';
+        case 'Time Period':
+          return 'Jangka Waktu';
         case 'All':
           return 'Semua';
         case 'Daily':
@@ -295,6 +312,20 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'sudah sesuai';
         case 'finished':
           return 'selesai';
+        case 'No Schedule':
+          return 'Tidak ada jadwal';
+        case 'Select Status':
+          return 'Pilih Status';
+        case 'Search...':
+          return 'Cari...';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
+        case '':
+          return '';
         case '':
           return '';
         default:
@@ -325,7 +356,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'finished';
         case '':
           return '';
-      // Tambahkan kases lain jika diperlukan
+        // Tambahkan kases lain jika diperlukan
         default:
           return status;
       }
@@ -404,7 +435,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                         fit: FlexFit.loose,
                         menuProps: MenuProps(
                           backgroundColor:
-                          isDarkTheme ? Colors.black : Colors.white,
+                              isDarkTheme ? Colors.black : Colors.white,
                           elevation: 0,
                         ),
                         showSelectedItems: true,
@@ -438,31 +469,31 @@ class _TableEventsExampleState extends State<TableEventsExample> {
 
                           // Set nilai pada search bar sesuai dengan pilihan dropdown
                           if (selectedPeriod == getTranslatedText("Daily")) {
-                            _textController.text = DateFormat('yyyy-MM-dd')
-                                .format(DateTime.now());
+                            _textController.text =
+                                DateFormat('yyyy-MM-dd').format(DateTime.now());
                           } else if (selectedPeriod ==
                               getTranslatedText("Weekly")) {
                             // Mendapatkan tanggal awal dan akhir minggu saat ini
                             DateTime now = DateTime.now();
                             DateTime startOfWeek =
-                            now.subtract(Duration(days: now.weekday - 1));
+                                now.subtract(Duration(days: now.weekday - 1));
                             DateTime endOfWeek =
-                            startOfWeek.add(Duration(days: 6));
+                                startOfWeek.add(Duration(days: 6));
 
                             _textController.text =
-                            '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
+                                '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
                           } else if (selectedPeriod ==
                               getTranslatedText("Monthly")) {
                             // Mendapatkan tanggal awal dan akhir bulan saat ini
                             DateTime now = DateTime.now();
                             DateTime startOfMonth =
-                            DateTime(now.year, now.month, 1);
+                                DateTime(now.year, now.month, 1);
                             DateTime endOfMonth =
-                            DateTime(now.year, now.month + 1, 1)
-                                .subtract(Duration(days: 1));
+                                DateTime(now.year, now.month + 1, 1)
+                                    .subtract(Duration(days: 1));
 
                             _textController.text =
-                            '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
+                                '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
                           } else if (selectedPeriod ==
                               getTranslatedText("Yearly")) {
                             // Mendapatkan tanggal awal dan akhir tahun saat ini
@@ -471,7 +502,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                             DateTime endOfYear = DateTime(now.year, 12, 31);
 
                             _textController.text =
-                            '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
+                                '${DateFormat('yyyy-MM-dd').format(startOfYear)}/${DateFormat('yyyy-MM-dd').format(endOfYear)}';
                           } else {
                             _textController.text = "";
                           }
@@ -479,7 +510,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                           // Lakukan filter berdasarkan pilihan dropdown
                           _filteredData = produksiData.where((item) {
                             String lowerCaseQuery =
-                            _textController.text.toLowerCase();
+                                _textController.text.toLowerCase();
 
                             // Mencocokkan berdasarkan nama_perusahaan
                             bool matchesname = item['nama_produk']
@@ -533,7 +564,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                               color: isDarkTheme
                                   ? Colors.white
                                   : Color(
-                                  0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                      0xFF8B9BA8), // Ganti dengan warna yang sesuai
                               size: 15,
                             ),
                           ),
@@ -546,30 +577,28 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                   setState(() {
                                     _filteredData = produksiData.where((item) {
                                       String lowerCaseQuery =
-                                      query.toLowerCase();
+                                          query.toLowerCase();
 
                                       // Mencocokkan berdasarkan
-                                      bool matchesname =
-                                      item['nama_produk']
+                                      bool matchesname = item['nama_produk']
                                           .toLowerCase()
                                           .contains(lowerCaseQuery);
                                       bool matchescreated_at =
-                                      item['tanggal_produksi']
-                                          .toLowerCase()
-                                          .contains(lowerCaseQuery);
+                                          item['tanggal_produksi']
+                                              .toLowerCase()
+                                              .contains(lowerCaseQuery);
                                       bool matchesstatus =
-                                      item['status_produksi']
-                                          .toLowerCase()
-                                          .contains(lowerCaseQuery);
+                                          item['status_produksi']
+                                              .toLowerCase()
+                                              .contains(lowerCaseQuery);
 
                                       // Mencocokkan berdasarkan updated_at dengan jangka waktu
                                       bool matchescreated_at2 =
                                           (item['tanggal_produksi'] != null) &&
                                               isDateInRange(
-                                                DateFormat('yyyy-MM-dd')
-                                                    .format(DateTime.parse(
-                                                    item[
-                                                    'tanggal_produksi'])),
+                                                DateFormat('yyyy-MM-dd').format(
+                                                    DateTime.parse(item[
+                                                        'tanggal_produksi'])),
                                                 lowerCaseQuery,
                                               );
 
@@ -607,9 +636,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                 ),
                                 style: TextStyle(
                                   fontFamily: 'Clash Display',
-                                  color: isDarkTheme
-                                      ? Colors.white
-                                      : Colors.black,
+                                  color:
+                                      isDarkTheme ? Colors.white : Colors.black,
                                   fontSize: screenWidth *
                                       0.035, // Ukuran teks pada tombol
                                   fontWeight: FontWeight.normal,
@@ -642,7 +670,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                         fit: FlexFit.loose,
                         menuProps: MenuProps(
                           backgroundColor:
-                          isDarkTheme ? Colors.black : Colors.white,
+                              isDarkTheme ? Colors.black : Colors.white,
                           elevation: 0,
                         ),
                         showSelectedItems: true,
@@ -677,24 +705,24 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                           // Set nilai pada search bar sesuai dengan pilihan dropdown
                           if (selectedStatus ==
                               getTranslatedText("not finished yet")) {
-                            _textController.text = ("belum selesai");
+                            _textstatusController.text = ("belum selesai");
                           } else if (selectedStatus ==
                               getTranslatedText("already made")) {
-                            _textController.text = ("sudah dibuat");
+                            _textstatusController.text = ("sudah dibuat");
                           } else if (selectedStatus ==
                               getTranslatedText("already appropriate")) {
-                            _textController.text = ("sudah sesuai");
+                            _textstatusController.text = ("sudah sesuai");
                           } else if (selectedStatus ==
                               getTranslatedText("finished")) {
-                            _textController.text = ("selesai");
+                            _textstatusController.text = ("selesai.");
                           } else {
-                            _textController.text = "";
+                            _textstatusController.text = "";
                           }
 
                           // Lakukan filter berdasarkan pilihan dropdown
                           _filteredData = produksiData.where((item) {
                             String lowerCaseQuery =
-                            _textController.text.toLowerCase();
+                                _textstatusController.text.toLowerCase();
 
                             // Mencocokkan berdasarkan
                             bool matchesstatus = item['status_produksi']
@@ -709,33 +737,160 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       selectedItem: getTranslatedText("All"),
                     ),
                   ),
+                  //ini searchbar untuk dropdown status
+                  Visibility(
+                    visible: false,
+                    child: Container(
+                      width: mediaQueryWidth * 0.38,
+                      height: bodyHeight * 0.060,
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? Colors.white24 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDarkTheme ? Colors.white38 : Colors.black38,
+                          width: 1, // Lebar garis tepi
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.search_rounded,
+                                color: isDarkTheme
+                                    ? Colors.white
+                                    : Color(
+                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                size: 15,
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 12),
+                                child: TextFormField(
+                                  controller: _textstatusController,
+                                  onChanged: (query) {
+                                    setState(() {
+                                      _filteredData =
+                                          produksiData.where((item) {
+                                        String lowerCaseQuery =
+                                            query.toLowerCase();
+
+                                        // Mencocokkan berdasarkan
+                                        bool matchesname = item['nama_produk']
+                                            .toLowerCase()
+                                            .contains(lowerCaseQuery);
+                                        bool matchescreated_at =
+                                            item['tanggal_produksi']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
+                                        bool matchesstatus =
+                                            item['status_produksi']
+                                                .toLowerCase()
+                                                .contains(lowerCaseQuery);
+
+                                        // Mencocokkan berdasarkan updated_at dengan jangka waktu
+                                        bool matchescreated_at2 =
+                                            (item['tanggal_produksi'] !=
+                                                    null) &&
+                                                isDateInRange(
+                                                  DateFormat('yyyy-MM-dd').format(
+                                                      DateTime.parse(item[
+                                                          'tanggal_produksi'])),
+                                                  lowerCaseQuery,
+                                                );
+
+                                        // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
+                                        return matchesname ||
+                                            matchescreated_at ||
+                                            matchescreated_at2 ||
+                                            matchesstatus;
+                                      }).toList();
+                                    });
+                                  },
+                                  obscureText: false,
+                                  decoration: InputDecoration(
+                                    hintText: getTranslatedText('Search...'),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        topRight: Radius.circular(4.0),
+                                      ),
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontFamily: 'Clash Display',
+                                    color: isDarkTheme
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: screenWidth *
+                                        0.035, // Ukuran teks pada tombol
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  validator: (value) {
+                                    // Validasi teks input
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
             Expanded(
-              child: produksiData.isEmpty
+              child: _isloading
                   ? Center(
                       child: CircularProgressIndicator(),
                     )
-                  : ListView.builder(
-                      itemCount: _filteredData.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final item = _filteredData[index];
-                        return GestureDetector(
-                          onTap: () {
-                            if (!isItemClicked[index]) {
-                              print('Tapped index: $index');
-                              _showConfirmationDialog(context,
-                                  item['id_produksi'], 'Sudah Sesuai', index);
-                            } else {
-                              print(
-                                  'Item sudah diklik dan status sudah sesuai');
-                            }
+                  : _filteredData.isEmpty
+                      ? Center(
+                          child: Text(getTranslatedText('No Schedule')),
+                        )
+                      : ListView.builder(
+                          itemCount: _filteredData.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final item = _filteredData[index];
+                            return GestureDetector(
+                              onTap: () {
+                                if (!isItemClicked[index]) {
+                                  print('Tapped index: $index');
+                                  _showConfirmationDialog(
+                                      context,
+                                      item['id_produksi'],
+                                      'Sudah Sesuai',
+                                      index);
+                                } else {
+                                  print(
+                                      'Item sudah diklik dan status sudah sesuai');
+                                }
+                              },
+                              child:
+                                  buildProductionItem(item, screenWidth, index),
+                            );
                           },
-                          child: buildProductionItem(item, screenWidth, index),
-                        );
-                      },
-                    ),
+                        ),
             ),
           ],
         ),
@@ -743,7 +898,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     );
   }
 
-  Widget buildProductionItem(Map<String, dynamic> item, double screenWidth, int index) {
+  Widget buildProductionItem(
+      Map<String, dynamic> item, double screenWidth, int index) {
     final mediaQueryHeight = MediaQuery.of(context).size.height;
     final mediaQueryWidth = MediaQuery.of(context).size.width;
 
@@ -759,8 +915,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         if (!isItemClicked[index]) {
           if (item['status_produksi'].toLowerCase() == 'sudah dibuat') {
             print('Tapped index: $index');
-            _showConfirmationDialog(
-                context, item['id_produksi'], 'Sudah Sesuai', index);
+            _showConfirmationDialog(context, item['id_produksi'],
+                getTranslatedText('sudah sesuai'), index);
           } else {
             print('Item sudah diklik dan status sudah sesuai');
           }
@@ -802,7 +958,9 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          item['tanggal_produksi'] ?? '',
+                          DateFormat('dd-MM-yyyy').format(
+                                  DateTime.parse(item['tanggal_produksi'])) ??
+                              '',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),
@@ -895,7 +1053,10 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          getTranslatedDatabase(item['status_produksi'] ?? ''),
+                          getTranslatedDatabase(item['status_produksi']
+                                  .toString()
+                                  .replaceAll('.', '') ??
+                              ''),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),

@@ -67,7 +67,7 @@ class _LoginState extends State<Login> {
           final String name = data['user']?['nama'] ?? '';
           final String userStatus = data['user']?['status'] ?? '';
 
-          if (userStatus == 'aktif') {
+          if (userStatus == 'aktif.') {
             // Simpan informasi login ke shared_preferences
             SharedPreferences prefs = await SharedPreferences.getInstance();
             prefs.setString('access_token', token);

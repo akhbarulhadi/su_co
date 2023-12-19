@@ -30,7 +30,7 @@ class AuthController extends Controller
             // Validasi request sesuai kebutuhan Anda
             $request->validate([
                 'id_user' => 'required', // Sesuaikan dengan nama field ID pada model User
-                'status' => 'required|in:aktif,tidak-aktif',
+                'status' => 'required|in:aktif.,tidak-aktif',
             ]);
 
             // Cari pengguna berdasarkan ID
@@ -78,7 +78,7 @@ class AuthController extends Controller
             'alamat' => 'required|string',
             'no_tlp' => 'required|string|min:10|unique:users',
             'email' => 'required|string|unique:users',
-            'status' => 'required|in:aktif,tidak-aktif',
+            'status' => 'required|in:aktif.,tidak-aktif',
             'roles' => 'required|in:marketing,supervisor,leader,staff_gudang,kepala_gudang,admin',
         ]);
 
@@ -121,20 +121,20 @@ class AuthController extends Controller
             'email' => 'required', // Mengubah validasi untuk email
             'password' => 'required|string',
         ]);
-    
+
         $credentials = $request->only('email', 'password');
-    
+
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-    
+
             // Pengecekan status pengguna
-            if ($user->status === 'aktif') {
+            if ($user->status === 'aktif.') {
                 // Cek role
                 $allowedRoles = ['admin', 'marketing', 'supervisor', 'leader', 'staff_gudang', 'kepala_gudang'];
-                
+
                 if (in_array($user->roles, $allowedRoles)) {
                     $token = $user->createToken('authToken')->plainTextToken;
-    
+
                     // Menggunakan 'roles' sebagai informasi peran dalam respons
                     return response()->json(['user' => $user, 'roles' => $user->roles, 'access_token' => $token]);
                 } else {
@@ -149,7 +149,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
     }
-    
+
 
     public function getProfile(Request $request)
     {

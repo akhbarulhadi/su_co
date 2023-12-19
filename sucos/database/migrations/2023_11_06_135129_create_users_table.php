@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('no_tlp')->unique();
             $table->string('foto')->default('null');
             $table->string('email')->unique();
-            $table->enum('status', ['aktif', 'tidak-aktif']);
+            $table->enum('status', ['aktif.', 'tidak-aktif']);
             $table->enum('roles', ['marketing', 'supervisor', 'leader', 'staff_gudang', 'kepala_gudang', 'admin']);
             $table->timestamps();
         });

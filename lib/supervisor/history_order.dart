@@ -135,8 +135,8 @@ class HistoryOrderState extends State<HistoryOrder> {
           return 'Selesai';
         case 'Total Price':
           return 'Harga Total';
-        case '':
-          return '';
+        case 'No History':
+          return 'Tidak ada riwayat';
         case '':
           return '';
         case '':

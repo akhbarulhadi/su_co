@@ -134,7 +134,7 @@ class ProduksiController extends Controller
             $produksi = Produksi::find($idProduksi);
 
             // Perbarui status_pesanan menjadi 'Siap Diantar'
-            $produksi->status_produksi = 'selesai';
+            $produksi->status_produksi = 'selesai.';
             $produksi->save();
 
             return response()->json(['message' => 'Status pesanan berhasil diperbarui'], 200);
@@ -169,8 +169,7 @@ class ProduksiController extends Controller
             $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
                 ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
                 ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
-                ->whereNotIn('laporan_produksi.status_produksi', ['belum selesai', 'sudah dibuat'])
-                ->orderByRaw("CASE WHEN laporan_produksi.status_produksi = 'sudah sesuai' THEN 1 WHEN laporan_produksi.status_produksi = 'selesai' THEN 2 ELSE 3 END")
+                ->orderByRaw("CASE WHEN laporan_produksi.status_produksi = 'sudah sesuai' THEN 1 WHEN laporan_produksi.status_produksi = 'sudah dibuat' THEN 2 WHEN laporan_produksi.status_produksi = 'belum selesai' THEN 3 WHEN laporan_produksi.status_produksi = 'selesai.' THEN 4 ELSE 5 END")
                 ->get();
 
             // Jika data ditemukan, kirimkan respons JSON
@@ -206,7 +205,7 @@ class ProduksiController extends Controller
             $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
                 ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
                 ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
-                ->whereNotIn('laporan_produksi.status_produksi', ['belum selesai', 'sudah sesuai', 'selesai'])
+                ->whereNotIn('laporan_produksi.status_produksi', ['belum selesai', 'sudah sesuai', 'selesai.'])
                 ->take(5)
                 ->get();
 
@@ -243,7 +242,7 @@ class ProduksiController extends Controller
             $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
                 ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
                 ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
-                ->whereNotIn('laporan_produksi.status_produksi', ['sudah dibuat', 'sudah sesuai', 'selesai'])
+                ->whereNotIn('laporan_produksi.status_produksi', ['sudah dibuat', 'sudah sesuai', 'selesai.'])
                 ->take(5)
                 ->get();
 
@@ -262,7 +261,7 @@ class ProduksiController extends Controller
             $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
                 ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
                 ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
-                ->whereNotIn('laporan_produksi.status_produksi', ['sudah dibuat', 'belum selesai', 'selesai'])
+                ->whereNotIn('laporan_produksi.status_produksi', ['sudah dibuat', 'belum selesai', 'selesai.'])
                 ->take(5)
                 ->get();
 
@@ -290,5 +289,29 @@ class ProduksiController extends Controller
             // Jika terjadi kesalahan, kirimkan respons JSON dengan pesan kesalahan
             return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
         }
+    }
+
+    public function showPemasukanProduksi(Request $request)
+    {
+        $idProduk = $request->input('idProduk');
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+
+        // Mengambil status produksi berdasarkan jangka waktu dan id_produk
+        $produksiStatus = Produksi::select('status_produksi')
+            ->whereNotIn('status_produksi', ['belum selesai', 'sudah dibuat', 'sudah sesuai'])
+            ->where('id_produk', '=', $idProduk)
+            ->whereDate('updated_at', '>=', $startDate)
+            ->whereDate('updated_at', '<=', $endDate)
+            ->get();
+
+        // Mengambil total hasil produksi berdasarkan jangka waktu dan id_produk
+        $totalHasilProduksi = Produksi::where('status_produksi', 'selesai.')
+            ->where('id_produk', '=', $idProduk)
+            ->whereDate('updated_at', '>=', $startDate)
+            ->whereDate('updated_at', '<=', $endDate)
+            ->sum('jumlah_produksi');
+
+        return response()->json(['message' => 'Success', 'total_hasil_produksi' => $totalHasilProduksi]);
     }
 }

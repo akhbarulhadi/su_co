@@ -164,7 +164,7 @@ class PesananState extends State<Pesanan> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -207,7 +207,7 @@ class PesananState extends State<Pesanan> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -301,10 +301,27 @@ class PesananState extends State<Pesanan> {
           return 'Batas Tanggal';
         case 'Cancel':
           return 'Batal';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
+        case 'No Data Client':
+          return 'Tidak ada data klien';
+        case 'Company Name':
+          return 'Nama Perusahaan';
+        case 'Client Detail':
+          return 'Detail Klien';
+        case 'Address':
+          return 'Alamat';
         case '':
           return '';
         case '':
           return '';
+        case '':
+          return '';
+
 
         default:
           return text;
@@ -550,6 +567,18 @@ class PesananState extends State<Pesanan> {
                                         TextEditingController(
                                             text: _listdata[index]['fax']
                                                 .toString());
+                                    TextEditingController emailController =
+                                    TextEditingController(
+                                        text: _listdata[index]['email']
+                                            .toString());
+                                    TextEditingController notelpController =
+                                    TextEditingController(
+                                        text: _listdata[index]['no_tlp']
+                                            .toString());
+                                    TextEditingController nobankController =
+                                    TextEditingController(
+                                        text: _listdata[index]['no_bank']
+                                            .toString());
                                     return AlertDialog(
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(
@@ -583,9 +612,36 @@ class PesananState extends State<Pesanan> {
                                             keyboardType: TextInputType.text,
                                             decoration: InputDecoration(
                                                 labelText: getTranslatedText(
-                                                    'Addres')),
+                                                    'Address')),
                                             enabled:
                                                 false, // Mengatur TextField menjadi disable
+                                          ),
+                                          TextField(
+                                            controller: emailController,
+                                            keyboardType: TextInputType.text,
+                                            decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'Email')),
+                                            enabled:
+                                            false, // Mengatur TextField menjadi disable
+                                          ),
+                                          TextField(
+                                            controller: nobankController,
+                                            keyboardType: TextInputType.text,
+                                            decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'No Bank')),
+                                            enabled:
+                                            false, // Mengatur TextField menjadi disable
+                                          ),
+                                          TextField(
+                                            controller: notelpController,
+                                            keyboardType: TextInputType.text,
+                                            decoration: InputDecoration(
+                                                labelText: getTranslatedText(
+                                                    'No Telp')),
+                                            enabled:
+                                            false, // Mengatur TextField menjadi disable
                                           ),
                                           TextField(
                                             controller: faxController,
@@ -792,7 +848,7 @@ class PesananState extends State<Pesanan> {
                                                                     decoration:
                                                                     InputDecoration(
                                                                       labelText:
-                                                                      getTranslatedText('CLient Name'),
+                                                                      getTranslatedText('Client Name'),
                                                                       contentPadding:
                                                                       EdgeInsets.all(13),
                                                                     ),
