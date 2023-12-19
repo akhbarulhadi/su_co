@@ -5,7 +5,7 @@ import 'package:suco/kepala_produksi/jadwal.dart';
 import 'package:suco/login.dart';
 import 'package:suco/kepala_produksi/dashboard.dart';
 import 'package:suco/edit_profile.dart';
-import 'package:suco/kepala_produksi/history_order.dart';
+import 'package:suco/history_order.dart';
 import 'package:suco/kepala_produksi//setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;

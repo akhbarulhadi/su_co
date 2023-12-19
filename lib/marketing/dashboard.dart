@@ -419,7 +419,6 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
         case '':
           return '';
 
-
         default:
           return text;
       }
@@ -621,6 +620,29 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                       context: context,
                                       firstDate: DateTime(2000),
                                       lastDate: DateTime(2100),
+                                      builder: (BuildContext context,
+                                          Widget? child) {
+                                        return Theme(
+                                          data: ThemeData.light().copyWith(
+                                            primaryColor: isDarkTheme
+                                                ? Color(0xFF8B9BA8)
+                                                : Colors
+                                                    .blue, // Warna pilihan tanggal saat ditekan
+                                            hintColor: isDarkTheme
+                                                ? Color(0xFF8B9BA8)
+                                                : Colors
+                                                    .blue, // Warna pilihan tanggal yang dipilih
+                                            colorScheme: ColorScheme.light(
+                                                primary: isDarkTheme
+                                                    ? Color(0xFF8B9BA8)
+                                                    : Colors.blue),
+                                            buttonTheme: ButtonThemeData(
+                                                textTheme:
+                                                    ButtonTextTheme.primary),
+                                          ),
+                                          child: child!,
+                                        );
+                                      },
                                     );
 
                                     if (pickedDateRange != null) {

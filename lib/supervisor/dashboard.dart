@@ -613,7 +613,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                             color: isDarkTheme ? Colors.white24 : Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDarkTheme ? Colors.white38 : Colors.black38,
+                              color:
+                                  isDarkTheme ? Colors.white38 : Colors.black38,
                               width: 1, // Lebar garis tepi
                             ),
                           ),
@@ -629,7 +630,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                     color: isDarkTheme
                                         ? Colors.white
                                         : Color(
-                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                            0xFF8B9BA8), // Ganti dengan warna yang sesuai
                                     size: 20,
                                   ),
                                 ),
@@ -640,15 +641,19 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                       value: null,
                                       items: _stockData
                                           .where((product) =>
-                                      product['harga_produk'] != null) // Filter produk dengan harga_produk yang tidak null
+                                              product['harga_produk'] !=
+                                              null) // Filter produk dengan harga_produk yang tidak null
                                           .map((product) {
                                         return DropdownMenuItem<String>(
-                                          value: product['id_produk'].toString(),
+                                          value:
+                                              product['id_produk'].toString(),
                                           child: Text(
                                             '${product['nama_produk']}',
-                                            style: TextStyle(fontSize: screenWidth *
-                                                0.020, // Ukuran teks pada tombol
-                                              fontWeight: FontWeight.normal,),
+                                            style: TextStyle(
+                                              fontSize: screenWidth *
+                                                  0.020, // Ukuran teks pada tombol
+                                              fontWeight: FontWeight.normal,
+                                            ),
                                           ),
                                         );
                                       }).toList(),
@@ -661,11 +666,15 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                         });
                                       },
                                       decoration: InputDecoration(
-                                        border: InputBorder.none, // Ini akan menghilangkan garis bawah
-                                        hintText: getTranslatedText('Select Product'), // Teks hint untuk dropdown
-                                        hintStyle: TextStyle(fontSize: screenWidth *
-                                            0.020, // Ukuran teks pada tombol
-                                          fontWeight: FontWeight.normal,),
+                                        border: InputBorder
+                                            .none, // Ini akan menghilangkan garis bawah
+                                        hintText: getTranslatedText(
+                                            'Select Product'), // Teks hint untuk dropdown
+                                        hintStyle: TextStyle(
+                                          fontSize: screenWidth *
+                                              0.020, // Ukuran teks pada tombol
+                                          fontWeight: FontWeight.normal,
+                                        ),
                                         // Menghilangkan ikon segitiga ke bawah
                                       ),
                                     ),
@@ -675,7 +684,9 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                             ),
                           ),
                         ),
-                        SizedBox(height: bodyHeight * 0.01,),
+                        SizedBox(
+                          height: bodyHeight * 0.01,
+                        ),
                         // Dropdown Tanggal
                         Container(
                           width: mediaQueryWidth * 0.4,
@@ -684,7 +695,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                             color: isDarkTheme ? Colors.white24 : Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDarkTheme ? Colors.white38 : Colors.black38,
+                              color:
+                                  isDarkTheme ? Colors.white38 : Colors.black38,
                               width: 1, // Lebar garis tepi
                             ),
                           ),
@@ -700,7 +712,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                     color: isDarkTheme
                                         ? Colors.white
                                         : Color(
-                                        0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                            0xFF8B9BA8), // Ganti dengan warna yang sesuai
                                     size: 15,
                                   ),
                                 ),
@@ -711,7 +723,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                       controller: textController,
                                       obscureText: false,
                                       decoration: InputDecoration(
-                                        hintText: getTranslatedText('Input Date'),
+                                        hintText:
+                                            getTranslatedText('Input Date'),
                                         enabledBorder: UnderlineInputBorder(
                                           borderSide: BorderSide(
                                             color: Colors.transparent,
@@ -735,7 +748,9 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                       ),
                                       style: TextStyle(
                                         fontFamily: 'Clash Display',
-                                        color: isDarkTheme ? Colors.white : Colors.black,
+                                        color: isDarkTheme
+                                            ? Colors.white
+                                            : Colors.black,
                                         fontSize: screenWidth *
                                             0.020, // Ukuran teks pada tombol
                                         fontWeight: FontWeight.normal,
@@ -744,19 +759,44 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                       //set it true, so that user will not able to edit text
                                       onTap: () async {
                                         DateTimeRange? pickedDateRange =
-                                        await showDateRangePicker(
+                                            await showDateRangePicker(
                                           context: context,
                                           firstDate: DateTime(2000),
                                           lastDate: DateTime(2100),
+                                          builder: (BuildContext context,
+                                              Widget? child) {
+                                            return Theme(
+                                              data: ThemeData.light().copyWith(
+                                                primaryColor: isDarkTheme
+                                                    ? Color(0xFF8B9BA8)
+                                                    : Colors
+                                                        .blue, // Warna pilihan tanggal saat ditekan
+                                                hintColor: isDarkTheme
+                                                    ? Color(0xFF8B9BA8)
+                                                    : Colors
+                                                        .blue, // Warna pilihan tanggal yang dipilih
+                                                colorScheme: ColorScheme.light(
+                                                    primary: isDarkTheme
+                                                        ? Color(0xFF8B9BA8)
+                                                        : Colors.blue),
+                                                buttonTheme: ButtonThemeData(
+                                                    textTheme: ButtonTextTheme
+                                                        .primary),
+                                              ),
+                                              child: child!,
+                                            );
+                                          },
                                         );
 
                                         if (pickedDateRange != null) {
-                                          print(pickedDateRange.start); // Tanggal awal
-                                          print(pickedDateRange.end); // Tanggal akhir
+                                          print(pickedDateRange
+                                              .start); // Tanggal awal
+                                          print(pickedDateRange
+                                              .end); // Tanggal akhir
 
                                           _formattedStartDate =
-                                              DateFormat('yyyy-MM-dd')
-                                                  .format(pickedDateRange.start!);
+                                              DateFormat('yyyy-MM-dd').format(
+                                                  pickedDateRange.start!);
                                           _formattedEndDate =
                                               DateFormat('yyyy-MM-dd')
                                                   .format(pickedDateRange.end!);
@@ -765,7 +805,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
 
                                           setState(() {
                                             textController.text =
-                                            '$_formattedStartDate/$_formattedEndDate';
+                                                '$_formattedStartDate/$_formattedEndDate';
                                             _getdatapemasukan(
                                                 _formattedStartDate,
                                                 _formattedEndDate,

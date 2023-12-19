@@ -4,7 +4,7 @@ import 'package:suco/login.dart';
 import 'package:suco/marketing/dashboard.dart';
 import 'package:suco/marketing/data_client.dart';
 import 'package:suco/edit_profile.dart';
-import 'package:suco/marketing/history_order.dart';
+import 'package:suco/history_order.dart';
 import 'package:suco/marketing/laporan.dart';
 import 'package:suco/admin/man_user.dart';
 import 'package:suco/marketing/pesanan.dart';

@@ -63,16 +63,13 @@ class HistoryOrderState extends State<HistoryOrder> {
 
   Future _getdata() async {
     try {
-      final response = await http.get(
-        Uri.parse(ApiConfig.show_history),
-      );
+      final response = await http.get(Uri.parse(ApiConfig.show_history),);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
           _listdata = data['pesanan'];
-          _filteredData =
-              _listdata; // Initially, filtered data is the same as the complete data
+          _filteredData = _listdata; // Initially, filtered data is the same as the complete data
           _isloading = false;
         });
       }
@@ -92,8 +89,7 @@ class HistoryOrderState extends State<HistoryOrder> {
 
       DateTime dateToCheck = DateTime.parse(date);
 
-      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) &&
-          dateToCheck.isBefore(endDate);
+      return dateToCheck.isAfter(startDate.subtract(Duration(days: 1))) && dateToCheck.isBefore(endDate);
     }
     return false;
   }
@@ -129,16 +125,16 @@ class HistoryOrderState extends State<HistoryOrder> {
           return 'Alamat';
         case 'Product Name':
           return 'Nama Produk';
-        case 'No history yet':
-          return 'Belum ada riwayat';
+        case 'No history':
+          return 'Tidak ada riwayat';
         case 'Finished':
           return 'Selesai';
         case 'Total Price':
           return 'Harga Total';
-        case 'No history':
-          return 'Tidak ada riwayat';
-        case '':
-          return '';
+        case 'Order Quantity':
+          return 'Jumlah Pesanan';
+        case 'Deadline':
+          return 'Batas Tanggal';
         case '':
           return '';
 
@@ -275,38 +271,28 @@ class HistoryOrderState extends State<HistoryOrder> {
                         onChanged: (selectedItem) {
                           setState(() {
                             // Set nilai pilihan dropdown
-                            selectedPeriod =
-                                selectedItem ?? getTranslatedText("All");
+                            selectedPeriod = selectedItem ?? getTranslatedText("All");
 
                             // Set nilai pada search bar sesuai dengan pilihan dropdown
                             if (selectedPeriod == getTranslatedText("Daily")) {
-                              _textController.text = DateFormat('yyyy-MM-dd')
-                                  .format(DateTime.now());
-                            } else if (selectedPeriod ==
-                                getTranslatedText("Weekly")) {
+                              _textController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+                            } else if (selectedPeriod == getTranslatedText("Weekly")) {
                               // Mendapatkan tanggal awal dan akhir minggu saat ini
                               DateTime now = DateTime.now();
-                              DateTime startOfWeek =
-                              now.subtract(Duration(days: now.weekday - 1));
-                              DateTime endOfWeek =
-                              startOfWeek.add(Duration(days: 6));
+                              DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+                              DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
 
                               _textController.text =
                               '${DateFormat('yyyy-MM-dd').format(startOfWeek)}/${DateFormat('yyyy-MM-dd').format(endOfWeek)}';
-                            } else if (selectedPeriod ==
-                                getTranslatedText("Monthly")) {
+                            } else if (selectedPeriod == getTranslatedText("Monthly")) {
                               // Mendapatkan tanggal awal dan akhir bulan saat ini
                               DateTime now = DateTime.now();
-                              DateTime startOfMonth =
-                              DateTime(now.year, now.month, 1);
-                              DateTime endOfMonth =
-                              DateTime(now.year, now.month + 1, 1)
-                                  .subtract(Duration(days: 1));
+                              DateTime startOfMonth = DateTime(now.year, now.month, 1);
+                              DateTime endOfMonth = DateTime(now.year, now.month + 1, 1).subtract(Duration(days: 1));
 
                               _textController.text =
                               '${DateFormat('yyyy-MM-dd').format(startOfMonth)}/${DateFormat('yyyy-MM-dd').format(endOfMonth)}';
-                            } else if (selectedPeriod ==
-                                getTranslatedText("Yearly")) {
+                            } else if (selectedPeriod == getTranslatedText("Yearly")) {
                               // Mendapatkan tanggal awal dan akhir tahun saat ini
                               DateTime now = DateTime.now();
                               DateTime startOfYear = DateTime(now.year, 1, 1);
@@ -320,36 +306,23 @@ class HistoryOrderState extends State<HistoryOrder> {
 
                             // Lakukan filter berdasarkan pilihan dropdown
                             _filteredData = _listdata.where((item) {
-                              String lowerCaseQuery =
-                              _textController.text.toLowerCase();
+                              String lowerCaseQuery = _textController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan nama_perusahaan
-                              bool matchesname = item['nama_perusahaan']
-                                  .toLowerCase()
-                                  .contains(lowerCaseQuery);
-                              bool matchesupdated_at = item['updated_at']
-                                  .toLowerCase()
-                                  .contains(lowerCaseQuery);
+                              bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                              bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
 
                               // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                              bool matchesupdated_at2 =
-                                  (item['updated_at'] != null) &&
-                                      isDateInRange(
-                                        DateFormat('yyyy-MM-dd').format(
-                                            DateTime.parse(item['updated_at'])),
-                                        lowerCaseQuery,
-                                      );
-                              bool matchesBareng =
-                                  matchesname && matchesupdated_at;
-                              bool matchesBareng2 =
-                                  matchesname && matchesupdated_at2;
+                              bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                  isDateInRange(
+                                    DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                    lowerCaseQuery,
+                                  );
+                              bool matchesBareng = matchesname && matchesupdated_at;
+                              bool matchesBareng2 = matchesname && matchesupdated_at2;
 
                               // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                              return matchesBareng ||
-                                  matchesBareng2 ||
-                                  matchesname ||
-                                  matchesupdated_at ||
-                                  matchesupdated_at2;
+                              return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
                             }).toList();
                           });
                         },
@@ -390,39 +363,23 @@ class HistoryOrderState extends State<HistoryOrder> {
                                   onChanged: (query) {
                                     setState(() {
                                       _filteredData = _listdata.where((item) {
-                                        String lowerCaseQuery =
-                                        query.toLowerCase();
+                                        String lowerCaseQuery = query.toLowerCase();
 
                                         // Mencocokkan berdasarkan nama_perusahaan
-                                        bool matchesname =
-                                        item['nama_perusahaan']
-                                            .toLowerCase()
-                                            .contains(lowerCaseQuery);
-                                        bool matchesupdated_at =
-                                        item['updated_at']
-                                            .toLowerCase()
-                                            .contains(lowerCaseQuery);
+                                        bool matchesname = item['nama_perusahaan'].toLowerCase().contains(lowerCaseQuery);
+                                        bool matchesupdated_at = item['updated_at'].toLowerCase().contains(lowerCaseQuery);
 
                                         // Mencocokkan berdasarkan updated_at dengan jangka waktu
-                                        bool matchesupdated_at2 =
-                                            (item['updated_at'] != null) &&
-                                                isDateInRange(
-                                                  DateFormat('yyyy-MM-dd')
-                                                      .format(DateTime.parse(
-                                                      item['updated_at'])),
-                                                  lowerCaseQuery,
-                                                );
-                                        bool matchesBareng =
-                                            matchesname && matchesupdated_at;
-                                        bool matchesBareng2 =
-                                            matchesname && matchesupdated_at2;
+                                        bool matchesupdated_at2 = (item['updated_at'] != null) &&
+                                            isDateInRange(
+                                              DateFormat('yyyy-MM-dd').format(DateTime.parse(item['updated_at'])),
+                                              lowerCaseQuery,
+                                            );
+                                        bool matchesBareng = matchesname && matchesupdated_at;
+                                        bool matchesBareng2 = matchesname && matchesupdated_at2;
 
                                         // Mengembalikan true jika ada kecocokan berdasarkan nama_perusahaan atau updated_at
-                                        return matchesBareng ||
-                                            matchesBareng2 ||
-                                            matchesname ||
-                                            matchesupdated_at ||
-                                            matchesupdated_at2;
+                                        return matchesBareng || matchesBareng2 || matchesname || matchesupdated_at || matchesupdated_at2;
                                       }).toList();
                                     });
                                   },
@@ -502,6 +459,11 @@ class HistoryOrderState extends State<HistoryOrder> {
                                 text: _filteredData[index]['nama_produk'].toString());
                             TextEditingController hargatotalController = TextEditingController(
                               text: 'Rp ${NumberFormat.decimalPattern('id_ID').format(int.parse(_filteredData[index]['harga_total']))}',);
+                            TextEditingController jumlahpesananController = TextEditingController(
+                                text: _filteredData[index]['jumlah_pesanan'].toString());
+                            TextEditingController batastanggalController = TextEditingController(
+                                text: DateFormat('dd-MM-yyyy').format(DateTime.parse(
+                                    _filteredData[index]['batas_tanggal'])).toString());
 
                             return AlertDialog(
                               shape: RoundedRectangleBorder(
@@ -541,11 +503,29 @@ class HistoryOrderState extends State<HistoryOrder> {
                                     false, // Mengatur TextField menjadi disable
                                   ),
                                   TextField(
+                                    controller: jumlahpesananController,
+                                    keyboardType: TextInputType.text,
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Order Quantity')),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
+                                  ),
+                                  TextField(
                                     controller: hargatotalController,
                                     keyboardType: TextInputType.text,
                                     decoration: InputDecoration(
                                         labelText: getTranslatedText(
                                             'Total Price')),
+                                    enabled:
+                                    false, // Mengatur TextField menjadi disable
+                                  ),
+                                  TextField(
+                                    controller: batastanggalController,
+                                    keyboardType: TextInputType.text,
+                                    decoration: InputDecoration(
+                                        labelText: getTranslatedText(
+                                            'Deadline')),
                                     enabled:
                                     false, // Mengatur TextField menjadi disable
                                   ),
@@ -613,19 +593,13 @@ class HistoryOrderState extends State<HistoryOrder> {
                                         padding: EdgeInsetsDirectional
                                             .fromSTEB(0, 4, 0, 0),
                                         child: Text(
-                                          DateFormat(
-                                              'dd-MM-yyyy')
-                                              .format(DateTime.parse(
-                                              _filteredData[index]
-                                              [
-                                              'updated_at'])),
+                                          DateFormat('dd-MM-yyyy').format(DateTime.parse(
+                                              _filteredData[index]['updated_at'])),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
-                                            fontSize:
-                                            screenWidth * 0.03,
-                                            fontWeight:
-                                            FontWeight.w300,
+                                            fontSize: screenWidth * 0.03,
+                                            fontWeight: FontWeight.w300,
                                           ),
                                         ),
                                       ),
@@ -662,8 +636,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                                       alignment: AlignmentDirectional(
                                           0.00, 0.00),
                                       child: Text(
-                                        _filteredData[index]
-                                        ['id_klien']
+                                        _filteredData[index]['id_klien']
                                             .toString(),
                                         style: TextStyle(
                                           fontFamily: 'Inter',
@@ -692,8 +665,7 @@ class HistoryOrderState extends State<HistoryOrder> {
                                                   .spaceBetween,
                                               children: [
                                                 Text(
-                                                  _filteredData[index]
-                                                  [
+                                                  _filteredData[index][
                                                   'nama_perusahaan'],
                                                   style: TextStyle(
                                                     fontFamily:
@@ -749,63 +721,6 @@ class HistoryOrderState extends State<HistoryOrder> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate<String> {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    // Tambahkan aksi yang ingin ditampilkan pada tampilan pencarian
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    // Ikon yang ditampilkan di sebelah kiri pada AppBar
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    // Tampilkan hasil pencarian di sini (jika ada)
-    return Center(
-      child: Text('Hasil pencarian untuk: $query'),
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // Tampilkan saran pencarian saat pengguna mengetik
-    return ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text('Saran 1'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 1');
-          },
-        ),
-        ListTile(
-          title: Text('Saran 2'),
-          onTap: () {
-            // Tindakan yang diambil ketika salah satu saran dipilih
-            close(context, 'Saran 2');
-          },
-        ),
-      ],
     );
   }
 }

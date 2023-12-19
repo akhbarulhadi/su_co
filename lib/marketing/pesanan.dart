@@ -865,7 +865,7 @@ class PesananState extends State<Pesanan> {
                                                                     },
                                                                   ),
                                                                   DropdownButtonFormField<String>(
-                                                                    value: _selectedProductId,
+                                                                    value: null,
                                                                     items: _stockData
                                                                         .where((product) => product['harga_produk'] != null) // Filter produk dengan harga_produk yang tidak null
                                                                         .map((product) {
@@ -885,6 +885,12 @@ class PesananState extends State<Pesanan> {
                                                                     decoration: InputDecoration(
                                                                       labelText: getTranslatedText('Select Product'),
                                                                     ),
+                                                                    validator: (value) {
+                                                                      if (value == null || value.isEmpty) {
+                                                                        return 'Pilih produk terlebih dahulu';
+                                                                      }
+                                                                      return null;
+                                                                    },
                                                                   ),
                                                                   TextFormField(
                                                                     keyboardType: TextInputType.number,

@@ -4,7 +4,7 @@ import 'package:suco/login.dart';
 import 'package:suco/supervisor/jadwal.dart';
 import 'package:suco/supervisor/dashboard.dart';
 import 'package:suco/edit_profile.dart';
-import 'package:suco/supervisor/history_order.dart';
+import 'package:suco/history_order.dart';
 import 'package:suco/supervisor/laporan.dart';
 import 'package:suco/supervisor/setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';

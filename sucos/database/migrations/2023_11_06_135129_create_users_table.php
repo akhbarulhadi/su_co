@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -25,15 +27,15 @@ return new class extends Migration
         // Menambahkan satu data default
         // User::table('users')->insert([
         //     'id_staff' => '123',
-        //     'password' => bcrypt('admin1'), // Anda mungkin ingin mengenkripsi kata sandi
-        //     'nama' => '123',
-        //     'jenis_kelamin' => 'Laki-laki', // Sesuaikan dengan kebutuhan
+        //     'password' => Hash::make('admin1'), // Menggunakan Hash untuk mengenkripsi kata sandi
+        //     'nama' => 'Admin',
+        //     'jenis_kelamin' => 'Laki-laki',
         //     'alamat' => 'Default',
         //     'no_tlp' => '1234567890',
-        //     'foto' => 'default-profile.jpg', // Ganti dengan nama file foto default
-        //     'email' => 'admin1@gmail.com.com',
-        //     'status' => 'aktif', // Sesuaikan dengan kebutuhan
-        //     'roles' => 'admin', // Sesuaikan dengan kebutuhan
+        //     'foto' => 'default-profile.jpg',
+        //     'email' => 'admin@gmail.com',
+        //     'status' => 'aktif',
+        //     'roles' => 'admin',
         //     'created_at' => now(),
         //     'updated_at' => now(),
         // ]);

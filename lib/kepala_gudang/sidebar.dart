@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:suco/api_config.dart';
-import 'package:suco/kepala_gudang/history_order.dart';
+import 'package:suco/history_order.dart';
 import 'package:suco/kepala_gudang/status_pesanan.dart';
 import 'package:suco/login.dart';
 import 'package:suco/kepala_gudang/jadwal.dart';
