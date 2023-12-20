@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:suco/supervisor/dashboard.dart';
 import 'dart:convert';
 import '../utils.dart';
 import 'kalender_test.dart';
@@ -140,7 +141,7 @@ class CalenderState extends State<Calendar> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => TableEventsExample(),
+                              builder: (context) => DashboardPageSupervisor(),
                             ),
                           );
                         },
