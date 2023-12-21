@@ -6,15 +6,13 @@ SUCO
 
 ## Information
 
-Aplikasi Suplai Controller Ini (SUCO) adalah sebuah aplikasi yang bertujuan untuk memudahkan proses suplai barang dari produksi ke gudang.
-
-Keuntungan menggunakan aplikasi suplai controller (SUCO) adalah memudahkan Pengguna dalam melihat jumlah barang yang tersedia, barang yang berhasil di produksi harga satuan, Dll.
+Aplikasi Suplai Controller (SUCO) memberikan berbagai manfaat signifikan bagi perusahaan dalam pengelolaan stok dan produksi. Dengan adanya SUCO, perusahaan dapat mencapai efisiensi operasional yang lebih tinggi, mengurangi waktu dan sumber daya yang dibutuhkan untuk manajemen stok dan produksi. Selain itu, aplikasi ini membantu meningkatkan produktivitas dengan memantau dan mengoptimalkan proses produksi secara akurat. Keputusan yang cepat dan tepat dapat diambil berkat data real-time yang diberikan oleh SUCO, memungkinkan manajemen untuk merespons perubahan pasar dengan lebih efektif.
 
 ## License
 
 PBL_SUCO
 
-## Cara pakai Git
+## Git
 
 1. git clone link github
 
