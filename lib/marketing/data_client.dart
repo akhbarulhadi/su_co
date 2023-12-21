@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:suco/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:suco/marketing/dashboard.dart';
 import 'package:suco/marketing/data_pesanan.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -102,7 +103,12 @@ class KlientPage extends State<DataClient> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
+                      Navigator.pop(context); // Close the current dialog
                       Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => DashboardPageMarketing()),
+                      );
+                      Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => Pesanan()));

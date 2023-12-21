@@ -498,7 +498,9 @@ class DashboardPageLeaderProductionState
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          item['tanggal_produksi'] ?? '',
+                          DateFormat('dd-MM-yyyy').format(
+                              DateTime.parse(item['tanggal_produksi'])) ??
+                              '',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),

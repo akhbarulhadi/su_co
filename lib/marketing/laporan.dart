@@ -278,8 +278,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
           return 'Kode Produk :';
         case 'Product Name :':
           return 'Nama Produk :';
-        case 'Order Quantity :':
-          return 'Jumlah Pesanan:';
+        case 'Order / Stock :':
+          return 'Pesanan / Ketersediaan :';
         case 'Type Of Payment :':
           return 'Jenis Pembayaran :';
         case 'Price :':
@@ -1215,7 +1215,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                                 0, 4, 0, 0),
                                                     child: Text(
                                                       getTranslatedText(
-                                                          'Order Quantity :'),
+                                                          'Order / Stock :'),
                                                       style: TextStyle(
                                                         fontFamily: 'Inter',
                                                         color:

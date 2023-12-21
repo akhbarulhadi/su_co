@@ -159,7 +159,12 @@ class AddUserState extends State<AddUser> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
+                      Navigator.pop(context); // Close the current dialog
                       Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UserManagementPage()));
+                      Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => UserManagementPage()));

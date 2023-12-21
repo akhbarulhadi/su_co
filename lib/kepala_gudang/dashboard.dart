@@ -236,10 +236,6 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderWarehouse> {
       await _getdatastok();
       print('Berhasil');
 
-      // Perbarui status langsung dalam _filteredData
-      setState(() {
-        _listdata[index]['status_pesanan'] = status_pesanan;
-      });
 
     } else {
       // Gagal memperbarui status

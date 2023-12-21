@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
@@ -25,20 +26,20 @@ return new class extends Migration
             $table->timestamps();
         });
         // Menambahkan satu data default
-        // User::table('users')->insert([
-        //     'id_staff' => '123',
-        //     'password' => Hash::make('admin1'), // Menggunakan Hash untuk mengenkripsi kata sandi
-        //     'nama' => 'Admin',
-        //     'jenis_kelamin' => 'Laki-laki',
-        //     'alamat' => 'Default',
-        //     'no_tlp' => '1234567890',
-        //     'foto' => 'default-profile.jpg',
-        //     'email' => 'admin@gmail.com',
-        //     'status' => 'aktif',
-        //     'roles' => 'admin',
-        //     'created_at' => now(),
-        //     'updated_at' => now(),
-        // ]);
+        DB::table('users')->insert([
+            'id_staff' => '123',
+            'password' => Hash::make('admin'),
+            'nama' => 'Admin',
+            'jenis_kelamin' => 'Laki-laki',
+            'alamat' => 'Default',
+            'no_tlp' => '1234567890',
+            'foto' => 'default-profile.jpg',
+            'email' => 'admin@gmail.com',
+            'status' => 'aktif.', // Sesuaikan dengan enum yang telah Anda tentukan
+            'roles' => 'admin',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     public function down()

@@ -406,6 +406,14 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Gagal';
         case 'Close':
           return 'Tutup';
+        case 'Order has been processed':
+          return 'Pesanan telah diproses';
+        case 'Move to history?':
+          return 'Pindahkan ke riwayat';
+        case 'Yes':
+          return 'Ya';
+        case 'No':
+          return 'Tidak';
         case '':
           return '';
         case '':
@@ -609,7 +617,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                         ? Colors.white
                                         : Colors.black,
                                     fontSize: screenWidth *
-                                        0.020, // Ukuran teks pada tombol
+                                        0.030, // Ukuran teks pada tombol
                                     fontWeight: FontWeight.normal,
                                   ),
                                   readOnly: true,

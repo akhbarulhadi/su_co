@@ -651,7 +651,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                             '${product['nama_produk']}',
                                             style: TextStyle(
                                               fontSize: screenWidth *
-                                                  0.020, // Ukuran teks pada tombol
+                                                  0.021, // Ukuran teks pada tombol
                                               fontWeight: FontWeight.normal,
                                             ),
                                           ),
@@ -672,7 +672,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                             'Select Product'), // Teks hint untuk dropdown
                                         hintStyle: TextStyle(
                                           fontSize: screenWidth *
-                                              0.020, // Ukuran teks pada tombol
+                                              0.030, // Ukuran teks pada tombol
                                           fontWeight: FontWeight.normal,
                                         ),
                                         // Menghilangkan ikon segitiga ke bawah
@@ -752,7 +752,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                             ? Colors.white
                                             : Colors.black,
                                         fontSize: screenWidth *
-                                            0.020, // Ukuran teks pada tombol
+                                            0.022, // Ukuran teks pada tombol
                                         fontWeight: FontWeight.normal,
                                       ),
                                       readOnly: true,
@@ -1369,7 +1369,9 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
                         child: Text(
-                          item['tanggal_produksi'] ?? '',
+                          DateFormat('dd-MM-yyyy').format(
+                              DateTime.parse(item['tanggal_produksi'])) ??
+                              '',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             color: Color(0xFFFFFFFE),

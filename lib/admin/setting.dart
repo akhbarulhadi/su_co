@@ -185,30 +185,48 @@ class _SettingWidgetState extends State<SettingWidget> {
             crossAxisAlignment: CrossAxisAlignment.start, // Pindahkan ke kiri
             children: [
               Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                      child: Icon(
-                        Icons.manage_accounts_sharp,
-                        color: Color(0xFF0A4F81),
-                        size: 24,
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDarkTheme
+                            ? Colors.white
+                            : Colors.black, // Choose your desired color for the underline
+                        width: 0.2, // Choose the thickness of the underline
+                      ),
+                      top: BorderSide(
+                        color: isDarkTheme
+                            ? Colors.white
+                            : Colors.black, // Choose your desired color for the underline
+                        width: 0.2, // Choose the thickness of the underline
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                      child: Text(
-                        getTranslatedText('Account'),
-                        style: TextStyle(
-                          fontFamily: 'Readex Pro',
-                          fontSize: 20,
-                          color: Color(0xFF0A4F81),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
+                        child: Icon(
+                          Icons.manage_accounts_sharp,
+                          color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
+                          size: 24,
                         ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
+                        child: Text(
+                          getTranslatedText('Account'),
+                          style: TextStyle(
+                            fontFamily: 'Readex Pro',
+                            fontSize: 20,
+                            color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               ListTile(
@@ -262,30 +280,48 @@ class _SettingWidgetState extends State<SettingWidget> {
                 },
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                      child: Icon(
-                        Icons.notifications,
-                        color: Color(0xFF0A4F81),
-                        size: 24,
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDarkTheme
+                            ? Colors.white
+                            : Colors.black, // Choose your desired color for the underline
+                        width: 0.2, // Choose the thickness of the underline
+                      ),
+                      top: BorderSide(
+                        color: isDarkTheme
+                            ? Colors.white
+                            : Colors.black, // Choose your desired color for the underline
+                        width: 0.2, // Choose the thickness of the underline
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                      child: Text(
-                        getTranslatedText('Notification'),
-                        style: TextStyle(
-                          fontFamily: 'Readex Pro',
-                          fontSize: 20,
-                          color: Color(0xFF0A4F81),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
+                        child: Icon(
+                          Icons.notifications,
+                          color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
+                          size: 24,
                         ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
+                        child: Text(
+                          getTranslatedText('Notification'),
+                          style: TextStyle(
+                            fontFamily: 'Readex Pro',
+                            fontSize: 20,
+                            color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SwitchListTile(
@@ -311,30 +347,48 @@ class _SettingWidgetState extends State<SettingWidget> {
                 contentPadding: EdgeInsets.fromLTRB(24, 1, 24, 1),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                      child: Icon(
-                          Icons.settings_suggest_outlined,
-                          color: Color(0xFF0A4F81),
-                          size: 24,
-                        ),
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDarkTheme
+                            ? Colors.white
+                            : Colors.black, // Choose your desired color for the underline
+                        width: 0.2, // Choose the thickness of the underline
                       ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                      child: Text(
-                        getTranslatedText('Other'),
-                        style: TextStyle(
-                          fontFamily: 'Readex Pro',
-                          fontSize: 20,
-                          color: Color(0xFF0A4F81),
-                        ),
+                      top: BorderSide(
+                        color: isDarkTheme
+                            ? Colors.white
+                            : Colors.black, // Choose your desired color for the underline
+                        width: 0.2, // Choose the thickness of the underline
                       ),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
+                        child: Icon(
+                            Icons.settings_suggest_outlined,
+                            color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
+                            size: 24,
+                          ),
+                        ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
+                        child: Text(
+                          getTranslatedText('Other'),
+                          style: TextStyle(
+                            fontFamily: 'Readex Pro',
+                            fontSize: 20,
+                            color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               ListTile(

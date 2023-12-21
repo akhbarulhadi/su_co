@@ -162,6 +162,7 @@ class AuthController extends Controller
             // Sesuaikan struktur data profil sesuai dengan model pengguna Anda
             $profileData = [
                 'alamat' => $user->alamat,
+                'email' => $user->email,
                 'no_tlp' => $user->no_tlp,
                 // Tambahkan properti lain sesuai kebutuhan
             ];
@@ -187,6 +188,7 @@ class AuthController extends Controller
                     'foto' => 'image|mimes:jpeg,png,jpg,gif',
                     'alamat' => 'required|string',
                     'no_tlp' => 'required|string',
+                    'email' => 'required|email',
                 ]);
 
                 // Simpan foto yang baru di storage
@@ -206,6 +208,7 @@ class AuthController extends Controller
             // Update informasi pengguna dengan alamat dan nomor telepon baru
             $user->update([
                 'alamat' => $request->alamat,
+                'email' => $request->email,
                 'no_tlp' => $request->no_tlp,
             ]);
 

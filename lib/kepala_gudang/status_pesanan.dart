@@ -343,8 +343,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           return 'Kode Produk :';
         case 'Product Name :':
           return 'Nama Produk :';
-        case 'Order Quantity :':
-          return 'Jumlah Pesanan:';
+        case 'Order / Stock :':
+          return 'Pesanan / Ketersediaan :';
         case 'Type Of Payment :':
           return 'Jenis Pembayaran :';
         case 'Price :':
@@ -371,6 +371,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           return 'Tidak ada pesanan';
         case 'No Order':
           return 'Tidak ada pesanan';
+        case 'Ready Delivered':
+          return 'Siap Diantar';
         case '':
           return '';
         case '':
@@ -1220,7 +1222,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                                                 0, 4, 0, 0),
                                                     child: Text(
                                                       getTranslatedText(
-                                                          'Order Quantity :'),
+                                                          'Order / Stock :'),
                                                       style: TextStyle(
                                                         fontFamily: 'Inter',
                                                         color:

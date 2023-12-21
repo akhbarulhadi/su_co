@@ -1013,35 +1013,38 @@ class UserManagementPageState extends State<UserManagementPage> {
                                               ),
                                               enabled: false,
                                             ),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(
-                                                  _filteredData[index]['roles'],
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Colors.white,
-                                                    fontSize:
-                                                        screenWidth * 0.028,
-                                                    fontWeight:
-                                                        FontWeight.normal,
+                                            Visibility(
+                                              visible: false,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    _filteredData[index]['roles'],
+                                                    style: TextStyle(
+                                                      fontFamily: 'Inter',
+                                                      color: Colors.white,
+                                                      fontSize:
+                                                          screenWidth * 0.028,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                    ),
                                                   ),
-                                                ),
-                                                Text(
-                                                  _filteredData[index]
-                                                      ['status'].toString().replaceAll('.', '').replaceAll('-', ''),
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: Colors.white,
-                                                    fontSize:
-                                                        screenWidth * 0.028,
-                                                    fontWeight:
-                                                        FontWeight.normal,
+                                                  Text(
+                                                    _filteredData[index]
+                                                        ['status'].toString().replaceAll('.', '').replaceAll('-', ''),
+                                                    style: TextStyle(
+                                                      fontFamily: 'Inter',
+                                                      color: Colors.white,
+                                                      fontSize:
+                                                          screenWidth * 0.028,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                             Row(
                                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

@@ -12,6 +12,7 @@ import 'package:giffy_dialog/giffy_dialog.dart';
 
 final StreamController<void> _streamController =
     StreamController<void>.broadcast();
+
 class EditProfile extends StatefulWidget {
   const EditProfile({Key? key}) : super(key: key);
 
@@ -20,23 +21,30 @@ class EditProfile extends StatefulWidget {
 }
 
 class EditProfilePage extends State<EditProfile> {
+  final _formKey = GlobalKey<FormState>();
+  bool isSubmitPressed = false;
   File? _imageFile;
   bool isDarkTheme = false;
   String selectedLanguage = 'IDN';
   late TextEditingController _alamatController;
   late TextEditingController _noTlpController;
-    List _listData = [];
+  late TextEditingController _emailController;
+  List _listData = [];
   List _filteredData = [];
+  bool isNumeric(String value) {
+    return int.tryParse(value) != null;
+  }
 
   @override
   void initState() {
     super.initState();
     _alamatController = TextEditingController();
     _noTlpController = TextEditingController();
+    _emailController = TextEditingController();
     loadDataProfile();
     loadThemePreference();
     loadSelectedLanguage();
-      _getData();
+    _getData();
     _streamController.stream.listen((_) {
       _getData();
     });
@@ -63,6 +71,7 @@ class EditProfilePage extends State<EditProfile> {
 
         setState(() {
           _alamatController.text = data['data']['alamat'];
+          _emailController.text = data['data']['email'];
           _noTlpController.text = data['data']['no_tlp'];
         });
       } else {
@@ -167,6 +176,7 @@ class EditProfilePage extends State<EditProfile> {
 
       var body = {
         'alamat': _alamatController.text,
+        'email': _emailController.text,
         'no_tlp': _noTlpController.text,
       };
 
@@ -199,7 +209,8 @@ class EditProfilePage extends State<EditProfile> {
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/success-tick-dribbble.gif',
+              Image.asset(
+                'lib/assets/success-tick-dribbble.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -240,7 +251,8 @@ class EditProfilePage extends State<EditProfile> {
           context: context,
           builder: (BuildContext context) {
             return GiffyDialog.image(
-              Image.asset('lib/assets/failed.gif',
+              Image.asset(
+                'lib/assets/failed.gif',
                 height: 200,
                 fit: BoxFit.cover,
               ),
@@ -327,7 +339,6 @@ class EditProfilePage extends State<EditProfile> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData =
@@ -403,7 +414,8 @@ class EditProfilePage extends State<EditProfile> {
                             child: MaterialButton(
                               textColor:
                                   isDarkTheme ? Colors.white : Colors.black,
-                              child: Text(getTranslatedText('Edit Profile Photo')),
+                              child:
+                                  Text(getTranslatedText('Edit Profile Photo')),
                               onPressed: () {
                                 showModalBottomSheet(
                                   context: context,
@@ -428,7 +440,8 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text(getTranslatedText('Select Photo')),
+                                                Text(getTranslatedText(
+                                                    'Select Photo')),
                                               ],
                                             ),
                                           ),
@@ -445,7 +458,8 @@ class EditProfilePage extends State<EditProfile> {
                                                   size: 40,
                                                 ),
                                                 SizedBox(width: 20.0),
-                                                Text(getTranslatedText('Take a Photo')),
+                                                Text(getTranslatedText(
+                                                    'Take a Photo')),
                                               ],
                                             ),
                                           ),
@@ -463,29 +477,74 @@ class EditProfilePage extends State<EditProfile> {
                                 : Text(
                                     "Suco_Photo: ${_imageFile!.path.split('/').last}"),
                           ),
-                          TextFormField(
-                            controller: _alamatController,
-                            obscureText: false,
-                            decoration: InputDecoration(
-                              labelText: getTranslatedText('Address'),
-                              contentPadding: EdgeInsets.all(13),
+                          Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  controller: _alamatController,
+                                  obscureText: false,
+                                  decoration: InputDecoration(
+                                    labelText: getTranslatedText('Address'),
+                                    contentPadding: EdgeInsets.all(13),
+                                  ),
+                                  style: TextStyle(fontSize: 16),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Isi Datanya';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                TextFormField(
+                                  controller: _emailController,
+                                  obscureText: false,
+                                  decoration: InputDecoration(
+                                    labelText: 'Email',
+                                    contentPadding: EdgeInsets.all(13),
+                                  ),
+                                  style: TextStyle(fontSize: 16),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Isi Datanya';
+                                    } else if (!value.contains('@')) {
+                                      return 'Email harus mengandung karakter "@"';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                TextFormField(
+                                  controller: _noTlpController,
+                                  obscureText: false,
+                                  decoration: InputDecoration(
+                                    labelText: 'Telp',
+                                    contentPadding: EdgeInsets.all(13),
+                                  ),
+                                  style: TextStyle(fontSize: 16),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Isi Datanya';
+                                    } else if (value.length < 10) {
+                                      return 'Minimal 10 angka';
+                                    } else if (!isNumeric(value)) {
+                                      return 'Nomor telepon harus mengandung angka saja';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
                             ),
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          TextFormField(
-                            controller: _noTlpController,
-                            obscureText: false,
-                            decoration: InputDecoration(
-                              labelText: 'Telp',
-                              contentPadding: EdgeInsets.all(13),
-                            ),
-                            style: TextStyle(fontSize: 16),
                           ),
                           Padding(
                             padding: EdgeInsets.fromLTRB(50, 50, 50, 10),
                             child: ElevatedButton(
                               onPressed: () async {
-                                await saveProfileChanges();
+                                setState(() {
+                                  isSubmitPressed = true;
+                                });
+                                if (_formKey.currentState!.validate()) {
+                                  await saveProfileChanges();
+                                }
                               },
                               child: Text(
                                 getTranslatedText('Save'),
