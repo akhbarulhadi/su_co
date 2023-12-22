@@ -155,7 +155,7 @@ class StockState extends State<Stock> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -198,7 +198,7 @@ class StockState extends State<Stock> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text(getTranslatedText('Tutup')),
+                    child: Text(getTranslatedText('Close')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(100, 40),
                       padding: EdgeInsets.all(10),
@@ -271,7 +271,7 @@ class StockState extends State<Stock> {
         case 'Not yet added':
           return 'Belum ditambahkan';
         case '+ Product':
-          return '+ Produksi';
+          return '+ Produk';
         case 'Add Product':
           return 'Tambah Produk';
         case 'Product Name':
@@ -288,12 +288,12 @@ class StockState extends State<Stock> {
           return 'Tambah Produk';
         case 'No Stock':
           return 'Tidak ada stok';
-        case '':
-          return '';
-        case '':
-          return '';
-        case '':
-          return '';
+        case 'Successfully':
+          return 'Berhasil';
+        case 'Failed':
+          return 'Gagal';
+        case 'Close':
+          return 'Tutup';
         case '':
           return '';
         case '':

@@ -17,6 +17,8 @@ class LaporanWidget extends StatefulWidget {
 }
 
 class _LaporanWidgetState extends State<LaporanWidget> {
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController batastanggalController = TextEditingController();
   late TextEditingController _textController;
   late TextEditingController _textstatusController;
   late TextEditingController _textperiodController;
@@ -29,6 +31,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
   String selectedPeriod = "";
   String selectedStatus = "";
   Map<int, Color> colorMap = {}; // Menyimpan warna berdasarkan id_klien
+  List _stockData = [];
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
     _listdata = [];
     _filteredData = [];
     _getdata();
+
   }
 
   void loadSelectedLanguage() async {
@@ -65,6 +69,114 @@ class _LaporanWidgetState extends State<LaporanWidget> {
     _textController.dispose();
     _unfocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _updateStatusBatal(
+      BuildContext context, int index, String newStatus) async {
+    final response = await http.post(
+      Uri.parse(ApiConfig.status_update_batal),
+      body: {
+        'id_pemesanan': _listdata[index]['id_pemesanan'].toString(),
+        'batas_tanggal': batastanggalController.text,
+        'status_pesanan': newStatus,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Status berhasil diperbarui
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/success-tick-dribbble.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Successfully'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Close')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+      print('Berhasil');
+      // Perbarui status langsung dalam _filteredData
+      setState(() {
+        _filteredData[index]['status_pesanan'] = newStatus;
+        _filteredData[index]['batas_tanggal'] = batastanggalController.text;
+      });
+      print('berhasil');
+    } else {
+      // Gagal memperbarui status
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return GiffyDialog.image(
+            Image.asset(
+              'lib/assets/failed.gif',
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            title: Text(
+              getTranslatedText('Failed'),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              getTranslatedText(''),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(getTranslatedText('Close')),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 40),
+                      padding: EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+      print('gagal');
+    }
   }
 
   Future<void> _updateStatus(
@@ -300,8 +412,16 @@ class _LaporanWidgetState extends State<LaporanWidget> {
           return 'Gagal';
         case 'Close':
           return 'Tutup';
-        case '':
-          return '';
+        case 'Cancelled':
+          return 'Batal';
+        case 'Do you want to cancel the order ?':
+          return 'Apakah pesanan ingin dibatalkan ?';
+        case 'Cancel Order':
+          return 'Batalkan Pesanan';
+        case 'Reactivate the order ?':
+          return 'Aktifkan Pesanan ?';
+        case 'Select Deadline':
+          return 'Pilih Batas Tanggal';
         case '':
           return '';
         case '':
@@ -326,8 +446,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
           return 'Waiting';
         case 'Siap Diantar':
           return 'Ready Delivered';
-        case '':
-          return '';
+        case 'Batal':
+          return 'Cancelled';
         case '':
           return '';
         // Tambahkan kases lain jika diperlukan
@@ -667,6 +787,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                           getTranslatedText("All"),
                           getTranslatedText("Waiting"),
                           getTranslatedText('Ready Delivered'),
+                          getTranslatedText('Cancelled'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -695,6 +816,9 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                             } else if (selectedStatus ==
                                 getTranslatedText("Ready Delivered")) {
                               _textstatusController.text = ("Siap Diantar");
+                            }else if (selectedStatus ==
+                                getTranslatedText("Cancelled")) {
+                              _textstatusController.text = ("Batal");
                             } else {
                               _textstatusController.text = "";
                             }
@@ -702,7 +826,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                             // Lakukan filter berdasarkan pilihan dropdown
                             _filteredData = _listdata.where((item) {
                               String lowerCaseQuery =
-                              _textstatusController.text.toLowerCase();
+                                  _textstatusController.text.toLowerCase();
 
                               // Mencocokkan berdasarkan
                               bool matchesstatus = item['status_pesanan']
@@ -727,7 +851,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                           color: isDarkTheme ? Colors.white24 : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isDarkTheme ? Colors.white38 : Colors.black38,
+                            color:
+                                isDarkTheme ? Colors.white38 : Colors.black38,
                             width: 1, // Lebar garis tepi
                           ),
                         ),
@@ -743,7 +868,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                   color: isDarkTheme
                                       ? Colors.white
                                       : Color(
-                                      0xFF8B9BA8), // Ganti dengan warna yang sesuai
+                                          0xFF8B9BA8), // Ganti dengan warna yang sesuai
                                   size: 15,
                                 ),
                               ),
@@ -756,21 +881,21 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                       setState(() {
                                         _filteredData = _listdata.where((item) {
                                           String lowerCaseQuery =
-                                          query.toLowerCase();
+                                              query.toLowerCase();
 
                                           // Mencocokkan berdasarkan
                                           bool matchesname =
-                                          item['nama_perusahaan']
-                                              .toLowerCase()
-                                              .contains(lowerCaseQuery);
+                                              item['nama_perusahaan']
+                                                  .toLowerCase()
+                                                  .contains(lowerCaseQuery);
                                           bool matchescreated_at =
-                                          item['batas_tanggal']
-                                              .toLowerCase()
-                                              .contains(lowerCaseQuery);
+                                              item['batas_tanggal']
+                                                  .toLowerCase()
+                                                  .contains(lowerCaseQuery);
                                           bool matchesstatus =
-                                          item['status_pesanan']
-                                              .toLowerCase()
-                                              .contains(lowerCaseQuery);
+                                              item['status_pesanan']
+                                                  .toLowerCase()
+                                                  .contains(lowerCaseQuery);
 
                                           // Mencocokkan berdasarkan updated_at dengan jangka waktu
                                           bool matchescreated_at2 =
@@ -778,8 +903,8 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                   isDateInRange(
                                                     DateFormat('yyyy-MM-dd')
                                                         .format(DateTime.parse(
-                                                        item[
-                                                        'batas_tanggal'])),
+                                                            item[
+                                                                'batas_tanggal'])),
                                                     lowerCaseQuery,
                                                   );
 
@@ -880,7 +1005,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                           actions: [
                                             Row(
                                               mainAxisAlignment:
-                                                  MainAxisAlignment.center,
+                                                  MainAxisAlignment.end,
                                               children: [
                                                 TextButton(
                                                   onPressed: () async {
@@ -891,7 +1016,7 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                   child: Text(
                                                     getTranslatedText('Yes'),
                                                     style: TextStyle(
-                                                        color: Colors.green),
+                                                        color: Colors.blue),
                                                   ),
                                                 ),
                                                 TextButton(
@@ -902,7 +1027,180 @@ class _LaporanWidgetState extends State<LaporanWidget> {
                                                   child: Text(
                                                     getTranslatedText('No'),
                                                     style: TextStyle(
-                                                        color: Colors.red),
+                                                        color: Colors
+                                                            .blueGrey),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  } else if (_filteredData[index]
+                                          ['status_pesanan'] ==
+                                      'Menunggu') {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          title: Center(
+                                            child: Text(getTranslatedText(
+                                                'Do you want to cancel the order ?')),
+                                          ),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(getTranslatedText(
+                                                  'Cancel Order')),
+                                            ],
+                                          ),
+                                          actions: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    // Mengubah status pesanan menjadi 'Selesai'
+                                                    await _updateStatus(context,
+                                                        index, 'Batal');
+                                                  },
+                                                  child: Text(
+                                                    getTranslatedText('Yes'),
+                                                    style: TextStyle(
+                                                        color: Colors.blue),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    // Menutup dialog tanpa melakukan perubahan
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Text(
+                                                    getTranslatedText('No'),
+                                                    style: TextStyle(
+                                                        color: Colors
+                                                            .blueGrey),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  } else if (_filteredData[index]
+                                          ['status_pesanan'] ==
+                                      'Batal') {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          title: Center(
+                                            child: Text(getTranslatedText(
+                                                'Reactivate the order ?')),
+                                          ),
+                                          content: Form(
+                                            key: _formKey,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(''),
+                                                TextFormField(
+                                                  controller:
+                                                      batastanggalController,
+                                                  decoration: InputDecoration(
+                                                      icon: Icon(
+                                                          Icons.calendar_today),
+                                                      labelText:
+                                                          getTranslatedText(
+                                                              "Deadline")),
+                                                  readOnly: true,
+                                                  //set it true, so that user will not able to edit text
+                                                  onTap: () async {
+                                                    DateTime now =
+                                                        DateTime.now();
+                                                    DateTime tomorrow = now
+                                                        .add(Duration(days: 1));
+
+                                                    DateTime? pickedDate =
+                                                        await showDatePicker(
+                                                            context: context,
+                                                            initialDate:
+                                                                tomorrow,
+                                                            firstDate: tomorrow,
+                                                            //DateTime.now() - not to allow to choose before today.
+                                                            lastDate:
+                                                                DateTime(2100));
+
+                                                    if (pickedDate != null) {
+                                                      print(
+                                                          pickedDate); //pickedDate output format => 2021-03-10 00:00:00.000
+                                                      String formattedDate =
+                                                          DateFormat(
+                                                                  'yyyy-MM-dd')
+                                                              .format(
+                                                                  pickedDate);
+                                                      print(
+                                                          formattedDate); //formatted date output using intl package =>  2021-03-16
+                                                      setState(() {
+                                                        batastanggalController
+                                                                .text =
+                                                            formattedDate; //set output date to TextField value.
+                                                      });
+                                                    } else {}
+                                                  },
+                                                  validator: (value) {
+                                                    if (value == null ||
+                                                        value.isEmpty) {
+                                                      return getTranslatedText('Select Deadline');
+                                                    }
+                                                    return null;
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          actions: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    if (_formKey.currentState!
+                                                        .validate()) {
+                                                      await _updateStatusBatal(
+                                                          context,
+                                                          index,
+                                                          'Menunggu');
+                                                    }
+                                                  },
+                                                  child: Text(
+                                                    getTranslatedText('Yes'),
+                                                    style: TextStyle(
+                                                        color: Colors.blue),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    // Menutup dialog tanpa melakukan perubahan
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Text(
+                                                    getTranslatedText('No'),
+                                                    style: TextStyle(
+                                                        color: Colors
+                                                            .blueGrey),
                                                   ),
                                                 ),
                                               ],

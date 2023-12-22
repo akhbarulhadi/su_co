@@ -228,7 +228,10 @@ class DashboardPageLeaderProductionState
                 },
               ),
               TextButton(
-                child: Text(getTranslatedText('Cancel')),
+                child: Text(getTranslatedText('Cancel'),
+                    style: TextStyle(
+                        color: Colors
+                            .blueGrey)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },

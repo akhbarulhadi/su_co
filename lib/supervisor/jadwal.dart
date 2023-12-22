@@ -254,7 +254,10 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                   },
                 ),
                 TextButton(
-                  child: Text(getTranslatedText('Cancel')),
+                  child: Text(getTranslatedText('Cancel'),
+                      style: TextStyle(
+                          color: Colors
+                              .blueGrey)),
                   onPressed: () {
                     if (!_isDisposed) {
                       Navigator.of(context).pop();

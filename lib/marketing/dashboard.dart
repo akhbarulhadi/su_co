@@ -849,7 +849,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                           Row(
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
-                                                                    .center,
+                                                                    .end,
                                                             children: [
                                                               TextButton(
                                                                 onPressed:
@@ -865,7 +865,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                                       'Yes'),
                                                                   style: TextStyle(
                                                                       color: Colors
-                                                                          .green),
+                                                                          .blue),
                                                                 ),
                                                               ),
                                                               TextButton(
@@ -880,7 +880,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                                       'No'),
                                                                   style: TextStyle(
                                                                       color: Colors
-                                                                          .red),
+                                                                          .blueGrey),
                                                                 ),
                                                               ),
                                                             ],

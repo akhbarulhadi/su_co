@@ -678,7 +678,7 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                             child: Text(
                                               getTranslatedText('Yes'),
                                               style: TextStyle(
-                                                color: Colors.green,
+                                                color: Colors.blue,
                                               ),
                                             ),
                                           ),
@@ -690,8 +690,8 @@ class DashboardPageStaffState extends State<DashboardPageStaff> {
                                             child: Text(
                                               getTranslatedText('No'),
                                               style: TextStyle(
-                                                color: Colors.red,
-                                              ),
+                                                  color: Colors
+                                                      .blueGrey),
                                             ),
                                           ),
                                         ],

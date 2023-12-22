@@ -41,6 +41,7 @@ Route::get('/pesanan/dashboard-supervisor', [PesananController::class, 'showPesa
 Route::get('/pesanan/pemasukan', [PesananController::class, 'showPemasukan']);
 Route::get('/pesanan/show-history', [PesananController::class, 'showHistory']);
 Route::post('pesanan/update-status', [PesananController::class, 'updateStatus']);
+Route::post('pesanan/update-status-batal', [PesananController::class, 'updateStatusBatal']);
 Route::post('pesanan/update-status-siapdiantar', [PesananController::class, 'updateStatusSiapDiantar']);
 Route::post('pesanan/tambah-pesanan', [PesananController::class, 'store']);
 Route::post('pesanan/updateProductAvailability', [PesananController::class, 'updateProductAvailability']);

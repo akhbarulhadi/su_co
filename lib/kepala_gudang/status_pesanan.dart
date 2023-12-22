@@ -373,8 +373,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           return 'Tidak ada pesanan';
         case 'Ready Delivered':
           return 'Siap Diantar';
-        case '':
-          return '';
+        case 'Cancelled':
+          return 'Batal';
         case '':
           return '';
         case '':
@@ -402,8 +402,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           return 'Waiting';
         case 'Siap Diantar':
           return 'Ready Delivered';
-        case '':
-          return '';
+        case 'Batal':
+          return 'Cancelled';
         case '':
           return '';
       // Tambahkan kases lain jika diperlukan
@@ -706,6 +706,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                           getTranslatedText("All"),
                           getTranslatedText("Waiting"),
                           getTranslatedText('Ready Delivered'),
+                          getTranslatedText('Cancelled'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -731,6 +732,8 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                               _textstatusController.text = ("Menunggu");
                             } else if (selectedStatus == getTranslatedText("Ready Delivered")) {
                               _textstatusController.text = ("Siap Diantar");
+                            }else if (selectedStatus == getTranslatedText("Cancelled")) {
+                              _textstatusController.text = ("Batal");
                             } else {
                               _textstatusController.text = "";
                             }
@@ -901,7 +904,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                               child: Text(
                                                 getTranslatedText('Yes'),
                                                 style: TextStyle(
-                                                  color: Colors.green,
+                                                  color: Colors.blue,
                                                 ),
                                               ),
                                             ),
@@ -912,9 +915,9 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                                               },
                                               child: Text(
                                                 getTranslatedText('No'),
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                ),
+                                                  style: TextStyle(
+                                                      color: Colors
+                                                          .blueGrey),
                                               ),
                                             ),
                                           ],

@@ -595,7 +595,7 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderWarehouse> {
                                                   child: Text(
                                                     getTranslatedText('Yes'),
                                                     style: TextStyle(
-                                                      color: Colors.green,
+                                                      color: Colors.blue,
                                                     ),
                                                   ),
                                                 ),
@@ -606,9 +606,9 @@ class _Dashboard1WidgetState extends State<DashboardPageLeaderWarehouse> {
                                                   },
                                                   child: Text(
                                                     getTranslatedText('No'),
-                                                    style: TextStyle(
-                                                      color: Colors.red,
-                                                    ),
+                                                      style: TextStyle(
+                                                          color: Colors
+                                                              .blueGrey),
                                                   ),
                                                 ),
                                               ],

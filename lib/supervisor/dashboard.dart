@@ -97,7 +97,10 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup dialog konfirmasi
               },
-              child: Text(getTranslatedText("No")),
+              child: Text(getTranslatedText("No"),
+                  style: TextStyle(
+                  color: Colors
+                      .blueGrey)),
             ),
           ],
         );
@@ -351,7 +354,10 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                   },
                 ),
                 TextButton(
-                  child: Text(getTranslatedText('Cancel')),
+                  child: Text(getTranslatedText('Cancel'),
+                      style: TextStyle(
+                          color: Colors
+                              .blueGrey)),
                   onPressed: () {
                     if (!_isDisposed) {
                       Navigator.of(context).pop();

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('jenis_pembayaran');
             $table->string('jumlah_pesanan');
             $table->date('batas_tanggal');
-            $table->enum('status_pesanan', ['Menunggu', 'Siap Diantar', 'Selesai', 'Ditunda']);
+            $table->enum('status_pesanan', ['Menunggu', 'Siap Diantar', 'Selesai', 'Batal']);
             $table->timestamps();
         });
     }

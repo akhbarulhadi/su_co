@@ -14,8 +14,11 @@ class PesananController extends Controller
         $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
             ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
             ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.kode_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
-            ->whereNotIn('pesanan.status_pesanan', ['Selesai', 'Batal'])
+            ->whereNotIn('pesanan.status_pesanan', ['Selesai'])
+            ->orderBy('pesanan.status_pesanan') // Urutkan berdasarkan status_pesanan (opsional)
+            ->orderByDesc('pesanan.id_pemesanan') // Urutkan secara descending berdasarkan ID untuk menempatkan yang 'Batal' di paling terakhir
             ->get();
+
         return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
     }
 
@@ -67,7 +70,7 @@ class PesananController extends Controller
         $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
             ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
             ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
-            ->whereNotIn('pesanan.status_pesanan', ['Menunggu', 'Siap Diantar'])
+            ->whereNotIn('pesanan.status_pesanan', ['Menunggu', 'Siap Diantar', 'Batal'])
             ->get();
         return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
     }
@@ -138,7 +141,7 @@ class PesananController extends Controller
         $endDate = $request->input('endDate');
 
         $pesanan = Pesanan::select('pesanan.status_pesanan')
-            ->whereNotIn('pesanan.status_pesanan', ['Menunggu', 'Siap Diantar', 'Ditunda'])
+            ->whereNotIn('pesanan.status_pesanan', ['Menunggu', 'Siap Diantar', 'Batal'])
             ->whereDate('pesanan.updated_at', '>=', $startDate)
             ->whereDate('pesanan.updated_at', '<=', $endDate)
             ->get();
@@ -150,5 +153,28 @@ class PesananController extends Controller
 
 
         return response()->json(['message' => 'Success', 'total_harga_selesai' => $total_harga_selesai]);
+    }
+
+    public function updateStatusBatal(Request $request)
+    {
+        // Validasi request sesuai kebutuhan Anda
+        $request->validate([
+            'id_pemesanan' => 'required|integer',
+            'batas_tanggal' => 'required|string',
+            'status_pesanan' => 'required|string',
+        ]);
+
+        // Perbarui status pesanan di database
+        $pesanan = Pesanan::find($request->id_pemesanan);
+
+        if (!$pesanan) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+        }
+
+        $pesanan->status_pesanan = $request->status_pesanan;
+        $pesanan->batas_tanggal = $request->batas_tanggal;
+        $pesanan->save();
+
+        return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 }

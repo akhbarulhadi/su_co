@@ -918,7 +918,7 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                     child: Text(
                                       getTranslatedText('Yes'),
                                       style: TextStyle(
-                                        color: Colors.green,
+                                        color: Colors.blue,
                                       ),
                                     ),
                                   ),
@@ -930,8 +930,8 @@ class TableEventsExampleState extends State<TableEventsExample> {
                                     child: Text(
                                       getTranslatedText('No'),
                                       style: TextStyle(
-                                        color: Colors.red,
-                                      ),
+                                          color: Colors
+                                              .blueGrey),
                                     ),
                                   ),
                                 ],
