@@ -15,6 +15,7 @@ class ProduksiController extends Controller
             // Ambil data leader dari tabel users dengan role 'leader'
             $leaders = User::select('users.id_user', 'users.nama')
                 ->where('roles', 'leader')
+                ->whereNotIn('status', ['tidak-aktif'])
                 ->get();
 
             // Jika data ditemukan, kirimkan respons JSON

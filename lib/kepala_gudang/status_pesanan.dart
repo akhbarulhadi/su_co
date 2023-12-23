@@ -373,7 +373,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
           return 'Tidak ada pesanan';
         case 'Ready Delivered':
           return 'Siap Diantar';
-        case 'Cancelled':
+        case 'Canceled':
           return 'Batal';
         case '':
           return '';
@@ -403,7 +403,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
         case 'Siap Diantar':
           return 'Ready Delivered';
         case 'Batal':
-          return 'Cancelled';
+          return 'Canceled';
         case '':
           return '';
       // Tambahkan kases lain jika diperlukan
@@ -706,7 +706,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                           getTranslatedText("All"),
                           getTranslatedText("Waiting"),
                           getTranslatedText('Ready Delivered'),
-                          getTranslatedText('Cancelled'),
+                          getTranslatedText('Canceled'),
                         ],
                         dropdownDecoratorProps: DropDownDecoratorProps(
                           dropdownSearchDecoration: InputDecoration(
@@ -732,7 +732,7 @@ class _LaporanWidgetState extends State<StatusPesanan> {
                               _textstatusController.text = ("Menunggu");
                             } else if (selectedStatus == getTranslatedText("Ready Delivered")) {
                               _textstatusController.text = ("Siap Diantar");
-                            }else if (selectedStatus == getTranslatedText("Cancelled")) {
+                            }else if (selectedStatus == getTranslatedText("Canceled")) {
                               _textstatusController.text = ("Batal");
                             } else {
                               _textstatusController.text = "";
