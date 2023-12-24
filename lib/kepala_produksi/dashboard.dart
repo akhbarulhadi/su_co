@@ -62,8 +62,10 @@ class DashboardPageLeaderProductionState
 
   Future<void> loadProduksi() async {
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      int userId = prefs.getInt('id_user') ?? 0;
       final response =
-          await http.get(Uri.parse(ApiConfig.get_production_leader_dashboard));
+          await http.get(Uri.parse('${ApiConfig.get_production_leader_dashboard}/$userId'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -99,11 +101,16 @@ class DashboardPageLeaderProductionState
         }
       }
 
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('yyyy-MM-dd').format(now);
+
       final response = await http.post(
-        Uri.parse(ApiConfig.status),
+        Uri.parse(ApiConfig.status_leader),
         body: {
           'id_produksi': idProduksi.toString(),
           'status_produksi': newStatus.toLowerCase(),
+          'tanggal_produksi': formattedDate,
+
         },
       );
 
@@ -214,7 +221,7 @@ class DashboardPageLeaderProductionState
               child: ListBody(
                 children: <Widget>[
                   Text(getTranslatedText(
-                      'Are you sure you want to change this production status?')),
+                      'Is this production already made ?')),
                 ],
               ),
             ),
@@ -280,8 +287,8 @@ class DashboardPageLeaderProductionState
           return 'Menunggu';
         case 'Edit':
           return 'Ubah';
-        case 'Are you sure you want to change this production status?':
-          return 'Apakah Anda yakin ingin mengubah status produksi ini?';
+        case 'Is this production already made ?':
+          return 'Apakah produksi ini sudah dibuat ?';
         case 'Yes':
           return 'Ya';
         case 'Cancel':

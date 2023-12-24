@@ -230,8 +230,8 @@ class StockState extends State<Stock> {
           return 'Bulanan';
         case 'Yearly':
           return 'Tahunan';
-        case 'Change Price':
-          return 'Ubah Harga';
+        case 'Price':
+          return 'Harga';
         case 'Save':
           return 'Simpan';
         case 'Not yet added':
@@ -244,6 +244,10 @@ class StockState extends State<Stock> {
           return 'Tutup';
         case 'No Stock':
           return 'Tidak ada stok';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Must contain numbers only':
+          return 'Harus mengandung angka saja';
         case '':
           return '';
 
@@ -469,7 +473,7 @@ class StockState extends State<Stock> {
                                         ),
                                         title: Center(
                                             child: Text(getTranslatedText(
-                                                'Change Price'))),
+                                                'Price'))),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -487,10 +491,10 @@ class StockState extends State<Stock> {
                                                 validator: (value) {
                                                   if (value == null ||
                                                       value.isEmpty) {
-                                                    return 'Isi Datanya';
+                                                    return getTranslatedText('Fill in the data');
                                                   } else if (!isNumeric(
                                                       value)) {
-                                                    return 'harus mengandung angka saja';
+                                                    return getTranslatedText('Must contain numbers only');
                                                   }
                                                   return null;
                                                 },

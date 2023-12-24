@@ -53,12 +53,15 @@ class StockController extends Controller
 
     public function store(Request $request)
     {
+        $kodeProduk = 'DUCT-' . date('YmdHis') . rand(1000, 9999);
+
         $data = $request->validate([
-            'kode_produk' => 'required',
             'nama_produk' => 'required',
             'jumlah_produk' => 'required',
             'jenis_produk' => 'required',
         ]);
+
+        $data['kode_produk'] = $kodeProduk;
 
         $stock = Stock::create($data);
 

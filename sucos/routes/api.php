@@ -63,6 +63,7 @@ Route::get('/klien', [KlienController::class, 'showKlien']);
 Route::post('/produksi', [ProduksiController::class, 'store']);
 Route::get('/roles-leader', [ProduksiController::class, 'user']);
 Route::post('/produksi/update-status', [ProduksiController::class, 'updateStatus']);
+Route::post('/produksi/update-status-leader', [ProduksiController::class, 'updateStatusLeader']);
 Route::post('/produksi/update-stock', [ProduksiController::class, 'updateJumlahProduk']);
 Route::get('/jadwal', [ProduksiController::class, 'getproduksi']);
 Route::post('/produksi/update-status-selesai', [ProduksiController::class, 'updateStatusSelesai']);
@@ -70,8 +71,8 @@ Route::post('/produksi/update-product', [ProduksiController::class, 'updateProdu
 Route::get('/produksi/production-staffgudang', [ProduksiController::class, 'getProduksiStaffGudang']);
 Route::get('/produksi/production-supervisor', [ProduksiController::class, 'getProduksiSupervisor']);
 Route::get('/produksi/production-supervisor-dashboard', [ProduksiController::class, 'getProduksiSupervisorDashboard']);
-Route::get('/produksi/production-leader', [ProduksiController::class, 'getProduksiLeader']);
-Route::get('/produksi/production-leader-dashboard', [ProduksiController::class, 'getProduksiLeaderDashboard']);
+Route::get('/produksi/production-leader/{id_user}', [ProduksiController::class, 'getProduksiLeader']);
+Route::get('/produksi/production-leader-dashboard/{id_user}', [ProduksiController::class, 'getProduksiLeaderDashboard']);
 Route::get('/produksi/production-staff-dashboard', [ProduksiController::class, 'getProduksiStaffDashboard']);
 Route::get('/produksi/production-history', [ProduksiController::class, 'getProduksiHistory']);
 Route::get('/produksi/pemasukan-produksi', [ProduksiController::class, 'showPemasukanProduksi']);

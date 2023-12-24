@@ -15,8 +15,7 @@ class PesananController extends Controller
             ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
             ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.kode_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
             ->whereNotIn('pesanan.status_pesanan', ['Selesai'])
-            ->orderBy('pesanan.status_pesanan') // Urutkan berdasarkan status_pesanan (opsional)
-            ->orderByDesc('pesanan.id_pemesanan') // Urutkan secara descending berdasarkan ID untuk menempatkan yang 'Batal' di paling terakhir
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
@@ -24,24 +23,28 @@ class PesananController extends Controller
 
     public function showPesananDashboardMarketing()
     {
+        $jumlahTotalData = Pesanan::whereNotIn('status_pesanan', ['Selesai', 'Batal', 'Menunggu'])->count();
+
         $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
             ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
             ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
             ->whereNotIn('pesanan.status_pesanan', ['Selesai', 'Batal', 'Menunggu'])
             ->take(5)
             ->get();
-        return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
+        return response()->json(['message' => 'Success', 'total_data' => $jumlahTotalData, 'pesanan' => $pesanan]);
     }
 
     public function showPesananDashboardSupervisor()
     {
+        $jumlahTotalData = Pesanan::whereNotIn('status_pesanan', ['Selesai', 'Batal', 'Siap Diantar'])->count();
+
         $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
             ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
             ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'ketersediaan_barang.jumlah_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
             ->whereNotIn('pesanan.status_pesanan', ['Selesai', 'Batal', 'Siap Diantar'])
             ->take(5)
             ->get();
-        return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
+        return response()->json(['message' => 'Success', 'total_data' => $jumlahTotalData, 'pesanan' => $pesanan]);
     }
 
     public function updateStatus(Request $request)
@@ -70,6 +73,7 @@ class PesananController extends Controller
         $pesanan = Pesanan::join('ketersediaan_barang', 'pesanan.id_produk', '=', 'ketersediaan_barang.id_produk')
             ->join('data_klien', 'data_klien.id_klien', '=', 'pesanan.id_klien')
             ->select('pesanan.*', 'ketersediaan_barang.nama_produk', 'data_klien.nama_klien', 'data_klien.alamat', 'data_klien.nama_perusahaan')
+            ->orderBy('updated_at', 'desc')
             ->whereNotIn('pesanan.status_pesanan', ['Menunggu', 'Siap Diantar', 'Batal'])
             ->get();
         return response()->json(['message' => 'Success', 'pesanan' => $pesanan]);
@@ -77,8 +81,10 @@ class PesananController extends Controller
 
     public function store(Request $request)
     {
+        // Generate kode pemesanan unik
+        $kodePemesanan = $this->generateUniqueCode();
+
         $data = $request->validate([
-            'kode_pemesanan' => 'required',
             'id_produk' => 'required',
             'id_klien' => 'required',
             'harga_total' => 'required',
@@ -87,10 +93,26 @@ class PesananController extends Controller
             'batas_tanggal' => 'required',
         ]);
 
+        // Tambahkan kode pemesanan ke data sebelum membuat pesanan
+        $data['kode_pemesanan'] = $kodePemesanan;
+
         $pesanan = Pesanan::create($data);
 
         return response()->json(['message' => 'Data Pesanan berhasil dibuat', 'data' => $pesanan], 201);
     }
+
+
+    public function generateUniqueCode()
+    {
+        // Menggabungkan timestamp dengan karakter acak (misalnya, 4 karakter acak)
+        $randomChars = substr(str_shuffle("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4);
+
+        // Menggabungkan timestamp dan karakter acak untuk membuat kode unik
+        $uniqueCode = 'OC-' . date('YmdHis') . $randomChars;
+
+        return $uniqueCode;
+    }
+
 
     public function updateStatusSiapDiantar(Request $request)
     {

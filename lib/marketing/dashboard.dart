@@ -30,6 +30,8 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
   bool isNumeric(String value) {
     return int.tryParse(value) != null;
   }
+  int _totalData = 0;
+
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
     _listdatastok = [];
     _getdatapesanan();
     _getdatastok();
+    _totalData;
   }
 
   void loadSelectedLanguage() async {
@@ -107,8 +110,10 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print(data); // Cetak data ke konsol
+        int totalData = data['total_data']; // Ambil jumlah total data
         setState(() {
           _listdata = data['pesanan'];
+          _totalData = totalData; // Simpan total data ke dalam variabel _totalData
           _isloading = false;
         });
       }
@@ -396,8 +401,8 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Tidak ada pesanan';
         case 'No Stock':
           return 'Tidak ada stok';
-        case 'Change Price':
-          return 'Ubah Harga';
+        case 'Price':
+          return 'Harga';
         case 'Save':
           return 'Simpan';
         case 'Successfully':
@@ -414,10 +419,10 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
           return 'Ya';
         case 'No':
           return 'Tidak';
-        case '':
-          return '';
-        case '':
-          return '';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Must contain numbers only':
+          return 'Harus mengandung angka saja';
         case '':
           return '';
         case '':
@@ -719,8 +724,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          _listdata.length
-                                              .toString(), // Menggunakan panjang list sebagai teks
+                                          _totalData.toString(),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),
@@ -1214,7 +1218,7 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                 title: Center(
                                                     child: Text(
                                                         getTranslatedText(
-                                                            'Change Price'))),
+                                                            'Price'))),
                                                 content: Column(
                                                   mainAxisSize:
                                                       MainAxisSize.min,
@@ -1235,10 +1239,10 @@ class _Dashboard1WidgetState extends State<DashboardPageMarketing> {
                                                         validator: (value) {
                                                           if (value == null ||
                                                               value.isEmpty) {
-                                                            return 'Isi Datanya';
+                                                            return getTranslatedText('Fill in the data');
                                                           } else if (!isNumeric(
                                                               value)) {
-                                                            return 'harus mengandung angka saja';
+                                                            return getTranslatedText('Must contain numbers only');
                                                           }
                                                           return null;
                                                         },

@@ -224,6 +224,16 @@ class KlientPage extends State<DataClient> {
           return 'Data sudah ada';
         case 'Yes':
           return 'Ya';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Email must contain the "@" character':
+          return 'Email harus menganding karakter "@"';
+        case 'Min 10 numbers':
+          return 'Min 10 angka';
+        case 'Min 1 numbers':
+          return 'Min 1 angka';
+        case 'Just numbers':
+          return 'Isi angka saja';
         case '':
           return '';
 
@@ -321,7 +331,7 @@ class KlientPage extends State<DataClient> {
                               // Tambahkan validator sesuai kebutuhan
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 }
                                 return null;
                               },
@@ -342,7 +352,7 @@ class KlientPage extends State<DataClient> {
                               // Tambahkan validator sesuai kebutuhan
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 }
                                 return null;
                               },
@@ -363,7 +373,7 @@ class KlientPage extends State<DataClient> {
                               // Tambahkan validator sesuai kebutuhan
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 }
                                 return null;
                               },
@@ -384,9 +394,9 @@ class KlientPage extends State<DataClient> {
                               // Tambahkan validator sesuai kebutuhan
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 } else if (!value.contains('@')) {
-                                  return 'Email harus mengandung karakter "@"';
+                                  return getTranslatedText('Email must contain the "@" character');
                                 }
                                 return null;
                               },
@@ -410,11 +420,11 @@ class KlientPage extends State<DataClient> {
                                     // Tambahkan validator sesuai kebutuhan
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Isi Datanya';
+                                        return getTranslatedText('Fill in the data');
                                       } else if (value.length < 10) {
-                                        return 'Minimal 10 angka';
+                                        return getTranslatedText('Min 10 numbers');
                                       } else if (!isNumeric(value)) {
-                                        return 'Nomor telepon harus mengandung angka saja';
+                                        return getTranslatedText('Just numbers');
                                       }
                                       return null;
                                     },
@@ -438,11 +448,11 @@ class KlientPage extends State<DataClient> {
                                     // Tambahkan validator sesuai kebutuhan
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Isi Datanya';
+                                        return getTranslatedText('Fill in the data');
                                       } else if (value.length < 1) {
-                                        return 'Minimal 1 angka';
+                                        return getTranslatedText('Min 1 numbers');
                                       } else if (!isNumeric(value)) {
-                                        return 'Harus mengandung angka saja';
+                                        return getTranslatedText('Just numbers');
                                       }
                                       return null;
                                     },
@@ -466,11 +476,11 @@ class KlientPage extends State<DataClient> {
                               // Tambahkan validator sesuai kebutuhan
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 } else if (value.length < 1) {
-                                  return 'Minimal 1 angka';
+                                  return getTranslatedText('Min 1 numbers');
                                 } else if (!isNumeric(value)) {
-                                  return 'Harus mengandung angka saja';
+                                  return getTranslatedText('Just numbers');
                                 }
                                 return null;
                               },

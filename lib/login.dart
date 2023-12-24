@@ -66,21 +66,25 @@ class _LoginState extends State<Login> {
           final String token = data['access_token'] ?? '';
           final String name = data['user']?['nama'] ?? '';
           final String userStatus = data['user']?['status'] ?? '';
+          final int id_user = data['user']?['id_user'] ?? 0;
 
           if (userStatus == 'aktif.') {
             // Simpan informasi login ke shared_preferences
             SharedPreferences prefs = await SharedPreferences.getInstance();
             prefs.setString('access_token', token);
             prefs.setString('nama', name);
+            prefs.setInt('id_user', id_user);
             prefs.setString('roles', roles);
 
             // Pengecekan apakah token dan informasi lainnya telah berhasil disimpan
             String storedToken = prefs.getString('access_token') ?? '';
             String storedName = prefs.getString('nama') ?? '';
+            String storedIdUser = prefs.getInt('id_user').toString() ?? '';
             String storedRoles = prefs.getString('roles') ?? '';
 
             print('Token: $storedToken');
             print('Nama: $storedName');
+            print('id_user: $storedIdUser');
             print('Roles: $storedRoles');
 
             // Handle navigasi sesuai dengan roles

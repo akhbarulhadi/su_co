@@ -24,6 +24,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
   bool isDarkTheme = false; // Variabel untuk tema gelap
   String selectedLanguage = 'IDN'; // Variabel untuk bahasa yang dipilih
   List _listdata = [];
+  int _totalData = 0;
   bool _isloading = true;
   Map<int, Color> colorMap = {}; // Menyimpan warna berdasarkan id_klien
   bool _isDisposed = false;
@@ -50,6 +51,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
     textController = TextEditingController();
     _getStockData();
     _getdatapemasukan('', '', ''); // Isi tanggal sesuai kebutuhan
+    _totalData;
   }
 
   @override
@@ -135,8 +137,10 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print(data); // Cetak data ke konsol
+        int totalData = data['total_data']; // Ambil jumlah total data
         setState(() {
           _listdata = data['pesanan'];
+          _totalData = totalData; // Simpan total data ke dalam variabel _totalData
           _isloading = false;
         });
       }
@@ -339,7 +343,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                 child: ListBody(
                   children: <Widget>[
                     Text(getTranslatedText(
-                        'Are you sure you want to change this production status?')),
+                        'Is production appropriate ?')),
                   ],
                 ),
               ),
@@ -411,8 +415,8 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
           return 'Menunggu';
         case 'Edit':
           return 'Ubah';
-        case 'Are you sure you want to change this production status?':
-          return 'Apakah Anda yakin ingin mengubah status produksi ini?';
+        case 'Is production appropriate ?':
+          return 'Apakah produksi sudah sesuai ?';
         case 'Yes':
           return 'Ya';
         case 'Cancel':
@@ -864,7 +868,7 @@ class _Dashboard1WidgetState extends State<DashboardPageSupervisor> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          _listdata.length.toString(),
+                                          _totalData.toString(),
                                           style: TextStyle(
                                             fontFamily: 'Inter',
                                             color: Color(0xFFFFFFFE),

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Produksi;
 use App\Models\Stock;
 use App\Models\User;
+use Carbon\Carbon;
 
 class ProduksiController extends Controller
 {
@@ -58,7 +59,28 @@ class ProduksiController extends Controller
         if (!$produksi) {
             return response()->json(['message' => 'Produksi tidak ditemukan'], 404);
         }
+        $produksi->status_produksi = $request->status_produksi;
+        $produksi->save();
 
+        return response()->json(['message' => 'Status berhasil diperbarui']);
+    }
+
+    public function updateStatusLeader(Request $request)
+    {
+        // Validasi request sesuai kebutuhan Anda
+        $request->validate([
+            'id_produksi' => 'required|integer',
+            'status_produksi' => 'required|string',
+        ]);
+
+        // Perbarui status pesanan di database
+        $produksi = Produksi::find($request->id_produksi);
+
+        if (!$produksi) {
+            return response()->json(['message' => 'Produksi tidak ditemukan'], 404);
+        }
+
+        $produksi->tanggal_produksi = Carbon::now();
         $produksi->status_produksi = $request->status_produksi;
         $produksi->save();
 
@@ -218,13 +240,14 @@ class ProduksiController extends Controller
         }
     }
 
-    public function getProduksiLeader()
+    public function getProduksiLeader($id_user)
     {
         try {
             // Ambil data produksi dari tabel laporan_produksi dengan join ke tabel ketersediaan_barang dan users
             $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
                 ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
                 ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
+                ->where('laporan_produksi.id_user', $id_user)
                 ->orderByRaw("CASE WHEN laporan_produksi.status_produksi = 'belum selesai' THEN 1 WHEN laporan_produksi.status_produksi = 'sudah dibuat' THEN 2 WHEN laporan_produksi.status_produksi = 'sudah sesuai' THEN 3 ELSE 4 END")
                 ->get();
 
@@ -236,12 +259,14 @@ class ProduksiController extends Controller
         }
     }
 
-    public function getProduksiLeaderDashboard()
+
+    public function getProduksiLeaderDashboard($id_user)
     {
         try {
             // Ambil data produksi dari tabel laporan_produksi dengan join ke tabel ketersediaan_barang dan users
             $produksi = Produksi::join('ketersediaan_barang', 'laporan_produksi.id_produk', '=', 'ketersediaan_barang.id_produk')
                 ->join('users', 'laporan_produksi.id_user', '=', 'users.id_user')
+                ->where('laporan_produksi.id_user', $id_user)
                 ->select('laporan_produksi.*', 'ketersediaan_barang.*', 'users.nama as nama_user')
                 ->whereNotIn('laporan_produksi.status_produksi', ['sudah dibuat', 'sudah sesuai', 'selesai.'])
                 ->take(5)
@@ -302,15 +327,15 @@ class ProduksiController extends Controller
         $produksiStatus = Produksi::select('status_produksi')
             ->whereNotIn('status_produksi', ['belum selesai', 'sudah dibuat', 'sudah sesuai'])
             ->where('id_produk', '=', $idProduk)
-            ->whereDate('updated_at', '>=', $startDate)
-            ->whereDate('updated_at', '<=', $endDate)
+            ->whereDate('tanggal_produksi', '>=', $startDate)
+            ->whereDate('tanggal_produksi', '<=', $endDate)
             ->get();
 
         // Mengambil total hasil produksi berdasarkan jangka waktu dan id_produk
         $totalHasilProduksi = Produksi::where('status_produksi', 'selesai.')
             ->where('id_produk', '=', $idProduk)
-            ->whereDate('updated_at', '>=', $startDate)
-            ->whereDate('updated_at', '<=', $endDate)
+            ->whereDate('tanggal_produksi', '>=', $startDate)
+            ->whereDate('tanggal_produksi', '<=', $endDate)
             ->sum('jumlah_produksi');
 
         return response()->json(['message' => 'Success', 'total_hasil_produksi' => $totalHasilProduksi]);

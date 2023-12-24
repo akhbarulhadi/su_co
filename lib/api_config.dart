@@ -48,5 +48,6 @@ class ApiConfig {
   static const String get_production_staff_dashboard = '$baseUrl/produksi/production-staff-dashboard';
   static const String status_user = '$baseUrl/update-status-user';
   static const String pemasukan_produksi= '$baseUrl/produksi/pemasukan-produksi';
+  static const String status_leader= '$baseUrl/produksi/update-status-leader';
 
 }

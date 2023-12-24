@@ -68,6 +68,18 @@ class ChangePassState extends State<ChangePassWidget> {
           return 'Gagal';
         case 'Wrong password':
           return 'Kata sandi salah';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Minimum 8 characters':
+          return 'Minimal 8 karakter';
+        case 'Enter letters and numbers':
+          return 'mengandung kombinasi huruf dan angka';
+        case 'Password do not match':
+          return 'Password tidak cocok';
+        case '':
+          return '';
+        case '':
+          return '';
 
         default:
           return text;
@@ -286,7 +298,7 @@ class ChangePassState extends State<ChangePassWidget> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 };
                               },
                               style: TextStyle(fontSize: 16),
@@ -313,12 +325,12 @@ class ChangePassState extends State<ChangePassWidget> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 } else if (value.length < 8) {
-                                  return 'Minimal 8 karakter';
+                                  return getTranslatedText('Minimum 8 characters');
                                 } else if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d).+$')
                                     .hasMatch(value)) {
-                                  return 'Password harus mengandung kombinasi huruf dan angka';
+                                  return getTranslatedText('Enter letters and numbers');
                                 }
                                 return null;
                               },
@@ -347,9 +359,9 @@ class ChangePassState extends State<ChangePassWidget> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Isi Datanya';
+                                  return getTranslatedText('Fill in the data');
                                 } else if (value != newPasswordController.text) {
-                                  return 'Konfirmasi password tidak cocok dengan password baru';
+                                  return getTranslatedText('Password do not match');
                                 }
                                 return null;
                               },

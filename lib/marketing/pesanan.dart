@@ -93,33 +93,12 @@ class PesananState extends State<Pesanan> {
   }
 
   Future<void> createPesanan() async {
-    DateTime now = DateTime.now();
-    String year = now.year
-        .toString()
-        .substring(2); // Extract the last two digits of the year
-    String month =
-        now.month.toString().padLeft(2, '0'); // Ensure two digits for the month
-    String day =
-        now.day.toString().padLeft(2, '0'); // Ensure two digits for the day
-
-    // Retrieve the last used unique code from SharedPreferences
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int lastUniqueCode = prefs.getInt('lastUniqueCode') ?? 0;
-
-    // Increment the unique code for the next product
-    int uniqueCode = lastUniqueCode + 1;
-
-    // Save the updated unique code in SharedPreferences
-    prefs.setInt('lastUniqueCode', uniqueCode);
-
-    // Combine the date and unique code to create the kode_produk
-    String kodePemesanan = '$day$month$year$uniqueCode';
 
     final response = await http.post(
       Uri.parse(ApiConfig.tambah_pesanan),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
-        "kode_pemesanan": kodePemesanan,
+        "kode_pemesanan": '',
         "id_produk": _selectedProductId,
         "id_klien": idklienController.text,
         "harga_total": hargatotalController.text,
@@ -315,6 +294,20 @@ class PesananState extends State<Pesanan> {
           return 'Detail Klien';
         case 'Address':
           return 'Alamat';
+        case 'Select the product first':
+          return 'Pilih produk terlebih dahulu';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Must contain numbers only':
+          return 'Harus mengandung angka saja';
+        case 'Minimum 1 numbers':
+          return 'Minimal 1 angka';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
         case '':
           return '';
         case '':
@@ -832,7 +825,7 @@ class PesananState extends State<Pesanan> {
                                                                           (value) {
                                                                         if (value == null ||
                                                                             value.isEmpty) {
-                                                                          return 'Isi Datanya';
+                                                                          return getTranslatedText('Fill in the data');
                                                                         }
                                                                         return null;
                                                                       },
@@ -859,7 +852,7 @@ class PesananState extends State<Pesanan> {
                                                                         (value) {
                                                                       if (value == null ||
                                                                           value.isEmpty) {
-                                                                        return 'Isi Datanya';
+                                                                        return getTranslatedText('Fill in the data');
                                                                       }
                                                                       return null;
                                                                     },
@@ -887,7 +880,7 @@ class PesananState extends State<Pesanan> {
                                                                     ),
                                                                     validator: (value) {
                                                                       if (value == null || value.isEmpty) {
-                                                                        return 'Pilih produk terlebih dahulu';
+                                                                        return getTranslatedText('Select the product first');
                                                                       }
                                                                       return null;
                                                                     },
@@ -914,7 +907,11 @@ class PesananState extends State<Pesanan> {
                                                                     style: TextStyle(fontSize: 16),
                                                                     validator: (value) {
                                                                       if (value == null || value.isEmpty) {
-                                                                        return 'Isi Datanya';
+                                                                        return getTranslatedText('Fill in the data');
+                                                                      } else if (value.length < 1) {
+                                                                        return getTranslatedText('Minimum 1 numbers');
+                                                                      } else if (!isNumeric(value)) {
+                                                                        return getTranslatedText('Must contain numbers only');
                                                                       }
                                                                       return null;
                                                                     },
@@ -940,7 +937,7 @@ class PesananState extends State<Pesanan> {
                                                                         (value) {
                                                                       if (value == null ||
                                                                           value.isEmpty) {
-                                                                        return 'Isi Datanya';
+                                                                        return getTranslatedText('Fill in the data');
                                                                       }
                                                                       return null;
                                                                     },
@@ -964,7 +961,7 @@ class PesananState extends State<Pesanan> {
                                                                         (value) {
                                                                       if (value == null ||
                                                                           value.isEmpty) {
-                                                                        return 'Isi Datanya';
+                                                                        return getTranslatedText('Fill in the data');
                                                                       }
                                                                       return null;
                                                                     },
@@ -1005,7 +1002,7 @@ class PesananState extends State<Pesanan> {
                                                                         (value) {
                                                                       if (value == null ||
                                                                           value.isEmpty) {
-                                                                        return 'Isi Datanya';
+                                                                        return getTranslatedText('Fill in the data');
                                                                       }
                                                                       return null;
                                                                     },

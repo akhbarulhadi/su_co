@@ -97,8 +97,37 @@ class AddUserState extends State<AddUser> {
           return 'Data sudah ada';
         case 'Yes':
           return 'Ya';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Email must contain the "@" character':
+          return 'Email harus menganding karakter "@"';
+        case 'Minimum 10 numbers':
+          return 'Minimal 10 angka';
+        case 'Telephone numbers must contain numbers only':
+          return 'Nomor telepon harus mengandung angka saja';
+        case 'Select gender':
+          return 'Pilih jenis kelamain';
+        case 'Select role':
+          return 'Pilih peran';
         case '':
           return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
+
         default:
           return text;
       }
@@ -327,9 +356,9 @@ class AddUserState extends State<AddUser> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Isi Datanya';
+                              return getTranslatedText('Fill in the data');
                             } else if (!value.contains('@')) {
-                              return 'Email harus mengandung karakter "@"';
+                              return getTranslatedText('Email must contain the "@" character');
                             }
                             return null;
                           },
@@ -348,7 +377,7 @@ class AddUserState extends State<AddUser> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Isi Datanya';
+                              return getTranslatedText('Fill in the data');
                             }
                             return null;
                           },
@@ -367,7 +396,7 @@ class AddUserState extends State<AddUser> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Isi Datanya';
+                              return getTranslatedText('Fill in the data');
                             }
                             return null;
                           },
@@ -386,11 +415,11 @@ class AddUserState extends State<AddUser> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Isi Datanya';
+                              return getTranslatedText('Fill in the data');
                             } else if (value.length < 10) {
-                              return 'Minimal 10 angka';
+                              return getTranslatedText('Minimum 10 numbers');
                             } else if (!isNumeric(value)) {
-                              return 'Nomor telepon harus mengandung angka saja';
+                              return getTranslatedText('Telephone numbers must contain numbers only');
                             }
                             return null;
                           },
@@ -408,7 +437,7 @@ class AddUserState extends State<AddUser> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Isi Datanya';
+                              return getTranslatedText('Fill in the data');
                             }
                             return null;
                           },
@@ -444,7 +473,7 @@ class AddUserState extends State<AddUser> {
                           Padding(
                             padding: const EdgeInsets.only(left: 13.0),
                             child: Text(
-                              'Pilih jenis kelamin',
+                              getTranslatedText('Select gender'),
                               style: TextStyle(color: Colors.red, fontSize: 12),
                             ),
                           ),
@@ -488,7 +517,7 @@ class AddUserState extends State<AddUser> {
                           Padding(
                             padding: const EdgeInsets.only(left: 14.0),
                             child: Text(
-                              'Pilih role',
+                              getTranslatedText('Select role'),
                               style: TextStyle(color: Colors.red, fontSize: 12),
                             ),
                           ),

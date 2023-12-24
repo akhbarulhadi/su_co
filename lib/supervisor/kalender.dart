@@ -28,6 +28,7 @@ class Calendar extends StatefulWidget {
 }
 
 class CalenderState extends State<Calendar> {
+  final _formKey = GlobalKey<FormState>();
   TextEditingController productNameController = TextEditingController();
   TextEditingController productNameprodukController = TextEditingController();
   TextEditingController namaRuanganController = TextEditingController();
@@ -36,6 +37,7 @@ class CalenderState extends State<Calendar> {
   bool isNumeric(String value) {
     return int.tryParse(value) != null;
   }
+
   bool isDarkTheme = false;
   String selectedLanguage = 'IDN';
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -138,7 +140,6 @@ class CalenderState extends State<Calendar> {
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(context); // Close the current dialog
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -279,8 +280,10 @@ class CalenderState extends State<Calendar> {
           return 'Ya';
         case 'Data cannot be empty':
           return 'Data tidak boleh kosong';
-        case '':
-          return '';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Must contain numbers only':
+          return 'Harus mengandung angka saja';
         case '':
           return '';
         case '':
@@ -345,14 +348,13 @@ class CalenderState extends State<Calendar> {
             decoration: BoxDecoration(
               color: Color(0xFF094067),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
-                  child: Visibility(
-                    visible:
-                        shouldShowProductName(), // Replace with your condition
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
                     child: TextFormField(
                       readOnly: true, // Menggantikan enabled: false
                       obscureText: false,
@@ -373,38 +375,23 @@ class CalenderState extends State<Calendar> {
                         fontSize: 16,
                         color: Colors.white,
                       ),
+                      validator:
+                          (value) {
+                        if (value == null ||
+                            value.isEmpty) {
+                          return getTranslatedText('Fill in the data');
+                        }
+                        return null;
+                      },
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
-                  child: TextFormField(
-                    obscureText: false,
-                    controller: namaRuanganController,
-                    decoration: InputDecoration(
-                      labelText: getTranslatedText('Room Name'),
-                      contentPadding: EdgeInsets.all(13),
-                      labelStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
-                  child: Form(
-                    child: DropdownButtonFormField(
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
+                    child: TextFormField(
+                      obscureText: false,
+                      controller: namaRuanganController,
                       decoration: InputDecoration(
-                        labelText: getTranslatedText('Leader Production Name'),
+                        labelText: getTranslatedText('Room Name'),
                         contentPadding: EdgeInsets.all(13),
                         labelStyle: TextStyle(
                           color: Colors.white,
@@ -415,206 +402,260 @@ class CalenderState extends State<Calendar> {
                           ),
                         ),
                       ),
-                      dropdownColor: Color(0xFF094067), // Warna latar belakang dropdown saat dibuka
-                      value: selectedLeader,
-                      items: listuser.map((leader) {
-                        return DropdownMenuItem(
-                          value: leader['id_user'].toString(),
-                          child: Row(
-                            children: [
-                              Text('ID: ${leader['id_user']}',
-                              style: TextStyle(color: Colors.white),),
-                              SizedBox(width: 8),
-                              Text('${leader['nama']}',
-                                style: TextStyle(color: Colors.white),),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        print("Selected Leader: $newValue");
-                        setState(() {
-                          selectedLeader = newValue!;
-                        });
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                      validator:
+                          (value) {
+                        if (value == null ||
+                            value.isEmpty) {
+                          return getTranslatedText('Fill in the data');
+                        }
+                        return null;
                       },
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
-                  child: TextFormField(
-                    obscureText: false,
-                    controller: jumlahPesananController,
-                    decoration: InputDecoration(
-                      labelText: getTranslatedText('Total Production'),
-                      contentPadding: EdgeInsets.all(13),
-                      labelStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 61, 0, 0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDarkTheme ? Colors.black : Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(50.0),
-                        topRight: Radius.circular(50.0),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(16, 20, 16, 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(2.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15.0),
-                              color: Color(0xFF094067),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
+                    child: Form(
+                      child: DropdownButtonFormField(
+                        decoration: InputDecoration(
+                          labelText:
+                              getTranslatedText('Leader Production Name'),
+                          contentPadding: EdgeInsets.all(13),
+                          labelStyle: TextStyle(
+                            color: Colors.white,
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.white,
                             ),
-                            child: Column(
+                          ),
+                        ),
+                        dropdownColor: Color(
+                            0xFF094067), // Warna latar belakang dropdown saat dibuka
+                        value: selectedLeader,
+                        items: listuser.map((leader) {
+                          return DropdownMenuItem(
+                            value: leader['id_user'].toString(),
+                            child: Row(
                               children: [
-                                Visibility(
-                                  visible: false,
-                                  child: Text(
-                                    'Tanggal Dipilih: ${_selectedDay?.toLocal()}',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                Text(
+                                  'ID: ${leader['id_user']}',
+                                  style: TextStyle(color: Colors.white),
                                 ),
-                                TableCalendar(
-                                  headerStyle: HeaderStyle(
-                                    titleTextStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    formatButtonDecoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 0.5,
-                                      ),
-                                      color: Colors.transparent,
-                                    ),
-                                    formatButtonTextStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    leftChevronIcon: Icon(
-                                      Icons.chevron_left,
-                                      color: Colors.white,
-                                    ),
-                                    rightChevronIcon: Icon(
-                                      Icons.chevron_right,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  daysOfWeekStyle: DaysOfWeekStyle(
-                                    weekdayStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    weekendStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  firstDay: DateTime.now(),
-                                  lastDay: kLastDay,
-                                  focusedDay: _focusedDay,
-                                  calendarFormat: _calendarFormat,
-                                  calendarStyle: CalendarStyle(
-                                    outsideDaysVisible: false,
-                                    weekendTextStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    defaultTextStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    todayTextStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    selectedTextStyle: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    todayDecoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    selectedDecoration: BoxDecoration(
-                                      color: Colors.blue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  selectedDayPredicate: (day) {
-                                    return isSameDay(_selectedDay, day);
-                                  },
-                                  onDaySelected: (selectedDay, focusedDay) {
-                                    if (!isSameDay(_selectedDay, selectedDay)) {
-                                      setState(() {
-                                        _selectedDay = selectedDay;
-                                        _focusedDay = focusedDay;
-                                      });
-                                    }
-                                  },
-                                  onFormatChanged: (format) {
-                                    setState(() {
-                                      _calendarFormat = format;
-                                    });
-                                  },
-                                  onPageChanged: (focusedDay) {
-                                    _focusedDay = focusedDay;
-                                  },
+                                SizedBox(width: 8),
+                                Text(
+                                  '${leader['nama']}',
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ],
                             ),
-                          ),
-                          SizedBox(height: bodyHeight * 0.001),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  // Add your logic to save data to the database
-                                  sendDataToDatabase();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 15,
-                                    vertical: 7,
-                                  ),
-                                  primary: Color(0xFF3DA9FC),
-                                ),
-                                child: Text(
-                                  getTranslatedText('Add Task'),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w600,
-                                    height: 0,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          print("Selected Leader: $newValue");
+                          setState(() {
+                            selectedLeader = newValue!;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return getTranslatedText('Select the leader first');
+                          }
+                          return null;
+                        },
                       ),
                     ),
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(30, 0, 30, 0),
+                    child: TextFormField(
+                      keyboardType: TextInputType.number,
+                      obscureText: false,
+                      controller: jumlahPesananController,
+                      decoration: InputDecoration(
+                        labelText: getTranslatedText('Total Production'),
+                        contentPadding: EdgeInsets.all(13),
+                        labelStyle: TextStyle(
+                          color: Colors.white,
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return getTranslatedText('Fill in the data');
+                        } else if (!isNumeric(value)) {
+                          return getTranslatedText('Must contain numbers only');
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 61, 0, 0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDarkTheme ? Colors.black : Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(50.0),
+                          topRight: Radius.circular(50.0),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(16, 20, 16, 16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(2.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15.0),
+                                color: Color(0xFF094067),
+                              ),
+                              child: Column(
+                                children: [
+                                  Visibility(
+                                    visible: false,
+                                    child: Text(
+                                      'Tanggal Dipilih: ${_selectedDay?.toLocal()}',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  TableCalendar(
+                                    headerStyle: HeaderStyle(
+                                      titleTextStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      formatButtonDecoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 0.5,
+                                        ),
+                                        color: Colors.transparent,
+                                      ),
+                                      formatButtonTextStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      leftChevronIcon: Icon(
+                                        Icons.chevron_left,
+                                        color: Colors.white,
+                                      ),
+                                      rightChevronIcon: Icon(
+                                        Icons.chevron_right,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    daysOfWeekStyle: DaysOfWeekStyle(
+                                      weekdayStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      weekendStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    firstDay: DateTime.now(),
+                                    lastDay: kLastDay,
+                                    focusedDay: _focusedDay,
+                                    calendarFormat: _calendarFormat,
+                                    calendarStyle: CalendarStyle(
+                                      outsideDaysVisible: false,
+                                      weekendTextStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      defaultTextStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      todayTextStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      selectedTextStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      todayDecoration: BoxDecoration(
+                                        color: Colors.transparent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      selectedDecoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    selectedDayPredicate: (day) {
+                                      return isSameDay(_selectedDay, day);
+                                    },
+                                    onDaySelected: (selectedDay, focusedDay) {
+                                      if (!isSameDay(
+                                          _selectedDay, selectedDay)) {
+                                        setState(() {
+                                          _selectedDay = selectedDay;
+                                          _focusedDay = focusedDay;
+                                        });
+                                      }
+                                    },
+                                    onFormatChanged: (format) {
+                                      setState(() {
+                                        _calendarFormat = format;
+                                      });
+                                    },
+                                    onPageChanged: (focusedDay) {
+                                      _focusedDay = focusedDay;
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: bodyHeight * 0.001),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      sendDataToDatabase();
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 15,
+                                      vertical: 7,
+                                    ),
+                                    primary: Color(0xFF3DA9FC),
+                                  ),
+                                  child: Text(
+                                    getTranslatedText('Add Task'),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w600,
+                                      height: 0,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

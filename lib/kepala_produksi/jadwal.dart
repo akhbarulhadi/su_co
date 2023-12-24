@@ -27,6 +27,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   String selectedStatus = "";
   bool _isloading = true;
 
+
   @override
   void initState() {
     super.initState();
@@ -56,8 +57,10 @@ class _TableEventsExampleState extends State<TableEventsExample> {
 
   Future<void> loadProduksi() async {
     try {
-      final response =
-          await http.get(Uri.parse(ApiConfig.get_production_leader));
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      int userId = prefs.getInt('id_user') ?? 0;
+
+      final response = await http.get(Uri.parse('${ApiConfig.get_production_leader}/$userId'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -93,11 +96,15 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         }
       }
 
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('yyyy-MM-dd').format(now);
+
       final response = await http.post(
-        Uri.parse(ApiConfig.status),
+        Uri.parse(ApiConfig.status_leader),
         body: {
           'id_produksi': idProduksi.toString(),
           'status_produksi': newStatus.toLowerCase(),
+          'tanggal_produksi': formattedDate,
         },
       );
 
@@ -146,6 +153,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         // Update production data after successfully updating the status
         setState(() {
           _filteredData[index]['status_produksi'] = newStatus;
+          _filteredData[index]['tanggal_produksi'] = formattedDate;
           isItemClicked[index] = true; // Set the item as clicked
           // Add necessary state updates after updating data
         });
@@ -208,7 +216,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
               child: ListBody(
                 children: <Widget>[
                   Text(getTranslatedText(
-                      'Are you sure you want to change this production status?')),
+                      'Is this production already made ?')),
                 ],
               ),
             ),
@@ -275,8 +283,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'Bulanan';
         case 'Yearly':
           return 'Tahunan';
-        case 'Are you sure you want to change this production status?':
-          return 'Apakah Anda yakin ingin mengubah status produksi ini?';
+        case 'Is this production already made ?':
+          return 'Apakah produksi ini sudah dibuat ?';
         case 'Yes':
           return 'Ya';
         case 'Cancel':
@@ -299,8 +307,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'Gagal';
         case 'Close':
           return 'Tutup';
-        case '':
-          return '';
+        case 'No Schedule':
+          return 'Tidak ada jadwal';
         case '':
           return '';
         default:
@@ -838,7 +846,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                     )
                   : _filteredData.isEmpty
                       ? Center(
-                          child: Text(getTranslatedText('No Production')),
+                          child: Text(getTranslatedText('No Schedule')),
                         )
                       : ListView.builder(
                           itemCount: _filteredData.length,

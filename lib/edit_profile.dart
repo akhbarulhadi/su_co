@@ -321,10 +321,14 @@ class EditProfilePage extends State<EditProfile> {
           return 'Pilih Gambar';
         case 'Take a Photo':
           return 'Ambil Gambar';
-        case '':
-          return '';
-        case '':
-          return '';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Email must contain the "@" character':
+          return 'Email harus menganding karakter "@"';
+        case 'Minimum 10 numbers':
+          return 'Minimal 10 angka';
+        case 'Telephone numbers must contain numbers only':
+          return 'Nomor telepon harus mengandung angka saja';
         case '':
           return '';
         case '':
@@ -491,7 +495,7 @@ class EditProfilePage extends State<EditProfile> {
                                   style: TextStyle(fontSize: 16),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Isi Datanya';
+                                      return getTranslatedText('Fill in the data');
                                     }
                                     return null;
                                   },
@@ -506,9 +510,9 @@ class EditProfilePage extends State<EditProfile> {
                                   style: TextStyle(fontSize: 16),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Isi Datanya';
+                                      return getTranslatedText('Fill in the data');
                                     } else if (!value.contains('@')) {
-                                      return 'Email harus mengandung karakter "@"';
+                                      return getTranslatedText('Email must contain the "@" character');
                                     }
                                     return null;
                                   },
@@ -523,11 +527,11 @@ class EditProfilePage extends State<EditProfile> {
                                   style: TextStyle(fontSize: 16),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Isi Datanya';
+                                      return getTranslatedText('Fill in the data');
                                     } else if (value.length < 10) {
-                                      return 'Minimal 10 angka';
+                                      return getTranslatedText('Minimum 10 numbers');
                                     } else if (!isNumeric(value)) {
-                                      return 'Nomor telepon harus mengandung angka saja';
+                                      return getTranslatedText('Telephone numbers must contain numbers only');
                                     }
                                     return null;
                                   },

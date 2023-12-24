@@ -10,6 +10,7 @@ class KlienController extends Controller
     public function showKlien()
     {
         $klien = Klien::select('data_klien.*')
+            ->orderBy('created_at', 'desc')
             ->get();
         return response()->json(['message' => 'Success', 'klien' => $klien]);
     }

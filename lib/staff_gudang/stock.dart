@@ -89,34 +89,11 @@ class StockState extends State<Stock> {
   }
 
   Future<void> createProduk() async {
-    // Get the current date, month, and year
-    DateTime now = DateTime.now();
-    String year = now.year
-        .toString()
-        .substring(2); // Extract the last two digits of the year
-    String month =
-        now.month.toString().padLeft(2, '0'); // Ensure two digits for the month
-    String day =
-        now.day.toString().padLeft(2, '0'); // Ensure two digits for the day
-
-    // Retrieve the last used unique code from SharedPreferences
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int lastUniqueCode = prefs.getInt('lastUniqueCode') ?? 0;
-
-    // Increment the unique code for the next product
-    int uniqueCode = lastUniqueCode + 1;
-
-    // Save the updated unique code in SharedPreferences
-    prefs.setInt('lastUniqueCode', uniqueCode);
-
-    // Combine the date and unique code to create the kode_produk
-    String kodeProduk = '$day$month$year$uniqueCode';
-
     final response = await http.post(
       Uri.parse(ApiConfig.add_product),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
-        "kode_produk": kodeProduk,
+        "kode_produk": '',
         "nama_produk": namaprodukController.text,
         "jumlah_produk": jumlahprodukController.text,
         "jenis_produk": jenisprodukController.text,
@@ -294,10 +271,10 @@ class StockState extends State<Stock> {
           return 'Gagal';
         case 'Close':
           return 'Tutup';
-        case '':
-          return '';
-        case '':
-          return '';
+        case 'Fill in the data':
+          return 'Isi datanya';
+        case 'Must contain numbers only':
+          return 'Harus mengandung angka saja';
         case '':
           return '';
         case '':
@@ -488,53 +465,55 @@ class StockState extends State<Stock> {
                                 title: Center(
                                     child: Text(
                                         getTranslatedText('Add Product'))),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    TextFormField(
-                                      controller: namaprodukController,
-                                      keyboardType: TextInputType.text,
-                                      decoration: InputDecoration(
-                                          labelText:
-                                              getTranslatedText('Product Name')),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Isi Datanya';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    TextFormField(
-                                      controller: jumlahprodukController,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                          labelText: getTranslatedText(
-                                              'Number Of Products')),
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.isEmpty) {
-                                          return 'Isi Datanya';
-                                        } else if (!isNumeric(
-                                            value)) {
-                                          return 'harus mengandung angka saja';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    TextFormField(
-                                      controller: jenisprodukController,
-                                      keyboardType: TextInputType.text,
-                                      decoration: InputDecoration(
-                                          labelText: getTranslatedText(
-                                              'Types Of Product')),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Isi Datanya';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ],
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      TextFormField(
+                                        controller: namaprodukController,
+                                        keyboardType: TextInputType.text,
+                                        decoration: InputDecoration(
+                                            labelText:
+                                                getTranslatedText('Product Name')),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return getTranslatedText('Fill in the data');
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        controller: jumlahprodukController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: InputDecoration(
+                                            labelText: getTranslatedText(
+                                                'Number Of Products')),
+                                        validator: (value) {
+                                          if (value == null ||
+                                              value.isEmpty) {
+                                            return getTranslatedText('Fill in the data');
+                                          } else if (!isNumeric(
+                                              value)) {
+                                            return getTranslatedText('Must contain numbers only');
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        controller: jenisprodukController,
+                                        keyboardType: TextInputType.text,
+                                        decoration: InputDecoration(
+                                            labelText: getTranslatedText(
+                                                'Types Of Product')),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return getTranslatedText('Fill in the data');
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 actions: [
                                   Row(

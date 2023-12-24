@@ -239,7 +239,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                 child: ListBody(
                   children: <Widget>[
                     Text(getTranslatedText(
-                        'Are you sure you want to change this production status?')),
+                        'Is production appropriate ?')),
                   ],
                 ),
               ),
@@ -297,8 +297,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           return 'Daftar Pesanan Klien';
         case 'Activity':
           return 'Kegiatan';
-        case 'Are you sure you want to change this production status?':
-          return 'Apakah Anda yakin ingin mengubah status produksi ini?';
+        case 'Is production appropriate ?':
+          return 'Apakah produksi sudah sesuai ?';
         case 'Yes':
           return 'Ya';
         case 'Cancel':
