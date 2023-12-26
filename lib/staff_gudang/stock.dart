@@ -29,7 +29,6 @@ class StockState extends State<Stock> {
   bool isDataBenar = false;
   TextEditingController kodeprodukController = TextEditingController();
   TextEditingController namaprodukController = TextEditingController();
-  TextEditingController jumlahprodukController = TextEditingController();
   TextEditingController jenisprodukController = TextEditingController();
   bool isNumeric(String value) {
     return int.tryParse(value) != null;
@@ -95,7 +94,7 @@ class StockState extends State<Stock> {
       body: jsonEncode({
         "kode_produk": '',
         "nama_produk": namaprodukController.text,
-        "jumlah_produk": jumlahprodukController.text,
+        "jumlah_produk": 0,
         "jenis_produk": jenisprodukController.text,
       }),
     );
@@ -104,7 +103,6 @@ class StockState extends State<Stock> {
       setState(() {
         isDataBenar = false; // Set data ke false
         namaprodukController.clear(); // Kosongkan form
-        jumlahprodukController.clear();
         jenisprodukController.clear();
       });
       await _getdata();
@@ -478,23 +476,6 @@ class StockState extends State<Stock> {
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
                                             return getTranslatedText('Fill in the data');
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        controller: jumlahprodukController,
-                                        keyboardType: TextInputType.number,
-                                        decoration: InputDecoration(
-                                            labelText: getTranslatedText(
-                                                'Number Of Products')),
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.isEmpty) {
-                                            return getTranslatedText('Fill in the data');
-                                          } else if (!isNumeric(
-                                              value)) {
-                                            return getTranslatedText('Must contain numbers only');
                                           }
                                           return null;
                                         },

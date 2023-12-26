@@ -580,71 +580,73 @@ class PesananState extends State<Pesanan> {
                                       title: Center(
                                           child: Text(getTranslatedText(
                                               'Client Detail'))),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          TextField(
-                                            controller: perusahaanController,
-                                            keyboardType: TextInputType.text,
-                                            decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Company Name')),
-                                            enabled: false,
-                                          ),
-                                          TextField(
-                                            controller: namaklienController,
-                                            keyboardType: TextInputType.text,
-                                            decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Client Name')),
-                                            enabled:
-                                                false, // Mengatur TextField menjadi disable
-                                          ),
-                                          TextField(
-                                            controller: alamatController,
-                                            keyboardType: TextInputType.text,
-                                            decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Address')),
-                                            enabled:
-                                                false, // Mengatur TextField menjadi disable
-                                          ),
-                                          TextField(
-                                            controller: emailController,
-                                            keyboardType: TextInputType.text,
-                                            decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Email')),
-                                            enabled:
-                                            false, // Mengatur TextField menjadi disable
-                                          ),
-                                          TextField(
-                                            controller: nobankController,
-                                            keyboardType: TextInputType.text,
-                                            decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'No Bank')),
-                                            enabled:
-                                            false, // Mengatur TextField menjadi disable
-                                          ),
-                                          TextField(
-                                            controller: notelpController,
-                                            keyboardType: TextInputType.text,
-                                            decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'No Telp')),
-                                            enabled:
-                                            false, // Mengatur TextField menjadi disable
-                                          ),
-                                          TextField(
-                                            controller: faxController,
-                                            keyboardType: TextInputType.text,
-                                            decoration: InputDecoration(
-                                                labelText: 'Fax'),
-                                            enabled:
-                                                false, // Mengatur TextField menjadi disable
-                                          ),
-                                        ],
+                                      content: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            TextField(
+                                              controller: perusahaanController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Company Name')),
+                                              enabled: false,
+                                            ),
+                                            TextField(
+                                              controller: namaklienController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Client Name')),
+                                              enabled:
+                                                  false, // Mengatur TextField menjadi disable
+                                            ),
+                                            TextField(
+                                              controller: alamatController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Address')),
+                                              enabled:
+                                                  false, // Mengatur TextField menjadi disable
+                                            ),
+                                            TextField(
+                                              controller: emailController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Email')),
+                                              enabled:
+                                              false, // Mengatur TextField menjadi disable
+                                            ),
+                                            TextField(
+                                              controller: nobankController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'No Bank')),
+                                              enabled:
+                                              false, // Mengatur TextField menjadi disable
+                                            ),
+                                            TextField(
+                                              controller: notelpController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'No Telp')),
+                                              enabled:
+                                              false, // Mengatur TextField menjadi disable
+                                            ),
+                                            TextField(
+                                              controller: faxController,
+                                              keyboardType: TextInputType.text,
+                                              decoration: InputDecoration(
+                                                  labelText: 'Fax'),
+                                              enabled:
+                                                  false, // Mengatur TextField menjadi disable
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     );
                                   },

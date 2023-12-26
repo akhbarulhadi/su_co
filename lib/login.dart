@@ -19,6 +19,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  String selectedLanguage = 'IDN';
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   bool _passwordVisibility = true;
@@ -38,6 +39,56 @@ class _LoginState extends State<Login> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void loadSelectedLanguage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedLanguage = prefs.getString('selectedLanguage') ?? 'IDN';
+    });
+  }
+
+  void saveSelectedLanguage(String language) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('selectedLanguage', language);
+  }
+
+  // Fungsi untuk menampilkan dialog pilihan bahasa
+  Future<void> showLanguageDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(getTranslatedText(
+              'Select Language')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                title: Text('Bahasa Indonesia'),
+                onTap: () {
+                  setState(() {
+                    selectedLanguage = 'IDN';
+                  });
+                  saveSelectedLanguage('IDN'); // Simpan bahasa yang dipilih
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                title: Text('English'),
+                onTap: () {
+                  setState(() {
+                    selectedLanguage = 'ENG';
+                  });
+                  saveSelectedLanguage('ENG'); // Simpan bahasa yang dipilih
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
  Future<void> _signIn() async {
@@ -92,7 +143,7 @@ class _LoginState extends State<Login> {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Inactive account. Please contact support.'),
+                content: Text(getTranslatedText('Inactive account. Please contact support.')),
               ),
             );
           }
@@ -102,14 +153,14 @@ class _LoginState extends State<Login> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Invalid credentials or inactive account.'),
+            content: Text(getTranslatedText('Invalid credentials or inactive account.')),
           ),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Email and password must be filled.'),
+          content: Text(getTranslatedText('Email and password must be filled.')),
         ),
       );
     }
@@ -117,7 +168,7 @@ class _LoginState extends State<Login> {
     print("Login error: $e");
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Login failed. Check your email and password.'),
+        content: Text(getTranslatedText('Login failed. Check your email and password.')),
       ),
     );
   }
@@ -178,6 +229,39 @@ class _LoginState extends State<Login> {
           }
     }
 
+  String getTranslatedText(String text) {
+    if (selectedLanguage == 'IDN') {
+      // Teks dalam bahasa Indonesia
+      switch (text) {
+        case 'Welcome':
+          return 'Selamat Datang';
+        case 'Fill out the information below to access your account.':
+          return 'Isi informasi di bawah ini untuk mengakses akun Anda.';
+        case 'Sign In':
+          return 'Masuk';
+        case 'Password':
+          return 'Kata Sandi';
+        case 'Inactive account. Please contact support.':
+          return 'Akun tidak aktif. Silakan hubungi dukungan.';
+        case 'Invalid credentials or inactive account.':
+          return 'Kredensial tidak valid atau akun tidak aktif.';
+        case 'Email and password must be filled.':
+          return 'Email dan kata sandi harus diisi.';
+        case 'Login failed. Check your email and password.':
+          return 'Gagal masuk. Periksa email dan kata sandi Anda.';
+        case 'Select Language':
+          return 'Pilih Bahasa';
+        case '':
+          return '';
+
+        default:
+          return text;
+      }
+    } else {
+      // Teks dalam bahasa Inggris (default)
+      return text;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +274,7 @@ class _LoginState extends State<Login> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF9766FF),
+                Color(0xFF094067),
                 Colors.white,
               ],
               stops: [0, 1],
@@ -204,6 +288,43 @@ class _LoginState extends State<Login> {
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // ListTile(
+                //   title: Text(
+                //     getTranslatedText(''),
+                //     style: TextStyle(
+                //       fontFamily: 'Outfit',
+                //       fontSize: 16,
+                //     ),
+                //   ),
+                //   contentPadding: EdgeInsets.fromLTRB(24, 1, 24, 1),
+                //   trailing: InkWell(
+                //     onTap: () {
+                //       showLanguageDialog(); // Tampilkan dialog pilihan bahasa
+                //     },
+                //     child: Container(
+                //       width: 76,
+                //       height: 22,
+                //       decoration: ShapeDecoration(
+                //         color: Color(0xFFF5F5F5),
+                //         shape: RoundedRectangleBorder(
+                //           side: BorderSide(width: 1, color: Color(0x443C3C3C)),
+                //         ),
+                //       ),
+                //       child: Text(
+                //         selectedLanguage == 'IDN' ? 'Bahasa' : 'English',
+                //         textAlign: TextAlign.center,
+                //         style: TextStyle(
+                //           color: Color(0xFF999999),
+                //           fontSize: 14,
+                //           fontFamily: 'Lato',
+                //           fontWeight: FontWeight.w700,
+                //           height: 0,
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                //   dense: false,
+                // ),
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0, 70, 0, 32),
                   child: Container(
@@ -250,7 +371,7 @@ class _LoginState extends State<Login> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              'Welcome',
+                              getTranslatedText('Welcome'),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: 'Outfit',
@@ -260,7 +381,7 @@ class _LoginState extends State<Login> {
                               padding:
                               EdgeInsetsDirectional.fromSTEB(0, 12, 0, 24),
                               child: Text(
-                                'Fill out the information below to access your account.',
+                                getTranslatedText('Fill out the information below to access your account.'),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -304,7 +425,7 @@ class _LoginState extends State<Login> {
                                   autofocus: true,
                                   obscureText: _passwordVisibility,
                                   decoration: InputDecoration(
-                                    labelText: 'Password',
+                                    labelText: getTranslatedText('Password'),
                                     enabledBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
                                         color: Colors.blue,
@@ -339,7 +460,7 @@ class _LoginState extends State<Login> {
                               EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                               child: ElevatedButton(
                                 onPressed: _signIn,
-                                child: Text('Sign In'),
+                                child: Text(getTranslatedText('Sign In')),
                               ),
                             ),
                           ],

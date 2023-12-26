@@ -473,71 +473,73 @@ class HistoryOrderState extends State<HistoryOrder> {
                               title: Center(
                                   child: Text(getTranslatedText(
                                       'Order Detail'))),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  TextField(
-                                    controller: namaklienController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: getTranslatedText(
-                                            'Client Name')),
-                                    enabled: false,
-                                  ),
-                                  TextField(
-                                    controller: alamatController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: getTranslatedText(
-                                            'Address')),
-                                    enabled:
-                                    false, // Mengatur TextField menjadi disable
-                                  ),
-                                  TextField(
-                                    controller: namaprodukController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: getTranslatedText(
-                                            'Product Name')),
-                                    enabled:
-                                    false, // Mengatur TextField menjadi disable
-                                  ),
-                                  TextField(
-                                    controller: jumlahpesananController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: getTranslatedText(
-                                            'Order Quantity')),
-                                    enabled:
-                                    false, // Mengatur TextField menjadi disable
-                                  ),
-                                  TextField(
-                                    controller: hargatotalController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: getTranslatedText(
-                                            'Total Price')),
-                                    enabled:
-                                    false, // Mengatur TextField menjadi disable
-                                  ),
-                                  TextField(
-                                    controller: batastanggalController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: getTranslatedText(
-                                            'Deadline')),
-                                    enabled:
-                                    false, // Mengatur TextField menjadi disable
-                                  ),
-                                  TextField(
-                                    controller: statusController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: InputDecoration(
-                                        labelText: 'Status'),
-                                    enabled:
-                                    false, // Mengatur TextField menjadi disable
-                                  ),
-                                ],
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
+                                      controller: namaklienController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText: getTranslatedText(
+                                              'Client Name')),
+                                      enabled: false,
+                                    ),
+                                    TextField(
+                                      controller: alamatController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText: getTranslatedText(
+                                              'Address')),
+                                      enabled:
+                                      false, // Mengatur TextField menjadi disable
+                                    ),
+                                    TextField(
+                                      controller: namaprodukController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText: getTranslatedText(
+                                              'Product Name')),
+                                      enabled:
+                                      false, // Mengatur TextField menjadi disable
+                                    ),
+                                    TextField(
+                                      controller: jumlahpesananController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText: getTranslatedText(
+                                              'Order Quantity')),
+                                      enabled:
+                                      false, // Mengatur TextField menjadi disable
+                                    ),
+                                    TextField(
+                                      controller: hargatotalController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText: getTranslatedText(
+                                              'Total Price')),
+                                      enabled:
+                                      false, // Mengatur TextField menjadi disable
+                                    ),
+                                    TextField(
+                                      controller: batastanggalController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText: getTranslatedText(
+                                              'Deadline')),
+                                      enabled:
+                                      false, // Mengatur TextField menjadi disable
+                                    ),
+                                    TextField(
+                                      controller: statusController,
+                                      keyboardType: TextInputType.text,
+                                      decoration: InputDecoration(
+                                          labelText: 'Status'),
+                                      enabled:
+                                      false, // Mengatur TextField menjadi disable
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           },

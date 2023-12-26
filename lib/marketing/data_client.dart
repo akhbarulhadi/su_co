@@ -103,7 +103,6 @@ class KlientPage extends State<DataClient> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context); // Close the current dialog
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => DashboardPageMarketing()),

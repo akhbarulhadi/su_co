@@ -68,7 +68,7 @@ class _SettingWidgetState extends State<SettingWidget> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               ListTile(
-                title: Text('Bahasa Indonesia'),
+                title: Text(getTranslatedText('Indonesian')),
                 onTap: () {
                   setState(() {
                     selectedLanguage = 'IDN';
@@ -78,7 +78,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                 },
               ),
               ListTile(
-                title: Text('English'),
+                title: Text(getTranslatedText('English')),
                 onTap: () {
                   setState(() {
                     selectedLanguage = 'ENG';
@@ -117,6 +117,16 @@ class _SettingWidgetState extends State<SettingWidget> {
           return 'Akun';
         case 'Select Language':
           return 'Pilih Bahasa';
+        case 'English':
+          return 'Bahasa Inggris';
+        case 'Indonesian':
+          return 'Bahasa Indonesia';
+        case '':
+          return '';
+        case '':
+          return '';
+        case '':
+          return '';
         // Tambahkan teks lainnya sesuai kebutuhan
         default:
           return text;
@@ -275,73 +285,6 @@ class _SettingWidgetState extends State<SettingWidget> {
                     MaterialPageRoute(builder: (context) => ChangePassWidget()),
                   );
                 },
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: isDarkTheme
-                            ? Colors.white
-                            : Colors.black, // Choose your desired color for the underline
-                        width: 0.2, // Choose the thickness of the underline
-                      ),
-                      top: BorderSide(
-                        color: isDarkTheme
-                            ? Colors.white
-                            : Colors.black, // Choose your desired color for the underline
-                        width: 0.2, // Choose the thickness of the underline
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                        child: Icon(
-                          Icons.notifications,
-                          color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
-                          size: 24,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
-                        child: Text(
-                          getTranslatedText('Notification'),
-                          style: TextStyle(
-                            fontFamily: 'Readex Pro',
-                            fontSize: 20,
-                            color: isDarkTheme ? Colors.blue : Color(0xFF0A4F81),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SwitchListTile(
-                value: switchListTileValueNotifications,
-                onChanged: (newValue) {
-                  setState(() {
-                    switchListTileValueNotifications = newValue;
-                  });
-                },
-                title: Text(
-                  getTranslatedText('Notification'),
-                  style: TextStyle(
-                    fontFamily: 'Readex Pro',
-                  ),
-                ),
-                tileColor: isDarkTheme
-                    ? Colors.black
-                    : Colors.white, // Menyesuaikan latar belakang sesuai tema
-                activeColor: Colors.white,
-                activeTrackColor: Colors.green,
-                dense: false,
-                controlAffinity: ListTileControlAffinity.trailing,
-                contentPadding: EdgeInsets.fromLTRB(24, 1, 24, 1),
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(10, 10, 10, 10),

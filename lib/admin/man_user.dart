@@ -938,209 +938,211 @@ class UserManagementPageState extends State<UserManagementPage> {
                                           child: Text(
                                               getTranslatedText('User Detail')),
                                         ),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            TextField(
-                                              controller: idStaffController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Id Staff'),
+                                        content: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextField(
+                                                controller: idStaffController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Id Staff'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: namaController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'User Name'),
+                                              TextField(
+                                                controller: namaController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'User Name'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: notelpController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'No Telp'),
+                                              TextField(
+                                                controller: notelpController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'No Telp'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: alamatController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Address'),
+                                              TextField(
+                                                controller: alamatController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Address'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: emailController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Email'),
+                                              TextField(
+                                                controller: emailController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Email'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: jkController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Gender'),
+                                              TextField(
+                                                controller: jkController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Gender'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: rolesController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Role'),
+                                              TextField(
+                                                controller: rolesController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Role'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            TextField(
-                                              controller: statusController,
-                                              keyboardType: TextInputType.text,
-                                              decoration: InputDecoration(
-                                                labelText: getTranslatedText(
-                                                    'Account Status'),
+                                              TextField(
+                                                controller: statusController,
+                                                keyboardType: TextInputType.text,
+                                                decoration: InputDecoration(
+                                                  labelText: getTranslatedText(
+                                                      'Account Status'),
+                                                ),
+                                                enabled: false,
                                               ),
-                                              enabled: false,
-                                            ),
-                                            Visibility(
-                                              visible: false,
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                              Visibility(
+                                                visible: false,
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      _filteredData[index]['roles'],
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color: Colors.white,
+                                                        fontSize:
+                                                            screenWidth * 0.028,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      _filteredData[index]
+                                                          ['status'].toString().replaceAll('.', '').replaceAll('-', ''),
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color: Colors.white,
+                                                        fontSize:
+                                                            screenWidth * 0.028,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                 children: [
-                                                  Text(
-                                                    _filteredData[index]['roles'],
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      color: Colors.white,
-                                                      fontSize:
-                                                          screenWidth * 0.028,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    _filteredData[index]
-                                                        ['status'].toString().replaceAll('.', '').replaceAll('-', ''),
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      color: Colors.white,
-                                                      fontSize:
-                                                          screenWidth * 0.028,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                              children: [
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext context) {
-                                                        return AlertDialog(
-                                                          title: Text(
-                                                            getTranslatedText('Reset Password'),
-                                                            textAlign: TextAlign.center,
-                                                          ),
-                                                          content: Column(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Text(getTranslatedText('The password will be reset to default'))
-                                                            ],
-                                                          ),
-
-                                                          actions: [
-                                                            Row(
-                                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context).pop();
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (BuildContext context) {
+                                                          return AlertDialog(
+                                                            title: Text(
+                                                              getTranslatedText('Reset Password'),
+                                                              textAlign: TextAlign.center,
+                                                            ),
+                                                            content: Column(
+                                                              mainAxisSize: MainAxisSize.min,
                                                               children: [
-                                                                ElevatedButton(
-                                                                  onPressed: () async {
-                                                                    await _resetPassword(
-                                                                        context,
-                                                                        index,
-                                                                        idStaffController.text);
-                                                                  },
-                                                                  child: Text(getTranslatedText('Yes')),
-                                                                  style: ElevatedButton.styleFrom(
-                                                                    minimumSize: Size(100, 40),
-                                                                    padding: EdgeInsets.all(10),
-                                                                    shape: RoundedRectangleBorder(
-                                                                      borderRadius: BorderRadius.circular(19),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                TextButton(
-                                                                  onPressed: () {
-                                                                    Navigator.pop(context);
-                                                                  },
-                                                                  child: Text(getTranslatedText('No')),
-                                                                  style: TextButton.styleFrom(
-                                                                    minimumSize: Size(100, 40),
-                                                                    padding: EdgeInsets.all(10),
-                                                                    shape: RoundedRectangleBorder(
-                                                                      borderRadius: BorderRadius.circular(19),
-                                                                      side: BorderSide(
-                                                                        color: Color(0xFF3DA9FC), // Warna border
-                                                                        width: 1.0, // Lebar border
+                                                                Text(getTranslatedText('The password will be reset to default'))
+                                                              ],
+                                                            ),
+
+                                                            actions: [
+                                                              Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                                children: [
+                                                                  ElevatedButton(
+                                                                    onPressed: () async {
+                                                                      await _resetPassword(
+                                                                          context,
+                                                                          index,
+                                                                          idStaffController.text);
+                                                                    },
+                                                                    child: Text(getTranslatedText('Yes')),
+                                                                    style: ElevatedButton.styleFrom(
+                                                                      minimumSize: Size(100, 40),
+                                                                      padding: EdgeInsets.all(10),
+                                                                      shape: RoundedRectangleBorder(
+                                                                        borderRadius: BorderRadius.circular(19),
                                                                       ),
                                                                     ),
                                                                   ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                  style: ElevatedButton.styleFrom(
-                                                    minimumSize: Size(100, 40),
-                                                    padding: EdgeInsets.all(10),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(19),
+                                                                  TextButton(
+                                                                    onPressed: () {
+                                                                      Navigator.pop(context);
+                                                                    },
+                                                                    child: Text(getTranslatedText('No')),
+                                                                    style: TextButton.styleFrom(
+                                                                      minimumSize: Size(100, 40),
+                                                                      padding: EdgeInsets.all(10),
+                                                                      shape: RoundedRectangleBorder(
+                                                                        borderRadius: BorderRadius.circular(19),
+                                                                        side: BorderSide(
+                                                                          color: Color(0xFF3DA9FC), // Warna border
+                                                                          width: 1.0, // Lebar border
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                    style: ElevatedButton.styleFrom(
+                                                      minimumSize: Size(100, 40),
+                                                      padding: EdgeInsets.all(10),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(19),
+                                                      ),
                                                     ),
+                                                    child: Text(getTranslatedText('Reset Password')),
                                                   ),
-                                                  child: Text(getTranslatedText('Reset Password')),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                    _showStatusChangeDialog(
-                                                        context,
-                                                        index,
-                                                        _filteredData[index]
-                                                            ['id_user']);
-                                                  },
-                                                  style: ElevatedButton.styleFrom(
-                                                    minimumSize: Size(100, 40),
-                                                    padding: EdgeInsets.all(10),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(19),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context).pop();
+                                                      _showStatusChangeDialog(
+                                                          context,
+                                                          index,
+                                                          _filteredData[index]
+                                                              ['id_user']);
+                                                    },
+                                                    style: ElevatedButton.styleFrom(
+                                                      minimumSize: Size(100, 40),
+                                                      padding: EdgeInsets.all(10),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(19),
+                                                      ),
                                                     ),
+                                                    child: Text(getTranslatedText('Change Status')),
                                                   ),
-                                                  child: Text(getTranslatedText('Change Status')),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       );
                                     },
