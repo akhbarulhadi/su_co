@@ -598,6 +598,46 @@ class StockState extends State<Stock> {
                                         children: [
                                           Row(
                                             mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                            children: [
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _filteredData[index]
+                                                  ['jenis_produk'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(0, 4, 0, 0),
+                                                child: Text(
+                                                  _filteredData[index]
+                                                  ['kode_produk'],
+                                                  style: TextStyle(
+                                                    fontFamily: 'Inter',
+                                                    color: Color(0xFFFFFFFE),
+                                                    fontSize: screenWidth *
+                                                        0.04, // Ukuran teks pada tombol
+                                                    fontWeight:
+                                                    FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: bodyHeight * 0.02),
+                                          Row(
+                                            mainAxisAlignment:
                                                 MainAxisAlignment
                                                     .spaceBetween,
                                             children: [

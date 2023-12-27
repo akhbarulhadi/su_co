@@ -124,7 +124,11 @@ class SidebarDrawerState extends State<SidebarDrawer> {
   // Fungsi untuk membersihkan data di SharedPreferences
   Future<void> _clearUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    String selectedLanguage = prefs.getString('selectedLanguage') ?? 'IDN'; // Simpan bahasa yang dipilih
+    bool isDarkTheme = prefs.getBool('isDarkTheme') ?? false; // Simpan preferensi tema
+    await prefs.clear(); // Hapus semua data di SharedPreferences
+    await prefs.setString('selectedLanguage', selectedLanguage); // Set kembali bahasa yang dipilih
+    await prefs.setBool('isDarkTheme', isDarkTheme); // Set kembali preferensi tema
   }
 
   @override
