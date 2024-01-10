@@ -29,7 +29,7 @@ PBL_SUCO
 2. setelah itu 'composer install'/'composer update' di command prompt directory sucos
 3. env.example copas dan jadikan .env
 4. 'php artisan key:generate' di command prompt directory sucos
-5. 'php artisan storage:link' di command prompt directory sucos
+5. 'php artisan storage:link' di command prompt directory sucos (buat kode ini dilakukan saat gambar tidak muncul atau ganti foto pertama dan tidak muncul fotonya)
 6. 'php artisan migrate' di command prompt directory sucos
 7. hidupkan apache dan mysql
 8. 'php artisan serve --host=IPv4 Address' di command prompt directory sucos
